@@ -1,3 +1,8 @@
+/**
+ Copyright 2014, Yahoo! Inc.
+ Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
+ **/
+
 package Test;
 
 import Accessories.Options;
@@ -12,10 +17,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-/**
- Copyright 2014, Yahoo! Inc.
- Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- **/
 public class API_UsageExample {
     public static void main(String[] args) throws  Exception{
         String infFile=args[0];

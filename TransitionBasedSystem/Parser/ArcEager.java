@@ -1,3 +1,8 @@
+/**
+ Copyright 2014, Yahoo! Inc.
+ Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
+ **/
+
 package TransitionBasedSystem.Parser;
 
 import TransitionBasedSystem.Configuration.Configuration;
@@ -5,10 +10,6 @@ import TransitionBasedSystem.Configuration.State;
 
 import java.util.ArrayList;
 
-/**
- Copyright 2014, Yahoo! Inc.
- Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- **/
 public class ArcEager extends TransitionBasedParser {
     public static void shift(State state) throws Exception {
         state.push(state.bufferHead());

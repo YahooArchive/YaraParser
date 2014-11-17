@@ -1,3 +1,8 @@
+/**
+ Copyright 2014, Yahoo! Inc.
+ Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
+ **/
+
 package Accessories;
 
 import Structures.Sentence;
@@ -8,12 +13,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.TreeMap;
 
-/**
- Copyright 2014, Yahoo! Inc.
- Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- **/
 public class CoNLLReader {
     /**
      * An object for reading the CoNLL file

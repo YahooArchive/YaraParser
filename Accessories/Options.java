@@ -1,11 +1,13 @@
-package Accessories;
-
-import java.io.Serializable;
-
 /**
  Copyright 2014, Yahoo! Inc.
  Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
  **/
+
+package Accessories;
+
+import java.io.Serializable;
+
+
 public class Options implements Serializable {
     public boolean train;
     public boolean parseTaggedFile;

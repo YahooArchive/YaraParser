@@ -1,11 +1,12 @@
-package Structures;
-
-import java.util.ArrayList;
-
 /**
  Copyright 2014, Yahoo! Inc.
  Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
  **/
+
+package Structures;
+
+import java.util.ArrayList;
+
 public class Sentence implements Comparable{
     /**
      * shows the tokens of a specific sentence

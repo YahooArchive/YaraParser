@@ -1,3 +1,8 @@
+/**
+ Copyright 2014, Yahoo! Inc.
+ Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
+ **/
+
 package Test;
 
 import Accessories.CoNLLReader;
@@ -14,11 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-/**
-Copyright 2014, Yahoo! Inc.
-Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
-**/
-public class Yara_PARSER {
+public class YaraParser {
     public static Options processArgs(String[] args){
         Options options=new Options();
 

@@ -1,3 +1,8 @@
+/**
+ Copyright 2014, Yahoo! Inc.
+ Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
+ **/
+
 package Learning;
 
 import Accessories.Pair;
@@ -5,10 +10,6 @@ import Accessories.Pair;
 import java.io.*;
 import java.util.HashMap;
 
-/**
- Copyright 2014, Yahoo! Inc.
- Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- **/
 public class AveragedPerceptron extends Perceptron {
     /**
      * This class tries to implement averaged Perceptron algorithm

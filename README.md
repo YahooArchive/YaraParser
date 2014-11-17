@@ -11,30 +11,32 @@ Yara Parser
 This project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs. For more details, see the technical details.
 
 ## Meaning of Yara
-Yara (__Ya__hoo-__Ra__sooli) is a word that means __strength__ , __boldness__, __bravery__ or __something robust__ in Persian. In other languages it has other meanings, e.g. in Amazonian language it means __daughter of the forests__, in Malaysian it means  __the beams of the sun__ and in ancient Egyptian it means __pure__ and __beloved__.
+Yara (Yahoo-Rasooli) is a word that means __strength__ , __boldness__, __bravery__ or __something robust__ in Persian. In other languages it has other meanings, e.g. in Amazonian language it means __daughter of the forests__, in Malaysian it means  __the beams of the sun__ and in ancient Egyptian it means __pure__ and __beloved__.
 
 ## Compilation
 
 Go to the root directory of the project and run the following command:
 	
-	javac Test/Yara_PARSER.java
+	javac Test/YaraParser.java
 
 Then you can test the code via the following command:
 
-    java Test.Yara_PARSER
+    java Test.YaraParser
     
 or
     
-    java Test/Yara_PARSER
+    java Test/YaraParser
 
 
 ## Command Line Options
+
+__NOTE:__ All the examples bellow are using the jar file for running the application but you can also use the java class files after manullay compiling the code.
 
 ### Train a parser
 
 __WARNING:__ The training code ignores non-projective trees in the training data. If you want to include them, try to projectivize them; e.g. by [tree projectivizer](http://www.cs.bgu.ac.il/~yoavg/software/projectivize/).
 
-* java Yara_PARSER train train-file:[train-file] dev-file:[dev-file] model-file:[model-file]
+* java -jar YaraParser.jar train train-file:[train-file] dev-file:[dev-file] model-file:[model-file]
 
 	    * In training mode, the parser takes as input CoNLL 2006 format 
 	    
@@ -61,9 +63,7 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	 	    * root_first (default: put ROOT in the last position, unless explicitly put _root_first_)
 
 ### Parse a CoNLL_2006 file
-* java Yara_PARSER parse_conll test-file:[test-file] out:[output-file] inf-file:[inf-file] model-file:[model-file]
-
-**MSR - I moved the two bullet points from the training section to here because they seem more about the decoding **
+* java -jar YaraParser.jar parse_conll test-file:[test-file] out:[output-file] inf-file:[inf-file] model-file:[model-file]
 
 	* The test file should have the conll 2006 format
 
@@ -72,21 +72,21 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	* The inf file is [model-file] for parsing (used in the testing phase)
 
 ### Parse a POS tagged file:
-* java Yara_PARSER parse_tagged test-file:[test-file] out:[output-file] inf-file:[inf-file] model-file:[model-file]
+* java -jar YaraParser.jar parse_tagged test-file:[test-file] out:[output-file] inf-file:[inf-file] model-file:[model-file]
 	* The test file should have each sentence in line and word_tag pairs are space-delimited
 		
 			Example: He_PRP is_VBZ nice_AJ ._.
 
 
-### Using the JAR file **MSR: didn't we already discuss this above**
+### Using the JAR file
 Use the following command to use the jar file (instead of class files):
     
-    java -jar jar/Yara_Parser.jar
+    java -jar jar/YaraParser.jar
 
 ### Example Usage
 There is small portion from Google Universal Treebank for the German language in the __sample\_data__ directory. 
 
-     java -jar jar/Yara_Parser.jar train train-file:sample_data/train.conll dev-file:sample_data/dev.conll model-file:/tmp/model beam:64 iter:10
+     java -jar jar/YaraParser.jar train train-file:sample_data/train.conll dev-file:sample_data/dev.conll model-file:/tmp/model beam:64 iter:10
 
 You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __86.54__ and labeled accuracy __78.34__ on the dev set in the 3rd iteration. 
 
@@ -99,7 +99,7 @@ Performance numbers are produced after each iteration in the following format:  
 
 Next, you can run the developed model on the test data, in this case, we are using the default parser settings:
 
-     java -jar jar/Yara_Parser.jar parse_conll test-file:sample_data/test.conll model-file:/tmp/model_iter3 inf-file:/tmp/model out:/tmp/test.output.conll
+     java -jar jar/YaraParser.jar parse_conll test-file:sample_data/test.conll model-file:/tmp/model_iter3 inf-file:/tmp/model out:/tmp/test.output.conll
 
 This will produce the following result (note that the sample data size is very small, hence the low performance numbers):
 
@@ -170,10 +170,10 @@ import java.util.HashSet;
 # OTHER USEFUL NOTES
 
 ## A Useful Trick to Improve Performance
-It is shown that replacing all numbers (integers and floating points), with a dummy token (e.g. <num>) helps the accuracy. If you want to try that idea, simply replace the numbers in your training, development and test data with that dummy token.
+It is shown that replacing all numbers (integers and floating points), with a dummy token (e.g. <num>) helps the accuracy in some treebanks. If you want to try that idea, simply replace the numbers in your training, development and test data with that dummy token.
 
 ## Memory size
-For very large training sets, you may need to increase the java memory heap size. For training on the Ontonotes training corpus (105k sentences), we found setting the heap size to -Xmx16G was enough.  For training on the standard WSJ set, the default memory was sufficient.  
+For very large training sets, you may need to increase the java memory heap size. For training on the Ontonotes training corpus (105k sentences), we found setting the heap size to -Xmx10G was enough for training and -Xmx7G for parsing.  For training on the standard WSJ set, the default memory was sufficient.  
 
 ## Performance 
 

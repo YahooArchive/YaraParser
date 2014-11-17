@@ -1,3 +1,8 @@
+/**
+ Copyright 2014, Yahoo! Inc.
+ Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
+ **/
+
 package TransitionBasedSystem.Features;
 
 import Accessories.Pair;
@@ -7,10 +12,6 @@ import TransitionBasedSystem.Configuration.State;
 
 import java.util.TreeSet;
 
-/**
- Copyright 2014, Yahoo! Inc.
- Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- **/
 public class FeatureExtractor {
     /**
      * Given a list of templates, extracts all features for the given state

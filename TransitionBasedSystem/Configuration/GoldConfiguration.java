@@ -1,17 +1,17 @@
+/**
+ Copyright 2014, Yahoo! Inc.
+ Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
+ **/
+
 package TransitionBasedSystem.Configuration;
 
 import Accessories.Pair;
 import Structures.Sentence;
-import Structures.SentenceToken;
 import TransitionBasedSystem.Parser.ArcEager;
 
 import java.util.HashMap;
 import java.util.HashSet;
 
-/**
- Copyright 2014, Yahoo! Inc.
- Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- **/
 public class GoldConfiguration {
     protected HashMap<Integer, Pair<Integer, String>> goldDependencies;
     protected HashMap<Integer, HashSet<Integer>> reversedDependencies;

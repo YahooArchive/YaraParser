@@ -1,3 +1,8 @@
+/**
+ Copyright 2014, Yahoo! Inc.
+ Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
+ **/
+
 package TransitionBasedSystem.Configuration;
 
 import Structures.Sentence;
@@ -5,10 +10,6 @@ import Structures.Sentence;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-/**
- Copyright 2014, Yahoo! Inc.
- Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- **/
 public class Configuration implements Comparable, Cloneable, Serializable {
     /**
      * Sentence in the configuration
