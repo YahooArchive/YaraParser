@@ -56,11 +56,9 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	 	 
 	 	 * early (default: use max violation update, unless explicitly put `early' for early update)
 	 	 
-	 	 * static (default: use dynamic oracles, unless explicitly put `static' for static oracles)
 	 	 
 	 	 * random (default: choose maximum scoring oracle, unless explicitly put `random' for randomly choosing an oracle)
-	 	 
-	 	 * root_first (default: put ROOT in the last position, unless explicitly put 'root_first')
+	 
 
 ### Parse a CoNLL_2006 file
 * __java -jar jar/YaraParser.jar parse_conll --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file]__
@@ -129,11 +127,10 @@ For very large training sets, you may need to increase the java memory heap size
 
 
 ## Technical Details
-This parser is an implementation of the arc-eager dependency model [Nivre, 2004] with averaged structured Perceptron [Collins, 2002]. The feature setting is from Zhang and Nivre [2011]. The model can be trained with early update strategery [Collins and Roark, 2004] or max-violation update [Huang et al., 2012]. Oracle search for training can be done either by static oracles or dynamic oracles [Goldberg and Nivre, 2013]. Choosing the best oracles in the dynamic oracle can be done via latent structured Perceptron [Sun et al., 2013]. As in [Ballesteros and Nivre, 2013], the dummy root token can be either in the zeroth or last position of the sentence.
+This parser is an implementation of the arc-eager dependency model [Nivre, 2004] with averaged structured Perceptron [Collins, 2002]. The feature setting is from Zhang and Nivre [2011]. The model can be trained with early update strategery [Collins and Roark, 2004] or max-violation update [Huang et al., 2012]. Oracle search for training is done with dynamic oracles [Goldberg and Nivre, 2013]. Choosing the best oracles in the dynamic oracle can be done via latent structured Perceptron [Sun et al., 2013]. 
 
 __[References]__
 
-__[Ballesteros and Nivre, 2013]__ Ballesteros, Miguel, and Joakim Nivre. "Going to the roots of dependency parsing." Computational Linguistics 39.1 (2013): 5-13.
 
 __[Collins, 2002]__ Collins, Michael. "Discriminative training methods for hidden markov models: Theory and experiments with perceptron algorithms." Proceedings of the ACL-02 conference on Empirical methods in natural language processing-Volume 10. Association for Computational Linguistics, 2002.
 

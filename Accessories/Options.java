@@ -121,9 +121,9 @@ public class Options implements Serializable {
         output.append("\t \t lowercase (default: case-sensitive words, unless explicitly put 'lowercase')\n");
         output.append("\t \t basic (default: use extended feature set, unless explicitly put 'basic')\n");
         output.append("\t \t early (default: use max violation update, unless explicitly put `early' for early update)\n");
-        output.append("\t \t static (default: use dynamic oracles, unless explicitly put `static' for static oracles)\n");
+       // output.append("\t \t static (default: use dynamic oracles, unless explicitly put `static' for static oracles)\n");
         output.append("\t \t random (default: choose maximum scoring oracle, unless explicitly put `random' for randomly choosing an oracle)\n");
-        output.append("\t \t root_first (default: put ROOT in the last position, unless explicitly put 'root_first')\n\n");
+       // output.append("\t \t root_first (default: put ROOT in the last position, unless explicitly put 'root_first')\n\n");
 
         output.append("* Parse a CoNLL'2006 file:\n");
         output.append("\tjava -jar YaraParser.jar parse_conll --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file]\n");
@@ -183,12 +183,12 @@ public class Options implements Serializable {
                 options.useExtendedFeatures = false;
             else if (args[i].equals("early"))
                 options.useMaxViol = false;
-            else if (args[i].equals("static"))
-                options.useDynamicOracle = false;
+           // else if (args[i].equals("static"))
+            //    options.useDynamicOracle = false;
             else if (args[i].equals("random"))
                 options.useRandomOracleSelection = true;
-            else if (args[i].equals("root_first"))
-                options.rootFirst = true;
+          ///  else if (args[i].equals("root_first"))
+           //     options.rootFirst = true;
             else if (args[i].startsWith("iter:"))
                 options.trainingIter = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
         }
