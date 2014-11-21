@@ -1,12 +1,11 @@
 /**
- Copyright 2014, Yahoo! Inc.
- Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- **/
+ * Copyright 2014, Yahoo! Inc.
+ * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
+ */
 
 package TransitionBasedSystem.Configuration;
 
 import Structures.Sentence;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -23,20 +22,22 @@ public class Configuration implements Comparable, Cloneable, Serializable {
 
     public float score;
 
+    public Configuration() {
+
+    }
+
     public Configuration(Sentence sentence, boolean rootFirst) {
         this.sentence = sentence;
-        // if(!rootFirst)
-        //     this.sentence.addToken(sentence.size()+1,new SentenceToken("ROOT","ROOT"));
         state = new State(sentence.size(), rootFirst);
         score = (float) 0.0;
-        actionHistory = new ArrayList<String>(2*(sentence.size()+1));
+        actionHistory = new ArrayList<String>(2 * (sentence.size() + 1));
     }
 
     public Configuration(Sentence sentence) {
         this.sentence = sentence;
         state = new State(sentence.size());
         score = (float) 0.0;
-        actionHistory = new ArrayList<String>(2*(sentence.size()+1));
+        actionHistory = new ArrayList<String>(2 * (sentence.size() + 1));
     }
 
     /**
@@ -46,13 +47,17 @@ public class Configuration implements Comparable, Cloneable, Serializable {
      * @return
      */
     public float getScore(boolean normalized) {
-       // if (normalized && actionHistory.size() > 0)
-       //     return score / actionHistory.size();
+        // if (normalized && actionHistory.size() > 0)
+        //     return score / actionHistory.size();
         return score;
     }
 
-    public void addScore(double score) {
+    public void addScore(float score) {
         this.score += score;
+    }
+
+    public void setScore(float score) {
+        this.score = score;
     }
 
     public void addAction(String action) {
@@ -66,7 +71,7 @@ public class Configuration implements Comparable, Cloneable, Serializable {
 
         // may be unsafe
         Configuration configuration = (Configuration) o;
-        double diff = getScore(true) - configuration.getScore(true);
+        float diff = getScore(true) - configuration.getScore(true);
 
         if (diff > 0)
             return (int) Math.ceil(diff);
@@ -96,7 +101,7 @@ public class Configuration implements Comparable, Cloneable, Serializable {
     public Configuration clone() {
         Configuration configuration = new Configuration(sentence);
 
-        ArrayList<String> history = new ArrayList<String>();
+        ArrayList<String> history = new ArrayList<String>(actionHistory.size());
         for (int i = 0; i < actionHistory.size(); i++)
             history.add(actionHistory.get(i));
 

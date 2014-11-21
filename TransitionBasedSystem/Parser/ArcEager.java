@@ -1,7 +1,7 @@
 /**
- Copyright 2014, Yahoo! Inc.
- Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- **/
+ * Copyright 2014, Yahoo! Inc.
+ * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
+ */
 
 package TransitionBasedSystem.Parser;
 
@@ -45,15 +45,15 @@ public class ArcEager extends TransitionBasedParser {
             state.setEmptyFlag(true);
     }
 
-    public static boolean canDo(String action, State state) throws Exception {
-        if (action.equals("sh")) {
+    public static boolean canDo(int action, State state) throws Exception {
+        if (action == 0) { //shift
             if (!state.bufferEmpty() && state.bufferHead() == state.rootIndex && !state.stackEmpty())
                 return false;
             if (!state.bufferEmpty() && !state.isEmptyFlag())
                 return true;
 
             return false;
-        } else if (action.equals("ra")) {
+        } else if (action == 2) { //right arc
             if (state.stackEmpty())
                 return false;
             if (!state.bufferEmpty() && state.bufferHead() == state.rootIndex)
@@ -62,7 +62,7 @@ public class ArcEager extends TransitionBasedParser {
             if (!state.bufferEmpty() && !state.stackEmpty())
                 return true;
             return false;
-        } else if (action.equals("la")) {
+        } else if (action == 3) { //left arc
             if (state.stackEmpty() || state.bufferEmpty())
                 return false;
 
@@ -74,13 +74,13 @@ public class ArcEager extends TransitionBasedParser {
             if (!state.hasHead(state.peek()) && !state.stackEmpty())
                 return true;
             return false;
-        } else if (action.equals("rd")) {
+        } else if (action == 1) { //reduce
             if (!state.stackEmpty() && state.hasHead(state.peek()))
                 return true;
             if (!state.stackEmpty() && state.stackSize() == 1 && state.bufferSize() == 0 && state.peek() == (float) state.rootIndex)
                 return true;
             return false;
-        } else if (action.equals("unshift")) {
+        } else if (action == 4) { //unshift
             if (!state.stackEmpty() && !state.hasHead(state.peek()) && state.isEmptyFlag())
                 return true;
             return false;
@@ -96,7 +96,7 @@ public class ArcEager extends TransitionBasedParser {
         actions.add("rd");
 
         if (!train)
-            actions.add("unshift");
+            actions.add("us");
 
         return actions;
     }

@@ -17,15 +17,15 @@ Yara (Yahoo-Rasooli) is a word that means __strength__ , __boldness__, __bravery
 
 Go to the root directory of the project and run the following command:
 	
-	javac Test/YaraParser.java
+	javac Parser/YaraParser.java
 
 Then you can test the code via the following command:
 
-    java Test.YaraParser
+    java Parser.YaraParser
     
 or
     
-    java Test/YaraParser
+    java Parser/YaraParser
 
 
 ## Command Line Options
@@ -36,148 +36,96 @@ __NOTE:__ All the examples bellow are using the jar file for running the applica
 
 __WARNING:__ The training code ignores non-projective trees in the training data. If you want to include them, try to projectivize them; e.g. by [tree projectivizer](http://www.cs.bgu.ac.il/~yoavg/software/projectivize/).
 
-* java -jar YaraParser.jar train train-file:[train-file] dev-file:[dev-file] model-file:[model-file]
-
-	    * In training mode, the parser takes as input CoNLL 2006 format 
-	    
-	    * If you do not use the dev-file option, the trainer just trains and it may be difficult to optimize the number of iterations.
+* __java -jar jar/YaraParser.jar train --train-file [train-file] --dev-file [dev-file] --model-file [model-file]__
 	
-	    * Other options
+	*	 The model for each iteration is with the pattern [model-file]_iter[iter#]; e.g. mode_iter2
 	
-	 	    * beam:[beam-width] default:1
+	* The inf file is [model-file] for parsing
+	
+	*	 Other options
 	 	 
-	 	    * iter:[training-iterations] default:20
+	 	 * beam:[beam-width] (default:1)
 	 	 
-	 	    * unlabeled (default: labeled parsing, unless explicitly put _unlabeled_)
+	 	 * iter:[training-iterations] (default:50)
 	 	 
-	 	    * lowercase (default: case-sensitive words, unless explicitly put _lowercase_)
+	 	 * unlabeled (default: labeled parsing, unless explicitly put `unlabeled')
 	 	 
-	 	    * basic (default: use extended feature set, unless explicitly put _basic_)
+	 	 * lowercase (default: case-sensitive words, unless explicitly put 'lowercase')
 	 	 
-	 	    * early (default: use max violation update, unless explicitly put _early_ for early update)
+	 	 * basic (default: use extended feature set, unless explicitly put 'basic')
 	 	 
-	 	    * static (default: use dynamic oracles, unless explicitly put _static_ for static oracles)
+	 	 * early (default: use max violation update, unless explicitly put `early' for early update)
 	 	 
-	 	    * random (default: choose maximum scoring oracle, unless explicitly put _random_ for randomly choosing an oracle)
-	 	
-	 	    * root_first (default: put ROOT in the last position, unless explicitly put _root_first_)
+	 	 * static (default: use dynamic oracles, unless explicitly put `static' for static oracles)
+	 	 
+	 	 * random (default: choose maximum scoring oracle, unless explicitly put `random' for randomly choosing an oracle)
+	 	 
+	 	 * root_first (default: put ROOT in the last position, unless explicitly put 'root_first')
 
 ### Parse a CoNLL_2006 file
-* java -jar YaraParser.jar parse_conll test-file:[test-file] out:[output-file] inf-file:[inf-file] model-file:[model-file]
-
-	* The test file should have the conll 2006 format
-
-	* The model for each iteration is with the pattern [model-file]_iter[iter#]; e.g. mode_iter2
+* __java -jar jar/YaraParser.jar parse_conll --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file]__
 	
 	* The inf file is [model-file] for parsing (used in the testing phase)
+	
+	* The test file should have the conll 2006 format
 
 ### Parse a POS tagged file:
-* java -jar YaraParser.jar parse_tagged test-file:[test-file] out:[output-file] inf-file:[inf-file] model-file:[model-file]
+* __java -jar jar/YaraParser.jar parse_tagged --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file]__
+	
 	* The test file should have each sentence in line and word_tag pairs are space-delimited
-		
-			Example: He_PRP is_VBZ nice_AJ ._.
+	
+	* Optional:  --delim [delim] (default is _)
+	
+	* The inf file is [model-file] for parsing (used in the testing phase)
+	 
+	* Example line: He_PRP is_VBZ nice_AJ ._.
 
-
-### Using the JAR file
-Use the following command to use the jar file (instead of class files):
-    
-    java -jar jar/YaraParser.jar
+## Evaluate the Parser
+* __java -jar jar/YaraParser.jar eval --gold-file [gold-file] --parsed-file [parsed-file]__
+	
+	* Both files should have conll 2006 format
 
 ### Example Usage
 There is small portion from Google Universal Treebank for the German language in the __sample\_data__ directory. 
 
-     java -jar jar/YaraParser.jar train train-file:sample_data/train.conll dev-file:sample_data/dev.conll model-file:/tmp/model beam:64 iter:10
+     java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model beam:64 iter:10
 
-You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __86.54__ and labeled accuracy __78.34__ on the dev set in the 3rd iteration. 
+You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __86.61__ and labeled accuracy __80.87__ on the dev set in the 3rd iteration. 
 
-Performance numbers are produced after each iteration in the following format:  The first line shows labeled accuracy, second line is te unlabeled accuracy, third line is the time for processing each word (in milliseconds) and the forth line is the time for processing each sentence (in milliseconds).
+Performance numbers are produced after each iteration. The following is the performance on the dev after the 3rd iteration:
 
-    Labeled accuracy is  78.33537331701346
-    Unlabeled accuracy is  86.53610771113831
-    8.802937576499389 for each arc!
-    101.29577464788733 for each sentence!
+    4.31 ms for each arc!
+	57.13 ms for each sentence!
 
-Next, you can run the developed model on the test data, in this case, we are using the default parser settings:
+	Labeled accuracy: 80.87
+	Unlabeled accuracy:  86.61
+	Labeled exact match:  25.35
+	Unlabeled exact match:  42.25
 
-     java -jar jar/YaraParser.jar parse_conll test-file:sample_data/test.conll model-file:/tmp/model_iter3 inf-file:/tmp/model out:/tmp/test.output.conll
+Next, you can run the developed model on the test data:
 
-This will produce the following result (note that the sample data size is very small, hence the low performance numbers):
+     java -jar jar/YaraParser.jar parse_conll --test-file sample_data/test.conll --model-file /tmp/model_iter3 --inf-file /tmp/model --out /tmp/test.output.conll
 
-    Labeled accuracy is  70.20023557126031
-    Unlabeled accuracy is  75.85394581861013
-    8.759717314487633 for each arc!
-    130.47368421052633 for each sentence!
+You can finally evaluate the output data:
+
+	java -jar jar/YaraParser.jar eval --gold-file sample_data/test.conll --parsed-file /tmp/test.output.conll
+
+    Labeled accuracy: 69.58
+	Unlabeled accuracy:  75.33
+	Labeled exact match:  19.30
+	Unlabeled exact match:  26.32
 
 # API USAGE
 
-#### Importing libraries
+You can look at the class __Parser/API_UsageExample__ to see an example of using the parser inside your code.
 
-```java
-import Accessories.Options;
-import Learning.AveragedPerceptron;
-import Structures.Sentence;
-import TransitionBasedSystem.Configuration.Configuration;
-import TransitionBasedSystem.Parser.KBeamArcEagerParser;
-
-import java.io.FileInputStream;
-import java.io.ObjectInputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-```
-#### Loading the parser
-
-```java
-    // loading inf file
-        ObjectInputStream reader = new ObjectInputStream(new FileInputStream(infFile));
-        ArrayList<String> dependencyLabels=(ArrayList<String>)reader.readObject();
-        HashMap<String, HashMap<String, HashSet<String>>> headDepSet=(HashMap<String, HashMap<String, HashSet<String>>>)reader.readObject();
-        Options options=(Options)reader.readObject();
-
-        // loading model to an averaged Perceptron classifier
-        AveragedPerceptron averagedPerceptron = (AveragedPerceptron) AveragedPerceptron.loadModel(modelFile, 1);
-
-        // loading the parser
-        KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, headDepSet, averagedPerceptron.featureSize());
-
-
-```
-
-#### Parsing a sentence
-
-```java
- if(options.rootFirst){
-            String[] words={"I","am","here","."};
-            String[] tags={"PRON","VERB","ADP","."};
-        Configuration bestParse= parser.parse(new Sentence(words, tags), options.rootFirst, options.beamWidth);
-
-            for(int i=0;i<words.length;i++){
-              System.out.println(words[i]+"\t"+tags[i]+"\t"+bestParse.state.getHead(i+1)+"\t"+bestParse.state.getDependency(i+1));
-            }
-        }else{
-            String[] words={"I","am","here",".","ROOT"};
-            String[] tags={"PRON","VERB","ADP",".","ROOT"};
-            Configuration bestParse= parser.parse(new Sentence(words, tags), options.rootFirst, options.beamWidth);
-            for(int i=0;i<words.length-1;i++){
-                int head=bestParse.state.getHead(i+1);
-                if(head==words.length)
-                    head=0;
-                System.out.println(words[i]+"\t"+tags[i]+"\t"+head+"\t"+bestParse.state.getDependency(i+1));
-            }
-        }
-```
-
-# OTHER USEFUL NOTES
+# NOTES
 
 ## A Useful Trick to Improve Performance
-It is shown that replacing all numbers (integers and floating points), with a dummy token (e.g. <num>) helps the accuracy in some treebanks. If you want to try that idea, simply replace the numbers in your training, development and test data with that dummy token.
+It is shown that replacing all numbers (integers and floating points), with a dummy token (e.g. <num>) helps the accuracy in _some treebanks but not always_. If you want to try that idea, simply replace the numbers in your training, development and test data with that dummy token.
 
 ## Memory size
-For very large training sets, you may need to increase the java memory heap size. For training on the Ontonotes training corpus (105k sentences), we found setting the heap size to -Xmx10G was enough for training and -Xmx7G for parsing.  For training on the standard WSJ set, the default memory was sufficient.  
-
-## Performance 
-
-We tested the Yara Parser on a few datasets to serve as benchmarks.  Using the standard WSJ train / dev / test splits, with gold-standard tags and a beam size of 1 and 20 iterations, yielded a performance of 89.61 labeled accuracy (LAS) and 91.10 unlabeled accuracy (UAS).  Repeating the experiment but with tags from the Stanford tagger yielded a performance of 87.43 LAS and 89.74 UAS.  Finally, we used the train / dev / test splits from ontonotes5, POS tagged and converted using ClearNLP, and trained with a beam of 1 and 20 iterations.  This experiment yielded a performance of 87.35 LAS and 89.25 LAS.
+For very large training sets, you may need to increase the java memory heap size by -Xmx option; e.g. java -Xmx3g jar/YaraParser.jar ...
 
 
 ## Technical Details

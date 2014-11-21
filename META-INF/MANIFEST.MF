@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: Test.YaraParser
+Main-Class: Parser.YaraParser
 

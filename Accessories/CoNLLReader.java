@@ -1,12 +1,12 @@
 /**
- Copyright 2014, Yahoo! Inc.
- Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- **/
+ * Copyright 2014, Yahoo! Inc.
+ * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
+ */
 
 package Accessories;
 
+import Structures.IndexMaps;
 import Structures.Sentence;
-import Structures.SentenceToken;
 import TransitionBasedSystem.Configuration.GoldConfiguration;
 
 import java.io.BufferedReader;
@@ -30,17 +30,59 @@ public class CoNLLReader {
         fileReader = new BufferedReader(new FileReader(filePath));
     }
 
+    public static IndexMaps createIndices(String filePath, boolean labeled, boolean lowercased) throws Exception {
+        BufferedReader reader = new BufferedReader(new FileReader(filePath));
+
+        HashMap<String, Integer> wordMap = new HashMap<String, Integer>();
+        HashMap<String, Integer> labels = new HashMap<String, Integer>();
+        labels.put("ROOT", 1);
+        int labelCount = 2;
+
+        int wi = 1;
+        wordMap.put("ROOT", 0);
+
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] spl = line.trim().split("\t");
+            if (spl.length > 7) {
+                String word = spl[1];
+                if (lowercased)
+                    word = word.toLowerCase();
+                if (!wordMap.containsKey(word)) {
+                    wordMap.put(word, wi++);
+                }
+
+                String pos = spl[3];
+                if (!wordMap.containsKey(pos)) {
+                    wordMap.put(pos, wi++);
+                }
+                String label = spl[7];
+                if (label.equals("_"))
+                    label = "-";
+                if (!labeled)
+                    label = "~";
+                if (!wordMap.containsKey(label)) {
+                    labels.put(label, labelCount);
+                    labelCount *= 2;
+                    wordMap.put(label, wi++);
+                }
+            }
+        }
+
+        return new IndexMaps(wordMap, labels);
+    }
+
     /**
      * @param limit it is used if we want to read part of the data
      * @return
      */
-    public ArrayList<GoldConfiguration> readData(int limit, boolean keepNonProjective, boolean labeled, boolean rootFirst, boolean lowerCased) throws Exception {
-        int illegalHeadCount = 0;
-
+    public ArrayList<GoldConfiguration> readData(int limit, boolean keepNonProjective, boolean labeled, boolean rootFirst, boolean lowerCased, IndexMaps maps) throws Exception {
+        HashMap<String, Integer> wordmap = maps.getWordMap();
         ArrayList<GoldConfiguration> configurationSet = new ArrayList<GoldConfiguration>();
 
         String line;
-        ArrayList<SentenceToken> tokens = new ArrayList<SentenceToken>();
+        ArrayList<Integer> tokens = new ArrayList<Integer>();
+        ArrayList<Integer> tags = new ArrayList<Integer>();
 
         HashMap<Integer, Pair<Integer, String>> goldDependencies = new HashMap<Integer, Pair<Integer, String>>();
         int sentenceCounter = 0;
@@ -54,20 +96,23 @@ public class CoNLLReader {
                             if (goldDependencies.get(gold).first.equals(0))
                                 goldDependencies.get(gold).setFirst(goldDependencies.size() + 1);
                         }
-                        tokens.add(new SentenceToken("ROOT", "ROOT"));
+                        tokens.add(0);
+                        tags.add(0);
                     }
-                    Sentence currentSentence = new Sentence(tokens);
+                    Sentence currentSentence = new Sentence(tokens, tags);
                     GoldConfiguration goldConfiguration = new GoldConfiguration(currentSentence, goldDependencies);
                     if (keepNonProjective || !goldConfiguration.isNonprojective())
                         configurationSet.add(goldConfiguration);
                     goldDependencies = new HashMap<Integer, Pair<Integer, String>>();
-                    tokens = new ArrayList<SentenceToken>();
-                } else{
+                    tokens = new ArrayList<Integer>();
+                    tags = new ArrayList<Integer>();
+                } else {
                     goldDependencies = new HashMap<Integer, Pair<Integer, String>>();
-                    tokens = new ArrayList<SentenceToken>();
+                    tokens = new ArrayList<Integer>();
+                    tags = new ArrayList<Integer>();
                 }
                 if (sentenceCounter >= limit) {
-                    System.out.println("buffer full..."+configurationSet.size());
+                    System.out.println("buffer full..." + configurationSet.size());
                     break;
                 }
             } else {
@@ -76,26 +121,28 @@ public class CoNLLReader {
                     throw new Exception("wrong file format");
                 int wordIndex = Integer.parseInt(splitLine[0]);
                 String word = splitLine[1].trim();
-                word = word.replace("``", "\"").replace("-LRB-", "(").replace("-RRB-", ")").replace("''", "\"")
-                        .replace("-RSB-", "]").replace("-LSB-", "[").replace("-LCB-", "{").replace("-RCB-", "}");
                 if (lowerCased)
                     word = word.toLowerCase();
                 String pos = splitLine[3].trim();
 
-                SentenceToken token = new SentenceToken(word, pos);
+                int wi = -1;
+                if (wordmap.containsKey(word))
+                    wi = wordmap.get(word);
+
+                int pi = -1;
+                if (wordmap.containsKey(pos))
+                    pi = wordmap.get(pos);
+
+                tags.add(pi);
+                tokens.add(wi);
 
                 int headIndex = Integer.parseInt(splitLine[6]);
-                if (headIndex < 0) {
-                 //   illegal = true;
-                    illegalHeadCount++;
-                }
                 String relation = splitLine[7];
-                if(relation.equals("_"))
-                    relation="-";
+                if (relation.equals("_"))
+                    relation = "-";
                 if (!labeled)
                     relation = "~";
                 goldDependencies.put(wordIndex, new Pair<Integer, String>(headIndex, relation));
-                tokens.add(token);
             }
         }
         if (tokens.size() > 0) {
@@ -104,14 +151,14 @@ public class CoNLLReader {
                     if (goldDependencies.get(gold).first.equals(0))
                         goldDependencies.get(gold).setFirst(goldDependencies.size() + 1);
                 }
-                tokens.add(new SentenceToken("ROOT", "ROOT"));
+                tokens.add(0);
+                tags.add(0);
             }
             sentenceCounter++;
-            Sentence currentSentence = new Sentence(tokens);
-            configurationSet.add( new GoldConfiguration(currentSentence, goldDependencies));
+            Sentence currentSentence = new Sentence(tokens, tags);
+            configurationSet.add(new GoldConfiguration(currentSentence, goldDependencies));
         }
 
-        System.out.println(illegalHeadCount);
         return configurationSet;
     }
 }
