@@ -279,7 +279,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile+".tmp"));
         int dataCount = 0;
 
-        ArrayList<String> outputs=new ArrayList<String>(2000);
 
         while (true) {
             ArrayList<GoldConfiguration> data = reader.readData(5000, true, true, rootFirst, lowerCased, maps);
@@ -287,12 +286,12 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             if (data.size() == 0)
                 break;
 
+
             for (GoldConfiguration goldConfiguration : data) {
                 dataCount++;
                 if (dataCount % 100 == 0)
                     System.err.print(dataCount + " ... ");
                 Configuration bestParse = parse(goldConfiguration.getSentence(), rootFirst, beamWidth);
-
 
                 int[] words = goldConfiguration.getSentence().getWords();
                 allArcs+=words.length-1;
@@ -313,19 +312,9 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     finalOutput.append(output);
                 }
                 finalOutput.append("\n");
-                if(outputs.size()<2000){
-                    outputs.add(finalOutput.toString());
-                } else{
-                    for(String o:outputs)
-                        writer.write(o);
-                    outputs=new ArrayList<String>(2000);
-                }
-            }
-        }
+                writer.write(finalOutput.toString());
 
-        if(outputs.size()>0){
-            for(String o:outputs)
-                writer.write(o);
+            }
         }
 
         System.err.print("\n");
@@ -346,6 +335,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         BufferedWriter pwriter = new BufferedWriter(new FileWriter(outputFile));
 
         String line;
+
         while((line=pReader.readLine())!=null){
             String gLine=gReader.readLine();
             if(line.trim().length()>0){

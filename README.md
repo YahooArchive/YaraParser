@@ -30,7 +30,7 @@ or
 
 ## Command Line Options
 
-__NOTE:__ All the examples bellow are using the jar file for running the application but you can also use the java class files after manullay compiling the code.
+__NOTE:__ All the examples bellow are using the jar file for running the application but you can also use the java class files after manually compiling the code.
 
 ### Train a parser
 
@@ -79,6 +79,8 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	* Example line: He_PRP is_VBZ nice_AJ ._.
 
 ## Evaluate the Parser
+__WARNING__ The current evaluation script does take into account every dependency relation. If you want to ignore the punctuations, you have to either tweak the code or write your own script.
+
 * __java -jar jar/YaraParser.jar eval --gold-file [gold-file] --parsed-file [parsed-file]__
 	
 	* Both files should have conll 2006 format
