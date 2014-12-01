@@ -90,30 +90,30 @@ There is small portion from Google Universal Treebank for the German language in
 
      java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model beam:64 iter:10
 
-You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __86.61__ and labeled accuracy __80.87__ on the dev set in the 3rd iteration. 
+You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __86.61__ and labeled accuracy __80.98__ on the dev set in the 8th iteration. 
 
-Performance numbers are produced after each iteration. The following is the performance on the dev after the 3rd iteration:
+Performance numbers are produced after each iteration. The following is the performance on the dev after the 8th iteration:
 
-    4.31 ms for each arc!
-	57.13 ms for each sentence!
+    4.56 ms for each arc!
+	60.48 ms for each sentence!
 
-	Labeled accuracy: 80.87
+	Labeled accuracy: 80.98
 	Unlabeled accuracy:  86.61
-	Labeled exact match:  25.35
-	Unlabeled exact match:  42.25
+	Labeled exact match:  26.76
+	Unlabeled exact match:  40.85 
 
 Next, you can run the developed model on the test data:
 
-     java -jar jar/YaraParser.jar parse_conll --test-file sample_data/test.conll --model-file /tmp/model_iter3 --inf-file /tmp/model --out /tmp/test.output.conll
+     java -jar jar/YaraParser.jar parse_conll --test-file sample_data/test.conll --model-file /tmp/model_iter8 --inf-file /tmp/model --out /tmp/test.output.conll
 
 You can finally evaluate the output data:
 
 	java -jar jar/YaraParser.jar eval --gold-file sample_data/test.conll --parsed-file /tmp/test.output.conll
 
-    Labeled accuracy: 69.58
-	Unlabeled accuracy:  75.33
-	Labeled exact match:  19.30
-	Unlabeled exact match:  26.32
+    Labeled accuracy: 69.48
+	Unlabeled accuracy:  74.31
+	Labeled exact match:  17.54
+	Unlabeled exact match:  24.56
 
 # API USAGE
 
