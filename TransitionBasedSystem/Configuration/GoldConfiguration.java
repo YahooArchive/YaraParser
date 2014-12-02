@@ -1,7 +1,8 @@
 /**
- Copyright 2014, Yahoo! Inc.
- Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
- **/
+ * Copyright 2014, Yahoo! Inc.
+ * Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
+ */
+
 
 package TransitionBasedSystem.Configuration;
 
@@ -94,20 +95,20 @@ public class GoldConfiguration {
      * @return oracle cost of the action
      * @throws Exception
      */
-    public int actionCost(String action, String dependency, State state) throws Exception {
+    public int actionCost(int action, String dependency, State state) throws Exception {
         if (!ArcEager.canDo(action, state))
             return Integer.MAX_VALUE;
         int cost = 0;
 
         // added by me to take care of labels
-        if (action.equals("la")) {
+        if (action == 3) { // left arc
             int bufferHead = state.bufferHead();
             int stackHead = state.peek();
 
             if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first.equals(bufferHead)
                     && !goldDependencies.get(stackHead).second.equals(dependency))
                 cost += 1;
-        } else if (action.equals("ra")) {
+        } else if (action == 2) { //right arc
             int bufferHead = state.bufferHead();
             int stackHead = state.peek();
             if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first.equals(stackHead)
@@ -115,7 +116,7 @@ public class GoldConfiguration {
                 cost += 1;
         }
 
-        if (action.equals("sh")) {
+        if (action == 0) { //shift
             int bufferHead = state.bufferHead();
             for (int stackItem : state.getStack()) {
                 if (goldDependencies.containsKey(stackItem) && goldDependencies.get(stackItem).first.equals(bufferHead))
@@ -124,14 +125,14 @@ public class GoldConfiguration {
                     cost += 1;
             }
 
-        } else if (action.equals("rd")) {
+        } else if (action == 1) { //reduce
             int stackHead = state.peek();
             if (!state.bufferEmpty())
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
                     if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first.equals(stackHead))
                         cost += 1;
                 }
-        } else if (action.equals("la")) {
+        } else if (action == 3) { //left arc
             int stackHead = state.peek();
             if (!state.bufferEmpty())
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
@@ -141,7 +142,7 @@ public class GoldConfiguration {
                         if (bufferItem != state.bufferHead())
                             cost += 1;
                 }
-        } else if (action.equals("ra")) {
+        } else if (action == 2) { //right arc
             int stackHead = state.peek();
             int bufferHead = state.bufferHead();
             for (int stackItem : state.getStack()) {
