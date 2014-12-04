@@ -8,13 +8,11 @@ package TransitionBasedSystem.Configuration;
 import Accessories.Pair;
 
 import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.HashMap;
 
 public class State implements Comparable, Cloneable {
-    public static HashMap<String, Integer> labelMap = new HashMap<String, Integer>();
     public int rootIndex;
     public int maxSentenceSize;
+
     /**
      * This is the additional information for the case of parsing with tree constraint
      * For more information see:
@@ -22,10 +20,11 @@ public class State implements Comparable, Cloneable {
      * Computational Linguistics(2014).
      */
     protected boolean emptyFlag;
+
     /**
      * Keeps dependent->head information
      */
-    protected Pair<Integer, String>[] arcs;
+    protected Pair<Integer, Integer>[] arcs;
     protected int[] leftMostArcs;
     protected int[] rightMostArcs;
     protected int[] leftValency;
@@ -38,9 +37,9 @@ public class State implements Comparable, Cloneable {
     public State(int size) {
         emptyFlag = false;
         stack = new ArrayDeque<Integer>();
-        arcs = new Pair[size+1];
+        arcs = new Pair[size + 1];
 
-        leftMostArcs =new int[size + 1];
+        leftMostArcs = new int[size + 1];
         rightMostArcs = new int[size + 1];
         leftValency = new int[size + 1];
         rightValency = new int[size + 1];
@@ -80,32 +79,31 @@ public class State implements Comparable, Cloneable {
         stack.push(index);
     }
 
-    public void addArc(int dependent, int head, String dependency) {
-        arcs[dependent]= new Pair<Integer, String>(head, dependency);
+    public void addArc(int dependent, int head, int dependency) {
+        arcs[dependent] = new Pair<Integer, Integer>(head, dependency);
 
-        int depIndex = labelMap.get(dependency);
-        long value = 1L << depIndex;
+        long value = 1L << dependency;
 
         if (dependent > head) { //right dep
-            if (rightMostArcs[head]==0 || dependent > rightMostArcs[head])
-                rightMostArcs[head]= dependent;
+            if (rightMostArcs[head] == 0 || dependent > rightMostArcs[head])
+                rightMostArcs[head] = dependent;
             rightValency[head] += 1;
             rightDepLabels[head] = rightDepLabels[head] | value;
 
         } else { //left dependency
-              if (leftMostArcs[head]==0 || dependent > leftMostArcs[head])
-                  leftMostArcs[head]= dependent;
+            if (leftMostArcs[head] == 0 || dependent > leftMostArcs[head])
+                leftMostArcs[head] = dependent;
             leftDepLabels[head] = leftDepLabels[head] | value;
             leftValency[head] += 1;
         }
     }
 
-    public String rightDependentLabels(int position) {
-        return rightValency[position] + "";
+    public long rightDependentLabels(int position) {
+        return rightDepLabels[position];
     }
 
-    public String leftDependentLabels(int position) {
-        return leftDepLabels[position] + "";
+    public long leftDependentLabels(int position) {
+        return leftDepLabels[position];
     }
 
     public boolean isEmptyFlag() {
@@ -140,7 +138,7 @@ public class State implements Comparable, Cloneable {
     }
 
     public boolean hasHead(int dependent) {
-        if (arcs[dependent]!=null)
+        if (arcs[dependent] != null)
             return true;
         return false;
     }
@@ -168,11 +166,11 @@ public class State implements Comparable, Cloneable {
     }
 
     public int rightMostModifier(int index) {
-      return (rightMostArcs[index]==0?-1:rightMostArcs[index]);
+        return (rightMostArcs[index] == 0 ? -1 : rightMostArcs[index]);
     }
 
     public int leftMostModifier(int index) {
-        return (leftMostArcs[index]==0?-1:leftMostArcs[index]);
+        return (leftMostArcs[index] == 0 ? -1 : leftMostArcs[index]);
     }
 
     /**
@@ -200,15 +198,15 @@ public class State implements Comparable, Cloneable {
     }
 
     public int getHead(int index) {
-        if (arcs[index]!=null)
+        if (arcs[index] != null)
             return arcs[index].first;
         return -1;
     }
 
-    public String getDependency(int index) {
-        if (arcs[index]!=null)
+    public int getDependency(int index) {
+        if (arcs[index] != null)
             return arcs[index].second;
-        return "_";
+        return -1;
     }
 
     public void setMaxSentenceSize(int maxSentenceSize) {
@@ -231,7 +229,10 @@ public class State implements Comparable, Cloneable {
         if (equals(o))
             return 0;
 
-        return hashCode() - o.hashCode();
+        int diff = hashCode() - o.hashCode();
+        if (diff == 0)
+            return 1;
+        return diff;
     }
 
     @Override
@@ -242,9 +243,9 @@ public class State implements Comparable, Cloneable {
                 return false;
             if (maxSentenceSize != state.maxSentenceSize || rootIndex != state.rootIndex || bufferH != state.bufferH)
                 return false;
-            for (int dependent=0;dependent<arcs.length;dependent++) {
-                if(arcs[dependent]!=null) {
-                    if (state.arcs[dependent]==null || !state.arcs[dependent].equals(arcs[dependent]))
+            for (int dependent = 0; dependent < arcs.length; dependent++) {
+                if (arcs[dependent] != null) {
+                    if (state.arcs[dependent] == null || !state.arcs[dependent].equals(arcs[dependent]))
                         return false;
                 }
             }
@@ -258,21 +259,11 @@ public class State implements Comparable, Cloneable {
     public State clone() {
         State state = new State(maxSentenceSize);
         state.stack = new ArrayDeque<Integer>(stack);
-/*
-        state.arcs= arcs.clone();
-        state.rightMostArcs=rightMostArcs.clone();
-        state.leftMostArcs=leftMostArcs.clone();
-        state.leftValency=leftValency.clone();
-        state.rightValency=rightValency.clone();
-        state.leftDepLabels=leftDepLabels.clone();
-        state.rightDepLabels=rightDepLabels.clone();
-*/
 
-
-        for (int dependent=0;dependent<arcs.length;dependent++) {
+        for (int dependent = 0; dependent < arcs.length; dependent++) {
             if (arcs[dependent] != null) {
-                Pair<Integer, String> head = arcs[dependent];
-                state.arcs[dependent]= head;
+                Pair<Integer, Integer> head = arcs[dependent];
+                state.arcs[dependent] = head;
                 int h = head.first;
 
                 if (rightMostArcs[h] != 0) {
@@ -298,15 +289,16 @@ public class State implements Comparable, Cloneable {
 
     @Override
     public int hashCode() {
-        int hashCode = stack.peek() * bufferH;
+        int hashCode = 0;
+        if (stack.size() > 0)
+            hashCode += stack.peek() * bufferH;
 
-        for (int dependent=0;dependent<arcs.length;dependent++) {
+        for (int dependent = 0; dependent < arcs.length; dependent++) {
             if (arcs[dependent] != null) {
-                Pair<Integer, String> pair = arcs[dependent];
+                Pair<Integer, Integer> pair = arcs[dependent];
                 hashCode += dependent * (pair.first + pair.second.hashCode());
             }
         }
-
         return hashCode;
     }
 }

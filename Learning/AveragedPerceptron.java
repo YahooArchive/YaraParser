@@ -7,6 +7,7 @@ package Learning;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.concurrent.*;
 
 public class AveragedPerceptron {
     /**
@@ -20,40 +21,37 @@ public class AveragedPerceptron {
      * Harold Charles Daume' III. "Practical Structured Learning Techniques for Natural Language Processing", PhD thesis, ISI USC, 2006.
      * http://www.umiacs.umd.edu/~hal/docs/daume06thesis.pdf
      **/
-
+    protected static int numberOfThreads;
     /**
      * For the weights for all features
      */
-    protected Object[][] featureWeights;
-    protected int numberOfThreads;
-    protected HashMap<String, Integer> labelsMap;
+    protected HashMap<Long, Float>[][] featureWeights;
     int iteration;
     /**
      * This is the main part of the extension to the original perceptron algorithm which the averaging over all the history
      */
-    private Object[][] averagedWeights;
+    private HashMap<Long, Float>[][] averagedWeights;
 
-    public AveragedPerceptron(int size, HashMap<String, Integer> labels, int numberOfThreads) {
-        this.labelsMap = labels;
-        featureWeights = new Object[labelsMap.size()][size];
+
+    public AveragedPerceptron(int size, int len, int numberOfThreads) {
+        featureWeights = new HashMap[len][size];
         for (int i = 0; i < featureWeights.length; i++)
             for (int j = 0; j < featureWeights[i].length; j++)
-                featureWeights[i][j] = new HashMap<String, Float>();
+                featureWeights[i][j] = new HashMap<Long, Float>();
         this.numberOfThreads = numberOfThreads;
         iteration = 1;
-        this.averagedWeights = new Object[labelsMap.size()][size];
+        this.averagedWeights = new HashMap[len][size];
         for (int i = 0; i < averagedWeights.length; i++)
             for (int j = 0; j < averagedWeights[i].length; j++)
-                averagedWeights[i][j] = new HashMap<String, Float>();
+                averagedWeights[i][j] = new HashMap<Long, Float>();
     }
 
-    public AveragedPerceptron(int size, Object[][] averagedWeights, HashMap<String, Integer> labelsMap, int numberOfThreads) {
-        this.labelsMap = labelsMap;
+    public AveragedPerceptron(int size, HashMap<Long, Float>[][] averagedWeights, int len, int numberOfThreads) {
 
-        featureWeights = new Object[labelsMap.size()][size];
+        featureWeights = new HashMap[len][size];
         for (int i = 0; i < featureWeights.length; i++)
             for (int j = 0; j < featureWeights[i].length; j++)
-                featureWeights[i][j] = new HashMap<String, Float>();
+                featureWeights[i][j] = new HashMap<Long, Float>();
 
         this.numberOfThreads = numberOfThreads;
         iteration = 1;
@@ -62,29 +60,23 @@ public class AveragedPerceptron {
 
     public static AveragedPerceptron loadModel(String modelPath, int numberOfThreads) throws IOException, ClassNotFoundException {
         ObjectInputStream reader = new ObjectInputStream(new FileInputStream(modelPath));
-        Object[][] avg = (Object[][]) reader.readObject();
-        HashMap<String, Integer> labelsMap = (HashMap<String, Integer>) reader.readObject();
+        HashMap<Long, Float>[][] avg = (HashMap<Long, Float>[][]) reader.readObject();
         reader.close();
 
-        return new AveragedPerceptron(avg.length, avg, labelsMap, numberOfThreads);
+        return new AveragedPerceptron(avg.length, avg, avg[0].length, numberOfThreads);
     }
 
-    public float changeWeight(int slotNum, String featureName, String label, float change) {
-        int labelIndex = labelsMap.get(label);
-
+    public float changeWeight(int slotNum, Long featureName, int labelIndex, float change) {
         float newWeight = change;
-        if (!labelsMap.containsKey(label)) {
-            System.out.println("DEBUG");
-        }
 
-        HashMap<String, Float> map = (HashMap<String, Float>) featureWeights[labelIndex][slotNum];
+        HashMap<Long, Float> map = featureWeights[labelIndex][slotNum];
         Float value = map.get(featureName);
         if (value != null)
             map.put(featureName, change + value);
         else
             map.put(featureName, change);
 
-        map = (HashMap<String, Float>) averagedWeights[labelIndex][slotNum];
+        map = averagedWeights[labelIndex][slotNum];
 
         value = map.get(featureName);
         if (value != null)
@@ -96,26 +88,24 @@ public class AveragedPerceptron {
     }
 
     public void saveModel(String modelPath) throws IOException {
-        Object[][] avg = new Object[labelsMap.size()][featureWeights[0].length];
+        HashMap<Long, Float>[][] avg = new HashMap[featureWeights.length][featureWeights[0].length];
         for (int i = 0; i < avg.length; i++) {
             for (int j = 0; j < avg[i].length; j++) {
-                avg[i][j] = new HashMap<String, Float>();
-                HashMap<String, Float> map = (HashMap<String, Float>) featureWeights[i][j];
-                HashMap<String, Float> avgMap = (HashMap<String, Float>) averagedWeights[i][j];
-                for (String feat : map.keySet()) {
+                avg[i][j] = new HashMap<Long, Float>();
+                HashMap<Long, Float> map = featureWeights[i][j];
+                HashMap<Long, Float> avgMap = averagedWeights[i][j];
+                for (long feat : map.keySet()) {
                     float weight = map.get(feat) - (avgMap.get(feat) / iteration);
                     if (weight != 0)
-                        ((HashMap<String, Float>) avg[i][j]).put(feat, weight);
+                        (avg[i][j]).put(feat, weight);
                 }
             }
         }
 
         ObjectOutput writer = new ObjectOutputStream(new FileOutputStream(modelPath));
         writer.writeObject(avg);
-        writer.writeObject(labelsMap);
         writer.flush();
         writer.close();
-
     }
 
     /**
@@ -125,34 +115,30 @@ public class AveragedPerceptron {
         iteration++;
     }
 
-
     /**
      * Returns the score of the specific feature
      *
      * @param features the features in the current instance
      * @return
      */
-    public float score(String[] features, String label, boolean decode) throws InterruptedException {
+    public float score(final long[] features, int labelIndex, boolean decode) throws InterruptedException, ExecutionException {
         float score = 0;
-
-        int labelIndex = labelsMap.get(label);
-        Object[] weights;
+        final HashMap<Long, Float>[] weights;
         if (!decode) {
             weights = featureWeights[labelIndex];
+
         } else {
             weights = averagedWeights[labelIndex];
         }
 
         for (int i = 0; i < features.length; i++) {
-            if (features[i] == null)
+            if (labelIndex < 3 && (i >= 26 && i < 32))
                 continue;
-
-            Float value = ((HashMap<String, Float>) weights[i]).get(features[i]);
+            Float value = (weights[i]).get(features[i]);
 
             if (value != null)
                 score += value;
         }
-
         return score;
     }
 
@@ -160,7 +146,7 @@ public class AveragedPerceptron {
         int size = 0;
         for (int i = 0; i < averagedWeights.length; i++)
             for (int j = 0; j < averagedWeights[i].length; j++)
-                size += ((HashMap<String, Float>) averagedWeights[i][j]).size();
+                size += (averagedWeights[i][j]).size();
         return size;
     }
 

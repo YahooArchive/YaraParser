@@ -13,31 +13,19 @@ public class Sentence implements Comparable {
      */
     private int[] words;
     private int[] tags;
-    private String[] wordStr;
-    private String[] tagStr;
 
     public Sentence(ArrayList<Integer> tokens, ArrayList<Integer> pos) {
         words = new int[tokens.size()];
         tags = new int[tokens.size()];
-        wordStr = new String[tokens.size()];
-        tagStr = new String[tokens.size()];
         for (int i = 0; i < tokens.size(); i++) {
             words[i] = tokens.get(i);
             tags[i] = pos.get(i);
-            wordStr[i] = (words[i] + "").intern();
-            tagStr[i] = (tags[i] + "").intern();
         }
     }
 
     public Sentence(int[] words, int[] tags) {
         this.words = words;
         this.tags = tags;
-        wordStr = new String[words.length];
-        tagStr = new String[words.length];
-        for (int i = 0; i < words.length; i++) {
-            wordStr[i] = (words[i] + "").intern();
-            tagStr[i] = (tags[i] + "").intern();
-        }
     }
 
     public int size() {
@@ -94,11 +82,4 @@ public class Sentence implements Comparable {
         return builder.toString().hashCode();
     }
 
-    public String[] getWordStr() {
-        return wordStr;
-    }
-
-    public String[] getTagStr() {
-        return tagStr;
-    }
 }

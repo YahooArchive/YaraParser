@@ -6,7 +6,6 @@
 package TransitionBasedSystem.Parser;
 
 import Accessories.CoNLLReader;
-import Accessories.Pair;
 import Learning.AveragedPerceptron;
 import Structures.IndexMaps;
 import Structures.Sentence;
@@ -21,7 +20,10 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.TreeSet;
 
 public class KBeamArcEagerParser extends TransitionBasedParser {
     /**
@@ -29,17 +31,17 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
      */
     AveragedPerceptron classifier;
 
-    ArrayList<String> dependencyRelations;
+    ArrayList<Integer> dependencyRelations;
 
     int featureLength;
 
     // for pruning irrelevant search space
-    HashMap<Integer, HashMap<Integer, HashSet<String>>> headDepSet;
+    HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet;
 
     IndexMaps maps;
 
-    public KBeamArcEagerParser(AveragedPerceptron classifier, ArrayList<String> dependencyRelations,
-                               HashMap<Integer, HashMap<Integer, HashSet<String>>> headDepSet, int featureLength, IndexMaps maps) {
+    public KBeamArcEagerParser(AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations,
+                               HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet, int featureLength, IndexMaps maps) {
         this.classifier = classifier;
         this.dependencyRelations = dependencyRelations;
         this.featureLength = featureLength;
@@ -64,31 +66,31 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     boolean canReduce = ArcEager.canDo(1, currentState);
                     boolean canRightArc = ArcEager.canDo(2, currentState);
                     boolean canLeftArc = ArcEager.canDo(3, currentState);
-                    String[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+                    long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                     if (!canShift
                             && !canReduce
                             && !canRightArc
                             && !canLeftArc) {
                         float addedScore = prevScore;
-                        beamPreserver.add(new BeamElement(addedScore,b,4,""));
+                        beamPreserver.add(new BeamElement(addedScore, b, 4, -1));
 
                         if (beamPreserver.size() > beamWidth)
                             beamPreserver.pollFirst();
                     }
 
                     if (canShift) {
-                        float score = classifier.score(features, "sh", true);
+                        float score = classifier.score(features, 0, true);
                         float addedScore = score + prevScore;
-                        beamPreserver.add(new BeamElement(addedScore,b,0,""));
+                        beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
                         if (beamPreserver.size() > beamWidth)
                             beamPreserver.pollFirst();
                     }
 
                     if (canReduce) {
-                        float score = classifier.score(features, "rd", true);
+                        float score = classifier.score(features, 1, true);
                         float addedScore = score + prevScore;
-                        beamPreserver.add(new BeamElement(addedScore,b,1,""));
+                        beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
                         if (beamPreserver.size() > beamWidth)
                             beamPreserver.pollFirst();
@@ -97,12 +99,12 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     if (canRightArc) {
                         int headPos = sentence.posAt(configuration.state.peek());
                         int depPos = sentence.posAt(configuration.state.bufferHead());
-                        for (String dependency : dependencyRelations) {
+                        for (int dependency : dependencyRelations) {
                             if ((!canLeftArc && !canShift && !canReduce) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
                                     && headDepSet.get(headPos).get(depPos).contains(dependency))) {
-                                float score = classifier.score(features, "ra_" + dependency, true);
+                                float score = classifier.score(features, 3 + dependency, true);
                                 float addedScore = score + prevScore;
-                                beamPreserver.add(new BeamElement(addedScore,b,2,dependency));
+                                beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
                                 if (beamPreserver.size() > beamWidth)
                                     beamPreserver.pollFirst();
@@ -113,12 +115,12 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     if (canLeftArc) {
                         int headPos = sentence.posAt(configuration.state.bufferHead());
                         int depPos = sentence.posAt(configuration.state.peek());
-                        for (String dependency : dependencyRelations) {
+                        for (int dependency : dependencyRelations) {
                             if ((!canShift && !canRightArc && !canReduce) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
                                     && headDepSet.get(headPos).get(depPos).contains(dependency))) {
-                                float score = classifier.score(features, "la_" + dependency, true);
+                                float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, true);
                                 float addedScore = score + prevScore;
-                                beamPreserver.add(new BeamElement(addedScore,b,3,dependency));
+                                beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
                                 if (beamPreserver.size() > beamWidth)
                                     beamPreserver.pollFirst();
@@ -131,39 +133,39 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 for (BeamElement beamElement : beamPreserver.descendingSet()) {
                     if (repBeam.size() >= beamWidth)
                         break;
-                        int b = beamElement.number;
-                        int action =beamElement.action;
-                        String label=beamElement.label;
-                        float score=beamElement.score;
+                    int b = beamElement.number;
+                    int action = beamElement.action;
+                    int label = beamElement.label;
+                    float score = beamElement.score;
 
-                        Configuration newConfig = beam.get(b).clone();
+                    Configuration newConfig = beam.get(b).clone();
 
-                        if (action==0) {
-                            ArcEager.shift(newConfig.state);
-                            newConfig.addAction("sh");
-                        } else if (action==1) {
-                            ArcEager.reduce(newConfig.state);
-                            newConfig.addAction("rd");
-                        } else if (action==2) {
-                            ArcEager.rightArc(newConfig.state, label);
-                            newConfig.addAction("ra_"+label);
-                        } else if (action==3) {
-                            ArcEager.leftArc(newConfig.state, label);
-                            newConfig.addAction("la_"+label);
-                        } else if (action==4) {
-                            ArcEager.unShift(newConfig.state);
-                            newConfig.addAction("us");
-                        }
-                        newConfig.setScore(score);
-                        repBeam.add(newConfig);
+                    if (action == 0) {
+                        ArcEager.shift(newConfig.state);
+                        newConfig.addAction(0);
+                    } else if (action == 1) {
+                        ArcEager.reduce(newConfig.state);
+                        newConfig.addAction(1);
+                    } else if (action == 2) {
+                        ArcEager.rightArc(newConfig.state, label);
+                        newConfig.addAction(3 + label);
+                    } else if (action == 3) {
+                        ArcEager.leftArc(newConfig.state, label);
+                        newConfig.addAction(3 + dependencyRelations.size() + label);
+                    } else if (action == 4) {
+                        ArcEager.unShift(newConfig.state);
+                        newConfig.addAction(2);
+                    }
+                    newConfig.setScore(score);
+                    repBeam.add(newConfig);
                 }
                 beam = repBeam;
             } else {
                 Configuration configuration = beam.get(0);
                 State currentState = configuration.state;
-                String[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+                long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                 float bestScore = Float.NEGATIVE_INFINITY;
-                String bestAction = null;
+                int bestAction = -1;
 
                 boolean canShift = ArcEager.canDo(0, currentState);
                 boolean canReduce = ArcEager.canDo(1, currentState);
@@ -177,37 +179,37 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
                     if (!currentState.stackEmpty()) {
                         ArcEager.unShift(currentState);
-                        configuration.addAction("us");
+                        configuration.addAction(2);
                     } else if (!currentState.bufferEmpty() && currentState.stackEmpty()) {
                         ArcEager.shift(currentState);
-                        configuration.addAction("sh");
+                        configuration.addAction(0);
                     }
                 }
 
                 if (canShift) {
-                    float score = classifier.score(features, "sh", true);
+                    float score = classifier.score(features, 0, true);
                     if (score > bestScore) {
                         bestScore = score;
-                        bestAction = "sh";
+                        bestAction = 0;
                     }
                 }
                 if (canReduce) {
-                    float score = classifier.score(features, "rd", true);
+                    float score = classifier.score(features, 1, true);
                     if (score > bestScore) {
                         bestScore = score;
-                        bestAction = "rd";
+                        bestAction = 1;
                     }
                 }
                 if (canRightArc) {
                     int headPos = sentence.posAt(configuration.state.peek());
                     int depPos = sentence.posAt(configuration.state.bufferHead());
-                    for (String dependency : dependencyRelations) {
+                    for (int dependency : dependencyRelations) {
                         if ((!canShift && !canLeftArc && !canReduce) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
                                 && headDepSet.get(headPos).get(depPos).contains(dependency))) {
-                            float score = classifier.score(features, "ra_" + dependency, true);
+                            float score = classifier.score(features, 3 + dependency, true);
                             if (score > bestScore) {
                                 bestScore = score;
-                                bestAction = "ra_" + dependency;
+                                bestAction = 3 + dependency;
                             }
                         }
                     }
@@ -215,30 +217,30 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 if (ArcEager.canDo(3, currentState)) {
                     int headPos = sentence.posAt(configuration.state.bufferHead());
                     int depPos = sentence.posAt(configuration.state.peek());
-                    for (String dependency : dependencyRelations) {
+                    for (int dependency : dependencyRelations) {
                         if ((!canShift && !canRightArc && !canReduce) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
                                 && headDepSet.get(headPos).get(depPos).contains(dependency))) {
-                            float score = classifier.score(features, "la_" + dependency, true);
+                            float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, true);
                             if (score > bestScore) {
                                 bestScore = score;
-                                bestAction = "la_" + dependency;
+                                bestAction = 3 + dependencyRelations.size() + dependency;
                             }
                         }
                     }
                 }
 
-                if (bestAction != null) {
-                    if (bestAction.equals("sh")) {
+                if (bestAction != -1) {
+                    if (bestAction == 0) {
                         ArcEager.shift(configuration.state);
-                    } else if (bestAction.equals("rd")) {
+                    } else if (bestAction == (1)) {
                         ArcEager.reduce(configuration.state);
                     } else {
-                        String act = bestAction.substring(0, 2);
-                        String label = bestAction.substring(3);
 
-                        if (act.equals("la")) {
+                        if (bestAction >= 3 + dependencyRelations.size()) {
+                            int label = bestAction - (3 + dependencyRelations.size());
                             ArcEager.leftArc(configuration.state, label);
                         } else {
+                            int label = bestAction - 3;
                             ArcEager.rightArc(configuration.state, label);
                         }
                     }
@@ -276,16 +278,14 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         long start = System.currentTimeMillis();
         int allArcs = 0;
         int size = 0;
-        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile+".tmp"));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile + ".tmp"));
         int dataCount = 0;
-
 
         while (true) {
             ArrayList<GoldConfiguration> data = reader.readData(5000, true, true, rootFirst, lowerCased, maps);
             size += data.size();
             if (data.size() == 0)
                 break;
-
 
             for (GoldConfiguration goldConfiguration : data) {
                 dataCount++;
@@ -294,21 +294,21 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 Configuration bestParse = parse(goldConfiguration.getSentence(), rootFirst, beamWidth);
 
                 int[] words = goldConfiguration.getSentence().getWords();
-                allArcs+=words.length-1;
+                allArcs += words.length - 1;
 
                 StringBuilder finalOutput = new StringBuilder();
                 for (int i = 0; i < words.length; i++) {
                     int w = i + 1;
                     int head = bestParse.state.getHead(w);
-                    String dep = bestParse.state.getDependency(w);
+                    int dep = bestParse.state.getDependency(w);
 
-                    if(w==bestParse.state.rootIndex && !rootFirst)
+                    if (w == bestParse.state.rootIndex && !rootFirst)
                         continue;
 
                     if (head == bestParse.state.rootIndex)
                         head = 0;
 
-                    String output = head + "\t" + dep + "\n";
+                    String output = head + "\t" + maps.revWords[dep] + "\n";
                     finalOutput.append(output);
                 }
                 finalOutput.append("\n");
@@ -330,117 +330,114 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         System.err.print(format.format(eacharc) + " ms for each arc!\n");
         System.err.print(format.format(each) + " ms for each sentence!\n\n");
 
-        BufferedReader gReader=new BufferedReader(new FileReader(inputFile));
-        BufferedReader pReader=new BufferedReader(new FileReader(outputFile+".tmp"));
+        BufferedReader gReader = new BufferedReader(new FileReader(inputFile));
+        BufferedReader pReader = new BufferedReader(new FileReader(outputFile + ".tmp"));
         BufferedWriter pwriter = new BufferedWriter(new FileWriter(outputFile));
 
         String line;
 
-        while((line=pReader.readLine())!=null){
-            String gLine=gReader.readLine();
-            if(line.trim().length()>0){
-                while(gLine.trim().length()==0)
-                    gLine=gReader.readLine();
-                String[] ps=line.split("\t");
-                String[] gs=gLine.split("\t");
-                    gs[6] = ps[0];
-                    gs[7] = ps[1];
-                StringBuilder output=new StringBuilder();
-                for(int i=0;i<gs.length;i++){
-                    output.append(gs[i]+"\t");
+        while ((line = pReader.readLine()) != null) {
+            String gLine = gReader.readLine();
+            if (line.trim().length() > 0) {
+                while (gLine.trim().length() == 0)
+                    gLine = gReader.readLine();
+                String[] ps = line.split("\t");
+                String[] gs = gLine.split("\t");
+                gs[6] = ps[0];
+                gs[7] = ps[1];
+                StringBuilder output = new StringBuilder();
+                for (int i = 0; i < gs.length; i++) {
+                    output.append(gs[i] + "\t");
                 }
-                pwriter.write(output.toString().trim()+"\n");
-            } else{
+                pwriter.write(output.toString().trim() + "\n");
+            } else {
                 pwriter.write("\n");
             }
         }
         pwriter.flush();
         pwriter.close();
-        System.err.print("done!\n");
-
     }
 
-
-    public void parseTaggedFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean lowerCased,String separator) throws Exception {
-         BufferedReader reader=new BufferedReader(new FileReader(inputFile));
-        BufferedWriter writer=new BufferedWriter(new FileWriter(outputFile));
-      HashMap<String,Integer> wordMap= maps.getWordMap();
+    public void parseTaggedFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean lowerCased, String separator) throws Exception {
+        BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
+        HashMap<String, Integer> wordMap = maps.getWordMap();
 
         String line;
-        int count=0;
-        while((line=reader.readLine())!=null){
+        int count = 0;
+        while ((line = reader.readLine()) != null) {
             count++;
-            if(count%100==0)
-                System.err.print(count+"...");
-            line=line.trim();
-            String[] wrds=line.split(" ");
-            String[] words =new String[wrds.length];
+            if (count % 100 == 0)
+                System.err.print(count + "...");
+            line = line.trim();
+            String[] wrds = line.split(" ");
+            String[] words = new String[wrds.length];
             String[] posTags = new String[wrds.length];
 
             ArrayList<Integer> tokens = new ArrayList<Integer>();
             ArrayList<Integer> tags = new ArrayList<Integer>();
 
 
-            int i=0;
-            for(String w:wrds){
-                if (w.length()==0)
+            int i = 0;
+            for (String w : wrds) {
+                if (w.length() == 0)
                     continue;
-                int index=w.lastIndexOf(separator);
-                String word= w.substring(0, index);
-                if(lowerCased)
-                    word=word.toLowerCase();
-                String pos=w.substring(index+1);
-                words[i]=word;
-                posTags[i++]=pos;
+                int index = w.lastIndexOf(separator);
+                String word = w.substring(0, index);
+                if (lowerCased)
+                    word = word.toLowerCase();
+                String pos = w.substring(index + 1);
+                words[i] = word;
+                posTags[i++] = pos;
 
-                int wi=-1;
-                if(wordMap.containsKey(word))
-                    wi=wordMap.get(word);
+                int wi = -1;
+                if (wordMap.containsKey(word))
+                    wi = wordMap.get(word);
 
-                int pi=-1;
-                if(wordMap.containsKey(pos))
-                    pi=wordMap.get(pos);
+                int pi = -1;
+                if (wordMap.containsKey(pos))
+                    pi = wordMap.get(pos);
 
                 tokens.add(wi);
                 tags.add(pi);
             }
 
-            if(!rootFirst) {
-                tokens.add(0);
-                tags.add(0);
+            if (tokens.size() > 0) {
+                if (!rootFirst) {
+                    tokens.add(0);
+                    tags.add(0);
+                }
+                Sentence sentence = new Sentence(tokens, tags);
+                Configuration bestParse = parse(sentence, rootFirst, beamWidth);
+
+
+                StringBuilder finalOutput = new StringBuilder();
+                for (i = 0; i < words.length; i++) {
+
+                    String word = words[i];
+                    String pos = posTags[i];
+
+                    int w = i + 1;
+                    int head = bestParse.state.getHead(w);
+                    int dep = bestParse.state.getDependency(w);
+
+
+                    String lemma = "_";
+
+                    String fpos = "_";
+
+                    if (head == bestParse.state.rootIndex)
+                        head = 0;
+                    String output = w + "\t" + word + "\t" + lemma + "\t" + pos + "\t" + fpos + "\t_\t" + head + "\t" + maps.revWords[dep] + "\t_\t_\n";
+                    finalOutput.append(output);
+                }
+                if (words.length > 0)
+                    finalOutput.append("\n");
+                writer.write(finalOutput.toString());
+
             }
-            Sentence sentence=new Sentence(tokens,tags);
-            Configuration bestParse=parse(sentence,rootFirst,beamWidth);
-
-
-            StringBuilder finalOutput = new StringBuilder();
-            for (i = 0; i < words.length; i++) {
-
-                String word = words[i];
-                String pos = posTags[i];
-
-                int w = i + 1;
-                int head = bestParse.state.getHead(w);
-                String dep = bestParse.state.getDependency(w);
-
-
-                String lemma = "_";
-
-                String fpos = "_";
-
-                if (head == bestParse.state.rootIndex)
-                    head = 0;
-                String output = w + "\t" + word + "\t" + lemma + "\t" + pos + "\t" + fpos + "\t_\t" + head + "\t" + dep + "\t_\t_\n";
-                finalOutput.append(output);
-            }
-            if(words.length>0)
-            finalOutput.append("\n");
-            writer.write(finalOutput.toString());
-
         }
         writer.flush();
         writer.close();
-        System.err.println("done!");
-
     }
 }

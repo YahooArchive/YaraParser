@@ -14,12 +14,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class GoldConfiguration {
-    protected HashMap<Integer, Pair<Integer, String>> goldDependencies;
+    protected HashMap<Integer, Pair<Integer, Integer>> goldDependencies;
     protected HashMap<Integer, HashSet<Integer>> reversedDependencies;
     protected Sentence sentence;
 
-    public GoldConfiguration(Sentence sentence, HashMap<Integer, Pair<Integer, String>> goldDependencies) {
-        this.goldDependencies = new HashMap<Integer, Pair<Integer, String>>();
+    public GoldConfiguration(Sentence sentence, HashMap<Integer, Pair<Integer, Integer>> goldDependencies) {
+        this.goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
         reversedDependencies = new HashMap<Integer, HashSet<Integer>>();
         for (int head : goldDependencies.keySet())
             this.goldDependencies.put(head, goldDependencies.get(head).clone());
@@ -46,10 +46,10 @@ public class GoldConfiguration {
     public String relation(int dependent) {
         if (!goldDependencies.containsKey(dependent))
             return "_";
-        return goldDependencies.get(dependent).second;
+        return goldDependencies.get(dependent).second + "";
     }
 
-    public HashMap<Integer, Pair<Integer, String>> getGoldDependencies() {
+    public HashMap<Integer, Pair<Integer, Integer>> getGoldDependencies() {
         return goldDependencies;
     }
 
@@ -95,7 +95,7 @@ public class GoldConfiguration {
      * @return oracle cost of the action
      * @throws Exception
      */
-    public int actionCost(int action, String dependency, State state) throws Exception {
+    public int actionCost(int action, int dependency, State state) throws Exception {
         if (!ArcEager.canDo(action, state))
             return Integer.MAX_VALUE;
         int cost = 0;
@@ -105,23 +105,23 @@ public class GoldConfiguration {
             int bufferHead = state.bufferHead();
             int stackHead = state.peek();
 
-            if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first.equals(bufferHead)
-                    && !goldDependencies.get(stackHead).second.equals(dependency))
+            if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first == (bufferHead)
+                    && goldDependencies.get(stackHead).second != (dependency))
                 cost += 1;
         } else if (action == 2) { //right arc
             int bufferHead = state.bufferHead();
             int stackHead = state.peek();
-            if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first.equals(stackHead)
-                    && !goldDependencies.get(bufferHead).second.equals(dependency))
+            if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == (stackHead)
+                    && goldDependencies.get(bufferHead).second != (dependency))
                 cost += 1;
         }
 
         if (action == 0) { //shift
             int bufferHead = state.bufferHead();
             for (int stackItem : state.getStack()) {
-                if (goldDependencies.containsKey(stackItem) && goldDependencies.get(stackItem).first.equals(bufferHead))
+                if (goldDependencies.containsKey(stackItem) && goldDependencies.get(stackItem).first == (bufferHead))
                     cost += 1;
-                if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first.equals(stackItem))
+                if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == (stackItem))
                     cost += 1;
             }
 
@@ -129,16 +129,16 @@ public class GoldConfiguration {
             int stackHead = state.peek();
             if (!state.bufferEmpty())
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
-                    if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first.equals(stackHead))
+                    if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first == (stackHead))
                         cost += 1;
                 }
         } else if (action == 3) { //left arc
             int stackHead = state.peek();
             if (!state.bufferEmpty())
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
-                    if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first.equals(stackHead))
+                    if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first == (stackHead))
                         cost += 1;
-                    if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first.equals(bufferItem))
+                    if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first == (bufferItem))
                         if (bufferItem != state.bufferHead())
                             cost += 1;
                 }
@@ -146,16 +146,16 @@ public class GoldConfiguration {
             int stackHead = state.peek();
             int bufferHead = state.bufferHead();
             for (int stackItem : state.getStack()) {
-                if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first.equals(stackItem))
+                if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == (stackItem))
                     if (stackItem != stackHead)
                         cost += 1;
 
-                if (goldDependencies.containsKey(stackItem) && goldDependencies.get(stackItem).first.equals(bufferHead))
+                if (goldDependencies.containsKey(stackItem) && goldDependencies.get(stackItem).first == (bufferHead))
                     cost += 1;
             }
             if (!state.bufferEmpty())
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
-                    if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first.equals(bufferItem))
+                    if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == (bufferItem))
                         cost += 1;
                 }
         }

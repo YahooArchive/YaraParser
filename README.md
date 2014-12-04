@@ -81,7 +81,7 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 ## Evaluate the Parser
 __WARNING__ The current evaluation script does take into account every dependency relation. If you want to ignore the punctuations, you have to either tweak the code or write your own script.
 
-* __java -jar jar/YaraParser.jar eval --gold-file [gold-file] --parsed-file [parsed-file]__
+* __java -jar jar/YaraParser.jar eval --gold-file [gold-file] --parsed-file [parsed-file] --inf-file [inf-file]__
 	
 	* Both files should have conll 2006 format
 
@@ -90,30 +90,30 @@ There is small portion from Google Universal Treebank for the German language in
 
      java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model beam:64 iter:10
 
-You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __86.61__ and labeled accuracy __80.98__ on the dev set in the 8th iteration. 
+You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __88.95__ and labeled accuracy __83.00__ on the dev set in the 10th iteration. 
 
-Performance numbers are produced after each iteration. The following is the performance on the dev after the 8th iteration:
+Performance numbers are produced after each iteration. The following is the performance on the dev after the 10th iteration:
 
-    4.56 ms for each arc!
-	60.48 ms for each sentence!
+    3.54 ms for each arc!
+	46.87 ms for each sentence!
 
-	Labeled accuracy: 80.98
-	Unlabeled accuracy:  86.61
-	Labeled exact match:  26.76
-	Unlabeled exact match:  40.85 
+	Labeled accuracy: 83.00
+	Unlabeled accuracy:  88.95
+	Labeled exact match:  23.94
+	Unlabeled exact match:  42.25  
 
 Next, you can run the developed model on the test data:
 
-     java -jar jar/YaraParser.jar parse_conll --test-file sample_data/test.conll --model-file /tmp/model_iter8 --inf-file /tmp/model --out /tmp/test.output.conll
+     java -jar jar/YaraParser.jar parse_conll --test-file sample_data/test.conll --model-file /tmp/model_iter10 --inf-file /tmp/model --out /tmp/test.output.conll
 
 You can finally evaluate the output data:
 
-	java -jar jar/YaraParser.jar eval --gold-file sample_data/test.conll --parsed-file /tmp/test.output.conll
+	java -jar jar/YaraParser.jar eval --gold-file sample_data/test.conll --parsed-file /tmp/test.output.conll --inf-file /tmp/model 
 
-    Labeled accuracy: 69.48
-	Unlabeled accuracy:  74.31
-	Labeled exact match:  17.54
-	Unlabeled exact match:  24.56
+    Labeled accuracy: 68.86
+	Unlabeled accuracy:  73.90
+	Labeled exact match:  19.30
+	Unlabeled exact match:  24.56  
 
 # API USAGE
 

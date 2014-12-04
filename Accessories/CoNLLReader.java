@@ -31,17 +31,44 @@ public class CoNLLReader {
     }
 
     public static IndexMaps createIndices(String filePath, boolean labeled, boolean lowercased) throws Exception {
-        BufferedReader reader = new BufferedReader(new FileReader(filePath));
 
         HashMap<String, Integer> wordMap = new HashMap<String, Integer>();
-        HashMap<String, Integer> labels = new HashMap<String, Integer>();
-        labels.put("ROOT", 1);
-        int labelCount = 2;
+        HashMap<Integer, Integer> labels = new HashMap<Integer, Integer>();
+        int labelCount = 1;
 
         int wi = 1;
         wordMap.put("ROOT", 0);
+        labels.put(0, 0);
 
+        BufferedReader reader = new BufferedReader(new FileReader(filePath));
         String line;
+        while ((line = reader.readLine()) != null) {
+            String[] spl = line.trim().split("\t");
+            if (spl.length > 7) {
+                String label = spl[7];
+                if (label.equals("_"))
+                    label = "-";
+                if (!labeled)
+                    label = "~";
+                if (!wordMap.containsKey(label)) {
+                    labels.put(wi, labelCount++);
+                    wordMap.put(label, wi++);
+                }
+            }
+        }
+
+        reader = new BufferedReader(new FileReader(filePath));
+        while ((line = reader.readLine()) != null) {
+            String[] spl = line.trim().split("\t");
+            if (spl.length > 7) {
+                String pos = spl[3];
+                if (!wordMap.containsKey(pos)) {
+                    wordMap.put(pos, wi++);
+                }
+            }
+        }
+
+        reader = new BufferedReader(new FileReader(filePath));
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
             if (spl.length > 7) {
@@ -50,21 +77,6 @@ public class CoNLLReader {
                     word = word.toLowerCase();
                 if (!wordMap.containsKey(word)) {
                     wordMap.put(word, wi++);
-                }
-
-                String pos = spl[3];
-                if (!wordMap.containsKey(pos)) {
-                    wordMap.put(pos, wi++);
-                }
-                String label = spl[7];
-                if (label.equals("_"))
-                    label = "-";
-                if (!labeled)
-                    label = "~";
-                if (!wordMap.containsKey(label)) {
-                    labels.put(label, labelCount);
-                    labelCount *= 2;
-                    wordMap.put(label, wi++);
                 }
             }
         }
@@ -84,7 +96,7 @@ public class CoNLLReader {
         ArrayList<Integer> tokens = new ArrayList<Integer>();
         ArrayList<Integer> tags = new ArrayList<Integer>();
 
-        HashMap<Integer, Pair<Integer, String>> goldDependencies = new HashMap<Integer, Pair<Integer, String>>();
+        HashMap<Integer, Pair<Integer, Integer>> goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
         int sentenceCounter = 0;
         while ((line = fileReader.readLine()) != null) {
             line = line.trim();
@@ -103,11 +115,11 @@ public class CoNLLReader {
                     GoldConfiguration goldConfiguration = new GoldConfiguration(currentSentence, goldDependencies);
                     if (keepNonProjective || !goldConfiguration.isNonprojective())
                         configurationSet.add(goldConfiguration);
-                    goldDependencies = new HashMap<Integer, Pair<Integer, String>>();
+                    goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
                     tokens = new ArrayList<Integer>();
                     tags = new ArrayList<Integer>();
                 } else {
-                    goldDependencies = new HashMap<Integer, Pair<Integer, String>>();
+                    goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
                     tokens = new ArrayList<Integer>();
                     tags = new ArrayList<Integer>();
                 }
@@ -142,7 +154,14 @@ public class CoNLLReader {
                     relation = "-";
                 if (!labeled)
                     relation = "~";
-                goldDependencies.put(wordIndex, new Pair<Integer, String>(headIndex, relation));
+
+                if (headIndex == 0)
+                    relation = "ROOT";
+
+                int ri = -1;
+                if (wordmap.containsKey(relation))
+                    ri = wordmap.get(relation);
+                goldDependencies.put(wordIndex, new Pair<Integer, Integer>(headIndex, ri));
             }
         }
         if (tokens.size() > 0) {

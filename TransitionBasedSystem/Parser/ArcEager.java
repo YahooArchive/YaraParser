@@ -33,11 +33,11 @@ public class ArcEager extends TransitionBasedParser {
             state.setEmptyFlag(true);
     }
 
-    public static void leftArc(State state, String dependency) throws Exception {
+    public static void leftArc(State state, int dependency) throws Exception {
         state.addArc(state.pop(), state.bufferHead(), dependency);
     }
 
-    public static void rightArc(State state, String dependency) throws Exception {
+    public static void rightArc(State state, int dependency) throws Exception {
         state.addArc(state.bufferHead(), state.peek(), dependency);
         state.push(state.bufferHead());
         state.incrementBufferHead();
@@ -77,7 +77,7 @@ public class ArcEager extends TransitionBasedParser {
         } else if (action == 1) { //reduce
             if (!state.stackEmpty() && state.hasHead(state.peek()))
                 return true;
-            if (!state.stackEmpty() && state.stackSize() == 1 && state.bufferSize() == 0 && state.peek() == (float) state.rootIndex)
+            if (!state.stackEmpty() && state.stackSize() == 1 && state.bufferSize() == 0 && state.peek() == state.rootIndex)
                 return true;
             return false;
         } else if (action == 4) { //unshift
@@ -86,19 +86,6 @@ public class ArcEager extends TransitionBasedParser {
             return false;
         }
         return false;
-    }
-
-    public static ArrayList<String> actions(boolean train) {
-        ArrayList<String> actions = new ArrayList<String>();
-        actions.add("sh");
-        actions.add("la");
-        actions.add("ra");
-        actions.add("rd");
-
-        if (!train)
-            actions.add("us");
-
-        return actions;
     }
 
     /**

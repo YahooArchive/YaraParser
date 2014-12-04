@@ -6,6 +6,7 @@
 package TransitionBasedSystem.Configuration;
 
 import Structures.Sentence;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -18,7 +19,7 @@ public class Configuration implements Comparable, Cloneable, Serializable {
 
     public State state;
 
-    public ArrayList<String> actionHistory;
+    public ArrayList<Integer> actionHistory;
 
     public float score;
 
@@ -30,14 +31,14 @@ public class Configuration implements Comparable, Cloneable, Serializable {
         this.sentence = sentence;
         state = new State(sentence.size(), rootFirst);
         score = (float) 0.0;
-        actionHistory = new ArrayList<String>(2 * (sentence.size() + 1));
+        actionHistory = new ArrayList<Integer>(2 * (sentence.size() + 1));
     }
 
     public Configuration(Sentence sentence) {
         this.sentence = sentence;
         state = new State(sentence.size());
         score = (float) 0.0;
-        actionHistory = new ArrayList<String>(2 * (sentence.size() + 1));
+        actionHistory = new ArrayList<Integer>(2 * (sentence.size() + 1));
     }
 
     /**
@@ -60,7 +61,7 @@ public class Configuration implements Comparable, Cloneable, Serializable {
         this.score = score;
     }
 
-    public void addAction(String action) {
+    public void addAction(int action) {
         actionHistory.add(action);
     }
 
@@ -90,7 +91,7 @@ public class Configuration implements Comparable, Cloneable, Serializable {
             if (configuration.actionHistory.size() != actionHistory.size())
                 return false;
             for (int i = 0; i < actionHistory.size(); i++)
-                if (!actionHistory.get(i).equals(configuration.actionHistory.get(i)))
+                if (actionHistory.get(i) != (configuration.actionHistory.get(i)))
                     return false;
             return true;
         }
@@ -101,7 +102,7 @@ public class Configuration implements Comparable, Cloneable, Serializable {
     public Configuration clone() {
         Configuration configuration = new Configuration(sentence);
 
-        ArrayList<String> history = new ArrayList<String>(actionHistory.size());
+        ArrayList<Integer> history = new ArrayList<Integer>(actionHistory.size());
         for (int i = 0; i < actionHistory.size(); i++)
             history.add(actionHistory.get(i));
 
@@ -115,11 +116,11 @@ public class Configuration implements Comparable, Cloneable, Serializable {
 
     @Override
     public int hashCode() {
-        //  StringBuilder hb=new StringBuilder();
         int hashCode = 0;
-        for (String action : actionHistory)
-            hashCode += action.hashCode();
-
+        int i = 0;
+        for (int action : actionHistory)
+            hashCode += action << i++;
+        hashCode += score;
         return hashCode;
     }
 }
