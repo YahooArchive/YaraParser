@@ -6,6 +6,7 @@
 package Accessories;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class Options implements Serializable {
     public boolean train;
@@ -55,7 +56,7 @@ public class Options implements Serializable {
         useRandomOracleSelection = false;
         trainingIter = 20;
         evaluate = false;
-        numOfThreads = 1;
+        numOfThreads = 8;
     }
 
     public static void showHelp() {
@@ -79,18 +80,18 @@ public class Options implements Serializable {
         output.append("\t \t lowercase (default: case-sensitive words, unless explicitly put 'lowercase')\n");
         output.append("\t \t basic (default: use extended feature set, unless explicitly put 'basic')\n");
         output.append("\t \t early (default: use max violation update, unless explicitly put `early' for early update)\n");
-        // output.append("\t \t static (default: use dynamic oracles, unless explicitly put `static' for static oracles)\n");
+        output.append("\t \t static (default: use dynamic oracles, unless explicitly put `static' for static oracles)\n");
         output.append("\t \t random (default: choose maximum scoring oracle, unless explicitly put `random' for randomly choosing an oracle)\n");
-       // output.append("\t \t nt:[#_of_threads] (default:1)\n");
-        // output.append("\t \t root_first (default: put ROOT in the last position, unless explicitly put 'root_first')\n\n");
+        output.append("\t \t nt:[#_of_threads] (default:8)\n");
+        output.append("\t \t root_first (default: put ROOT in the last position, unless explicitly put 'root_first')\n\n");
 
         output.append("* Parse a CoNLL'2006 file:\n");
-        output.append("\tjava -jar YaraParser.jar parse_conll --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file] \n");
+        output.append("\tjava -jar YaraParser.jar parse_conll --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
         output.append("\t** The inf file is [model-file] for parsing (used in the testing phase)\n");
         output.append("\t** The test file should have the conll 2006 format\n\n");
 
         output.append("* Parse a tagged file:\n");
-        output.append("\tjava -jar YaraParser.jar parse_tagged --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file]\n");
+        output.append("\tjava -jar YaraParser.jar parse_tagged --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
         output.append("\t** The test file should have each sentence in line and word_tag pairs are space-delimited\n");
         output.append("\t** Optional:  --delim [delim] (default is _)\n");
         output.append("\t** The inf file is [model-file] for parsing (used in the testing phase)\n");
@@ -144,12 +145,12 @@ public class Options implements Serializable {
                 options.useExtendedFeatures = false;
             else if (args[i].equals("early"))
                 options.useMaxViol = false;
-                // else if (args[i].equals("static"))
-                //    options.useDynamicOracle = false;
+            else if (args[i].equals("static"))
+                options.useDynamicOracle = false;
             else if (args[i].equals("random"))
                 options.useRandomOracleSelection = true;
-                ///  else if (args[i].equals("root_first"))
-                //     options.rootFirst = true;
+            else if (args[i].equals("root_first"))
+                options.rootFirst = true;
             else if (args[i].startsWith("iter:"))
                 options.trainingIter = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
         }
@@ -207,5 +208,130 @@ public class Options implements Serializable {
         return "";
     }
 
+    public Options clone(){
+        Options options=new Options();
+        options.train=train;
+        options.labeled=labeled;
+        options.trainingIter=trainingIter;
+        options.useMaxViol=useMaxViol;
+        options.beamWidth=beamWidth;
+        options.devPath=devPath;
+        options.evaluate=evaluate;
+        options.goldFile=goldFile;
+        options.infFile=infFile;
+        options.inputFile=inputFile;
+        options.lowercase=lowercase;
+        options.numOfThreads=numOfThreads;
+        options.outputFile=outputFile;
+        options.useDynamicOracle=useDynamicOracle;
+        options.modelFile=modelFile;
+        options.rootFirst=rootFirst;
+        options.parseConllFile=parseConllFile;
+        options.parseTaggedFile=parseTaggedFile;
+        options.predFile=predFile;
+        options.showHelp=showHelp;
+        options.separator=separator;
+        options.useExtendedFeatures=useExtendedFeatures;
+        return options;
+    }
 
+    public static ArrayList<Options> getAllPossibleOptions(Options option){
+        ArrayList<Options> options=new ArrayList<Options>();
+        options.add(option);
+
+        ArrayList<Options> tmp=new ArrayList<Options>();
+
+        for(Options opt:options){
+            Options o1=opt.clone();
+            o1.labeled=true;
+
+            Options o2=opt.clone();
+            o2.labeled=false;
+            tmp.add(o1);
+            tmp.add(o2);
+        }
+
+        options=tmp;
+        tmp=  new ArrayList<Options>();
+
+
+        for(Options opt:options){
+            Options o1=opt.clone();
+            o1.lowercase=true;
+
+            Options o2=opt.clone();
+            o2.lowercase=false;
+            tmp.add(o1);
+            tmp.add(o2);
+        }
+
+        options=tmp;
+        tmp=  new ArrayList<Options>();
+
+        for(Options opt:options){
+            Options o1=opt.clone();
+            o1.useExtendedFeatures=true;
+
+            Options o2=opt.clone();
+            o2.useExtendedFeatures=false;
+            tmp.add(o1);
+            tmp.add(o2);
+        }
+
+        options=tmp;
+        tmp=  new ArrayList<Options>();
+
+        for(Options opt:options){
+            Options o1=opt.clone();
+            o1.useDynamicOracle=true;
+
+            Options o2=opt.clone();
+            o2.useDynamicOracle=false;
+            tmp.add(o1);
+            tmp.add(o2);
+        }
+
+        options=tmp;
+        tmp=  new ArrayList<Options>();
+
+        for(Options opt:options){
+            Options o1=opt.clone();
+            o1.useMaxViol=true;
+
+            Options o2=opt.clone();
+            o2.useMaxViol=false;
+            tmp.add(o1);
+            tmp.add(o2);
+        }
+
+        options=tmp;
+        tmp=  new ArrayList<Options>();
+
+        for(Options opt:options){
+            Options o1=opt.clone();
+            o1.useRandomOracleSelection=true;
+
+            Options o2=opt.clone();
+            o2.useRandomOracleSelection=false;
+            tmp.add(o1);
+            tmp.add(o2);
+        }
+
+        options=tmp;
+        tmp=  new ArrayList<Options>();
+
+
+        for(Options opt:options){
+            Options o1=opt.clone();
+            o1.rootFirst=true;
+
+            Options o2=opt.clone();
+            o2.rootFirst=false;
+            tmp.add(o1);
+            tmp.add(o2);
+        }
+
+        options=tmp;
+    return options;
+       }
 }

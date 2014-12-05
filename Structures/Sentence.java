@@ -32,9 +32,7 @@ public class Sentence implements Comparable {
         return words.length;
     }
 
-    public int posAt(int position) throws Exception {
-        if (position < 0)
-            throw new ArrayIndexOutOfBoundsException("The position is outside the boundary of this sentence: " + position);
+    public int posAt(int position) {
         if (position == 0)
             return 0;
 

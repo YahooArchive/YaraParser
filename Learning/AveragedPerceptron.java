@@ -7,7 +7,6 @@ package Learning;
 
 import java.io.*;
 import java.util.HashMap;
-import java.util.concurrent.*;
 
 public class AveragedPerceptron {
     /**
@@ -15,12 +14,12 @@ public class AveragedPerceptron {
      * Collins, Michael. "Discriminative training methods for hidden Markov models: Theory and experiments with Perceptron algorithms."
      * In Proceedings of the ACL-02 conference on Empirical methods in natural language processing-Volume 10, pp. 1-8.
      * Association for Computational Linguistics, 2002.
-     *
+     * <p/>
      * The averaging update is also optimized by using the trick introduced in Hal Daume's dissertation.
      * For more information see the second chapter of his thesis:
      * Harold Charles Daume' III. "Practical Structured Learning Techniques for Natural Language Processing", PhD thesis, ISI USC, 2006.
      * http://www.umiacs.umd.edu/~hal/docs/daume06thesis.pdf
-     **/
+     */
     protected static int numberOfThreads;
     /**
      * For the weights for all features
@@ -121,7 +120,7 @@ public class AveragedPerceptron {
      * @param features the features in the current instance
      * @return
      */
-    public float score(final long[] features, int labelIndex, boolean decode) throws InterruptedException, ExecutionException {
+    public float score(final long[] features, int labelIndex, boolean decode) {
         float score = 0;
         final HashMap<Long, Float>[] weights;
         if (!decode) {

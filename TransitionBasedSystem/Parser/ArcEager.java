@@ -21,7 +21,8 @@ public class ArcEager extends TransitionBasedParser {
     }
 
     public static void unShift(State state) throws Exception {
-        state.setBufferH(state.pop());
+        if (!state.stackEmpty())
+            state.setBufferH(state.pop());
         // to make sure
         state.setEmptyFlag(true);
         state.setMaxSentenceSize(state.bufferHead());
@@ -45,7 +46,7 @@ public class ArcEager extends TransitionBasedParser {
             state.setEmptyFlag(true);
     }
 
-    public static boolean canDo(int action, State state) throws Exception {
+    public static boolean canDo(int action, State state) {
         if (action == 0) { //shift
             if (!state.bufferEmpty() && state.bufferHead() == state.rootIndex && !state.stackEmpty())
                 return false;

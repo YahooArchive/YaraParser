@@ -9,7 +9,7 @@ import Accessories.Pair;
 
 import java.util.ArrayDeque;
 
-public class State implements Comparable, Cloneable {
+public class State implements Cloneable {
     public int rootIndex;
     public int maxSentenceSize;
 
@@ -114,18 +114,17 @@ public class State implements Comparable, Cloneable {
         this.emptyFlag = emptyFlag;
     }
 
-    public int bufferHead() throws Exception {
+    public int bufferHead() {
         return bufferH;
     }
 
-    public int peek() throws Exception {
-        return stack.peek();
+    public int peek() {
+        if (stack.size() > 0)
+            return stack.peek();
+        return -1;
     }
 
-    public int getBufferItem(int position) throws Exception {
-        if (position > maxSentenceSize)
-            throw new Exception("index out of bound for getting an item from the buffer");
-
+    public int getBufferItem(int position) {
         return bufferH + position;
     }
 
@@ -225,39 +224,8 @@ public class State implements Comparable, Cloneable {
     }
 
     @Override
-    public int compareTo(Object o) {
-        if (equals(o))
-            return 0;
-
-        int diff = hashCode() - o.hashCode();
-        if (diff == 0)
-            return 1;
-        return diff;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof State) {
-            State state = (State) o;
-            if (state.stack.peek() != stack.peek())
-                return false;
-            if (maxSentenceSize != state.maxSentenceSize || rootIndex != state.rootIndex || bufferH != state.bufferH)
-                return false;
-            for (int dependent = 0; dependent < arcs.length; dependent++) {
-                if (arcs[dependent] != null) {
-                    if (state.arcs[dependent] == null || !state.arcs[dependent].equals(arcs[dependent]))
-                        return false;
-                }
-            }
-
-            return true;
-        }
-        return false;
-    }
-
-    @Override
     public State clone() {
-        State state = new State(maxSentenceSize);
+        State state = new State(arcs.length - 1);
         state.stack = new ArrayDeque<Integer>(stack);
 
         for (int dependent = 0; dependent < arcs.length; dependent++) {
@@ -279,26 +247,10 @@ public class State implements Comparable, Cloneable {
                 }
             }
         }
-
         state.rootIndex = rootIndex;
         state.bufferH = bufferH;
         state.maxSentenceSize = maxSentenceSize;
         state.emptyFlag = emptyFlag;
         return state;
-    }
-
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        if (stack.size() > 0)
-            hashCode += stack.peek() * bufferH;
-
-        for (int dependent = 0; dependent < arcs.length; dependent++) {
-            if (arcs[dependent] != null) {
-                Pair<Integer, Integer> pair = arcs[dependent];
-                hashCode += dependent * (pair.first + pair.second.hashCode());
-            }
-        }
-        return hashCode;
     }
 }

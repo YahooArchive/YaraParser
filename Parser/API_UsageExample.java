@@ -21,7 +21,7 @@ public class API_UsageExample {
     public static void main(String[] args) throws Exception {
         String infFile = args[0];
         String modelFile = args[1];
-        int numOfThreads = 1;
+        int numOfThreads =8;
 
 
         ObjectInputStream reader = new ObjectInputStream(new FileInputStream(infFile));
@@ -34,12 +34,12 @@ public class API_UsageExample {
         AveragedPerceptron averagedPerceptron = AveragedPerceptron.loadModel(modelFile, numOfThreads);
 
         int templates = averagedPerceptron.featureSize();
-        KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, headDepSet, templates, maps);
+        KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, headDepSet, templates, maps, numOfThreads);
 
         String[] words = {"I", "am", "here", "."};
         String[] tags = {"PRP", "VBP", "RB", "."};
 
-        Configuration bestParse = parser.parse(maps.makeSentence(words, tags, inf_options.rootFirst, inf_options.lowercase), inf_options.rootFirst, inf_options.beamWidth);
+        Configuration bestParse = parser.parse(maps.makeSentence(words, tags, inf_options.rootFirst, inf_options.lowercase), inf_options.rootFirst, inf_options.beamWidth, numOfThreads);
         if (inf_options.rootFirst) {
             for (int i = 0; i < words.length; i++) {
                 System.out.println(words[i] + "\t" + tags[i] + "\t" + bestParse.state.getHead(i + 1) + "\t" + maps.revWords[bestParse.state.getDependency(i + 1)]);
@@ -52,6 +52,7 @@ public class API_UsageExample {
                 System.out.println(words[i] + "\t" + tags[i] + "\t" + head + "\t" + maps.revWords[bestParse.state.getDependency(i + 1)]);
             }
         }
-
+        parser.shutDownLiveThreads();
+        System.exit(0);
     }
 }

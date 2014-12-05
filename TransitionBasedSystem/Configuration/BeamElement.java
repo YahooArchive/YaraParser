@@ -22,10 +22,10 @@ public class BeamElement implements Comparable<BeamElement> {
     public int compareTo(BeamElement beamElement) {
         float diff = score - beamElement.score;
         if (diff > 0)
-            return 1;
+            return 2;
         if (diff < 0)
-            return -1;
-        return 0;
+            return -2;
+        return -1;
     }
 
     @Override

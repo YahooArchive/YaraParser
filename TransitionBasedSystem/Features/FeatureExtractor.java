@@ -17,7 +17,7 @@ public class FeatureExtractor {
      * @return
      * @throws Exception
      */
-    public static long[] extractAllParseFeatures(Configuration configuration, int length) throws Exception {
+    public static long[] extractAllParseFeatures(Configuration configuration, int length) {
         if (length == 26)
             return extractBasicFeatures(configuration, length);
         else
@@ -31,7 +31,7 @@ public class FeatureExtractor {
      * @return
      * @throws Exception
      */
-    private static long[] extractExtendedFeatures(Configuration configuration, int length) throws Exception {
+    private static long[] extractExtendedFeatures(Configuration configuration, int length) {
         long[] featureMap = new long[length];
 
         State state = configuration.state;
@@ -353,7 +353,7 @@ public class FeatureExtractor {
      * @return
      * @throws Exception
      */
-    private static long[] extractBasicFeatures(Configuration configuration, int length) throws Exception {
+    private static long[] extractBasicFeatures(Configuration configuration, int length) {
         long[] featureMap = new long[length];
 
         State state = configuration.state;

@@ -16,9 +16,14 @@ import TransitionBasedSystem.Configuration.GoldConfiguration;
 import TransitionBasedSystem.Configuration.State;
 import TransitionBasedSystem.Features.FeatureExtractor;
 import TransitionBasedSystem.Parser.ArcEager;
+import TransitionBasedSystem.Parser.BeamScorerThread;
 import TransitionBasedSystem.Parser.KBeamArcEagerParser;
 
 import java.util.*;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ArcEagerBeamTrainer {
     /**
@@ -50,10 +55,10 @@ public class ArcEagerBeamTrainer {
 
     boolean isRandomDynamicSelection;
 
+    int numOfThreads;
 
     // for pruning irrelevant search space
     HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet;
-
 
     Random randGen;
     IndexMaps maps;
@@ -61,7 +66,7 @@ public class ArcEagerBeamTrainer {
     public ArcEagerBeamTrainer(String updateMode, AveragedPerceptron classifier, boolean rootFirst,
                                int beamWidth, ArrayList<Integer> dependencyRelations,
                                HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet, int featureLength
-            , boolean dynamicOracle, boolean isRandomDynamicSelection, IndexMaps maps) {
+            , boolean dynamicOracle, boolean isRandomDynamicSelection, IndexMaps maps, int numOfThreads) {
         this.updateMode = updateMode;
         this.classifier = classifier;
         this.rootFirst = rootFirst;
@@ -73,12 +78,15 @@ public class ArcEagerBeamTrainer {
         this.isRandomDynamicSelection = isRandomDynamicSelection;
         this.headDepSet = headDepSet;
         this.maps = maps;
+        this.numOfThreads = numOfThreads;
     }
 
     public void train(ArrayList<GoldConfiguration> trainData, String devPath, int maxIteration, String modelPath, boolean lowerCased) throws Exception {
         /**
          * Actions: 0=shift, 1=reduce, 2=unshift, ra_dep=3+dep, la_dep=3+dependencyRelations.size()+dep
          */
+        ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
+        CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<ArrayList<BeamElement>>(executor);
 
 
         for (int i = 1; i <= maxIteration; i++) {
@@ -237,7 +245,7 @@ public class ArcEagerBeamTrainer {
                                     ArcEager.leftArc(newConfig.state, dependency);
                                     newConfig.addAction(3 + dependencyRelations.size() + dependency);
                                     newConfig.addScore(score);
-                                } else if (state.hasHead(top)) {
+                                } else if (top >= 0 && state.hasHead(top)) {
                                     if (reversedDependencies.containsKey(top)) {
                                         if (reversedDependencies.get(top).size() == state.valence(top)) {
                                             float score = classifier.score(features, 1, false);
@@ -282,64 +290,77 @@ public class ArcEagerBeamTrainer {
 
                     TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
 
-                    for (int b = 0; b < beam.size(); b++) {
-                        Configuration configuration = beam.get(b);
-                        State currentState = configuration.state;
-                        float prevScore = configuration.score;
-                        boolean canShift = ArcEager.canDo(0, currentState);
-                        boolean canReduce = ArcEager.canDo(1, currentState);
-                        boolean canRightArc = ArcEager.canDo(2, currentState);
-                        boolean canLeftArc = ArcEager.canDo(3, currentState);
-                        long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+                    if (numOfThreads == 1 || beam.size() == 1) {
+                        for (int b = 0; b < beam.size(); b++) {
+                            Configuration configuration = beam.get(b);
+                            State currentState = configuration.state;
+                            float prevScore = configuration.score;
+                            boolean canShift = ArcEager.canDo(0, currentState);
+                            boolean canReduce = ArcEager.canDo(1, currentState);
+                            boolean canRightArc = ArcEager.canDo(2, currentState);
+                            boolean canLeftArc = ArcEager.canDo(3, currentState);
+                            long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
 
-                        if (canShift) {
-                            float score = classifier.score(features, 0, false);
-                            float addedScore = score + prevScore;
-                            beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
+                            if (canShift) {
+                                float score = classifier.score(features, 0, false);
+                                float addedScore = score + prevScore;
+                                beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
-                            if (beamPreserver.size() > beamWidth)
-                                beamPreserver.pollFirst();
-                        }
-                        if (canReduce) {
-                            float score = classifier.score(features, 1, false);
-                            float addedScore = score + prevScore;
-                            beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
+                                if (beamPreserver.size() > beamWidth)
+                                    beamPreserver.pollFirst();
+                            }
+                            if (canReduce) {
+                                float score = classifier.score(features, 1, false);
+                                float addedScore = score + prevScore;
+                                beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
-                            if (beamPreserver.size() > beamWidth)
-                                beamPreserver.pollFirst();
-                        }
+                                if (beamPreserver.size() > beamWidth)
+                                    beamPreserver.pollFirst();
+                            }
 
-                        if (canRightArc) {
-                            int headPos = sentence.posAt(configuration.state.peek());
-                            int depPos = sentence.posAt(configuration.state.bufferHead());
-                            for (int dependency : dependencyRelations) {
-                                if ((!canLeftArc && !canShift && !canReduce) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
-                                        && headDepSet.get(headPos).get(depPos).contains(dependency))) {
-                                    float score = classifier.score(features, 3 + dependency, false);
-                                    float addedScore = score + prevScore;
-                                    beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
+                            if (canRightArc) {
+                                int headPos = sentence.posAt(configuration.state.peek());
+                                int depPos = sentence.posAt(configuration.state.bufferHead());
+                                for (int dependency : dependencyRelations) {
+                                    if ((!canLeftArc && !canShift && !canReduce) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
+                                            && headDepSet.get(headPos).get(depPos).contains(dependency))) {
+                                        float score = classifier.score(features, 3 + dependency, false);
+                                        float addedScore = score + prevScore;
+                                        beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
-                                    if (beamPreserver.size() > beamWidth)
-                                        beamPreserver.pollFirst();
+                                        if (beamPreserver.size() > beamWidth)
+                                            beamPreserver.pollFirst();
+                                    }
+                                }
+                            }
+                            if (canLeftArc) {
+                                int headPos = sentence.posAt(configuration.state.bufferHead());
+                                int depPos = sentence.posAt(configuration.state.peek());
+                                for (int dependency : dependencyRelations) {
+                                    if ((!canShift && !canRightArc && !canReduce) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
+                                            && headDepSet.get(headPos).get(depPos).contains(dependency))) {
+                                        float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, false);
+                                        float addedScore = score + prevScore;
+                                        beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
+
+                                        if (beamPreserver.size() > beamWidth)
+                                            beamPreserver.pollFirst();
+                                    }
                                 }
                             }
                         }
-                        if (canLeftArc) {
-                            int headPos = sentence.posAt(configuration.state.bufferHead());
-                            int depPos = sentence.posAt(configuration.state.peek());
-                            for (int dependency : dependencyRelations) {
-                                if ((!canShift && !canRightArc && !canReduce) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
-                                        && headDepSet.get(headPos).get(depPos).contains(dependency))) {
-                                    float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, false);
-                                    float addedScore = score + prevScore;
-                                    beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
-
-                                    if (beamPreserver.size() > beamWidth)
-                                        beamPreserver.pollFirst();
-                                }
+                    } else {
+                        for (int b = 0; b < beam.size(); b++) {
+                            pool.submit(new BeamScorerThread(false, classifier, beam.get(b),
+                                    dependencyRelations, featureLength, headDepSet, b));
+                        }
+                        for (int b = 0; b < beam.size(); b++) {
+                            for (BeamElement element : pool.take().get()) {
+                                beamPreserver.add(element);
+                                if (beamPreserver.size() > beamWidth)
+                                    beamPreserver.pollFirst();
                             }
                         }
-
                     }
 
                     if (beamPreserver.size() == 0 || beam.size() == 0) {
@@ -384,7 +405,7 @@ public class ArcEagerBeamTrainer {
                         beam = repBeam;
 
 
-                        if (beam.size() > 0 && oracles.size()>0) {
+                        if (beam.size() > 0 && oracles.size() > 0) {
                             Configuration bestConfig = beam.get(0);
                             if (oracles.containsKey(bestConfig)) {
                                 oracles = new HashMap<Configuration, Float>();
@@ -396,8 +417,10 @@ public class ArcEagerBeamTrainer {
                                     oracles = new HashMap<Configuration, Float>();
                                     oracles.put(randomKey, 0.0f);
                                     bestScoringOracle = randomKey;
+                                } else {
+                                    oracles = new HashMap<Configuration, Float>();
+                                    oracles.put(bestScoringOracle, 0.0f);
                                 }
-                                oracles.put(bestScoringOracle, 0.0f);
                             }
 
                             // do early update
@@ -527,14 +550,19 @@ public class ArcEagerBeamTrainer {
 
             if (!devPath.equals("")) {
                 AveragedPerceptron averagedPerceptron = AveragedPerceptron.loadModel(modelPath + "_iter" + i, 1);
-                KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyRelations, headDepSet, featureLength, maps);
+                KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyRelations, headDepSet, featureLength, maps, numOfThreads);
 
                 parser.parseConllFile(devPath, devPath + ".tmp",
-                        rootFirst, beamWidth, lowerCased);
+                        rootFirst, beamWidth, lowerCased, numOfThreads);
                 Evaluator.evaluate(devPath, devPath + ".tmp", maps);
+                parser.shutDownLiveThreads();
             }
-
-
+        }
+        boolean isTerminated=executor.isTerminated();
+        while (!isTerminated) {
+            executor.shutdownNow();
+            isTerminated=executor.isTerminated();
         }
     }
+
 }

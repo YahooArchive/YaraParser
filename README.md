@@ -42,7 +42,7 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	
 	* The inf file is [model-file] for parsing
 	
-	*	 Other options
+	*	 Other options (__there are 128 combinations of features and also beam size and thread but the default is the best setting given a big beam (e.g. 64)__)
 	 	 
 	 	 * beam:[beam-width] (default:1)
 	 	 
@@ -54,10 +54,16 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	 	 
 	 	 * basic (default: use extended feature set, unless explicitly put 'basic')
 	 	 
+	 	 *  static (default: use dynamic oracles, unless explicitly put `static' for static oracles)
+	 	 
 	 	 * early (default: use max violation update, unless explicitly put `early' for early update)
 	 	 
 	 	 
 	 	 * random (default: choose maximum scoring oracle, unless explicitly put `random' for randomly choosing an oracle)
+	 	 
+	 	 * nt:[#_of_threads] (default:1)
+	 	 
+	 	 * root_first (default: put ROOT in the last position, unless explicitly put 'root_first')
 	 
 
 ### Parse a CoNLL_2006 file
@@ -88,19 +94,19 @@ __WARNING__ The current evaluation script does take into account every dependenc
 ### Example Usage
 There is small portion from Google Universal Treebank for the German language in the __sample\_data__ directory. 
 
-     java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model beam:64 iter:10
+     java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model beam:64 iter:10 nt:1
 
-You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __88.95__ and labeled accuracy __83.00__ on the dev set in the 10th iteration. 
+Note that it is better to have more threads depending on your machine, but since multi-threading is not giving exactly the same answer for approximate search in each run, we give examples with one thread. You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __87.89__ and labeled accuracy __82.78__ on the dev set in the 10th iteration. 
 
 Performance numbers are produced after each iteration. The following is the performance on the dev after the 10th iteration:
 
-    3.54 ms for each arc!
-	46.87 ms for each sentence!
+    2.88 ms for each arc!
+	38.17 ms for each sentence!
 
-	Labeled accuracy: 83.00
-	Unlabeled accuracy:  88.95
-	Labeled exact match:  23.94
-	Unlabeled exact match:  42.25  
+	Labeled accuracy: 82.78
+	Unlabeled accuracy:  87.89
+	Labeled exact match:  26.76
+	Unlabeled exact match:  42.25   
 
 Next, you can run the developed model on the test data:
 
@@ -110,9 +116,9 @@ You can finally evaluate the output data:
 
 	java -jar jar/YaraParser.jar eval --gold-file sample_data/test.conll --parsed-file /tmp/test.output.conll --inf-file /tmp/model 
 
-    Labeled accuracy: 68.86
-	Unlabeled accuracy:  73.90
-	Labeled exact match:  19.30
+    Labeled accuracy: 71.43
+	Unlabeled accuracy:  76.26
+	Labeled exact match:  17.54
 	Unlabeled exact match:  24.56  
 
 # API USAGE
@@ -122,17 +128,19 @@ You can look at the class __Parser/API_UsageExample__ to see an example of using
 # NOTES
 
 ## A Useful Trick to Improve Performance
-It is shown that replacing all numbers (integers and floating points), with a dummy token (e.g. <num>) helps the accuracy in _some treebanks but not always_. If you want to try that idea, simply replace the numbers in your training, development and test data with that dummy token.
+It is shown that replacing all numbers (integers and floating points), with a dummy token (e.g. \<num\>) helps the accuracy in _some treebanks but not always_. If you want to try that idea, simply replace the numbers in your training, development and test data with that dummy token.
 
 ## Memory size
 For very large training sets, you may need to increase the java memory heap size by -Xmx option; e.g. java -Xmx3g jar/YaraParser.jar ...
 
 
 ## Technical Details
-This parser is an implementation of the arc-eager dependency model [Nivre, 2004] with averaged structured Perceptron [Collins, 2002]. The feature setting is from Zhang and Nivre [2011]. The model can be trained with early update strategery [Collins and Roark, 2004] or max-violation update [Huang et al., 2012]. Oracle search for training is done with dynamic oracles [Goldberg and Nivre, 2013]. Choosing the best oracles in the dynamic oracle can be done via latent structured Perceptron [Sun et al., 2013]. 
+This parser is an implementation of the arc-eager dependency model [Nivre, 2004] with averaged structured Perceptron [Collins, 2002]. The feature setting is from Zhang and Nivre [2011]. The model can be trained with early update strategy [Collins and Roark, 2004] or max-violation update [Huang et al., 2012]. Oracle search for training is done with either dynamic oracles [Goldberg and Nivre, 2013] or original static oracles.  Choosing the best oracles in the dynamic oracle can be done via latent structured Perceptron [Sun et al., 2013] and also randomly. The dummy root token can be placed in the end or in the beginning of the sentence [Ballesteros and Nivre, 2013]. When the dummy root token is placed in the beginning, tree constraints are applied [Nivre and Fernández-González, 2014].
 
 __[References]__
 
+__[Ballesteros and Nivre, 2013]__ Ballesteros, Miguel, and Joakim Nivre. "Going to the roots of dependency parsing." Computational Linguistics 39.1 (2013): 5-13.
+	
 
 __[Collins, 2002]__ Collins, Michael. "Discriminative training methods for hidden markov models: Theory and experiments with perceptron algorithms." Proceedings of the ACL-02 conference on Empirical methods in natural language processing-Volume 10. Association for Computational Linguistics, 2002.
 
@@ -143,6 +151,9 @@ __[Goldberg and Nivre, 2013]__ Goldberg, Yoav, and Joakim Nivre. "Training Deter
 __[Huang et al., 20012]__ Huang, Liang, Suphan Fayong, and Yang Guo. "Structured perceptron with inexact search." Proceedings of the 2012 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies. Association for Computational Linguistics, 2012.
 
 __[Nivre, 2004]__ Nivre, Joakim. "Incrementality in deterministic dependency parsing." In Proceedings of the Workshop on Incremental Parsing: Bringing Engineering and Cognition Together, pp. 50-57. Association for Computational Linguistics, 2004.
+
+__[Nivre and Fernández-González, 2014]__ Nivre, Joakim, and Daniel Fernández-González. "Arc-Eager Parsing with the Tree Constraint." Computational Linguistics, 40(2), (2014): 259-267.
+
 
 __[Sun et al., 2013]__ Sun, Xu, Takuya Matsuzaki, and Wenjie Li. "Latent structured perceptrons for large-scale learning with hidden information." IEEE Transactions on Knowledge and Data Engineering, 25.9 (2013): 2063-2075.
 
