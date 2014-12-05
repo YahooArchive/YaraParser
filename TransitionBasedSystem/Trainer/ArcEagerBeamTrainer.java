@@ -81,7 +81,7 @@ public class ArcEagerBeamTrainer {
         this.numOfThreads = numOfThreads;
     }
 
-    public void train(ArrayList<GoldConfiguration> trainData, String devPath, int maxIteration, String modelPath, boolean lowerCased) throws Exception {
+    public void train(ArrayList<GoldConfiguration> trainData, String devPath, int maxIteration, String modelPath, boolean lowerCased,HashSet<String> punctuations) throws Exception {
         /**
          * Actions: 0=shift, 1=reduce, 2=unshift, ra_dep=3+dep, la_dep=3+dependencyRelations.size()+dep
          */
@@ -554,7 +554,7 @@ public class ArcEagerBeamTrainer {
 
                 parser.parseConllFile(devPath, devPath + ".tmp",
                         rootFirst, beamWidth, lowerCased, numOfThreads);
-                Evaluator.evaluate(devPath, devPath + ".tmp", maps);
+                Evaluator.evaluate(devPath, devPath + ".tmp",punctuations);
                 parser.shutDownLiveThreads();
             }
         }

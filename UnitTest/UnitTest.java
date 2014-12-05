@@ -29,6 +29,7 @@ public class UnitTest {
         options.inputFile=args[0];
         options.devPath=args[1];
         options.modelFile=args[2];
+        options.changePunc(args[3]);
         options.trainingIter=3;
         options.train=true;
         options.beamWidth=4;
@@ -110,6 +111,6 @@ public class UnitTest {
 
         ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, 4 + 2 * dependencyLabels.size(), options.numOfThreads),
                 options.rootFirst, options.beamWidth, dependencyLabels, headDepSet, featureLength, options.useDynamicOracle, options.useRandomOracleSelection, maps, options.numOfThreads);
-        trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase);
+        trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase,options.punctuations);
     }
 }

@@ -36,13 +36,13 @@ __NOTE:__ All the examples bellow are using the jar file for running the applica
 
 __WARNING:__ The training code ignores non-projective trees in the training data. If you want to include them, try to projectivize them; e.g. by [tree projectivizer](http://www.cs.bgu.ac.il/~yoavg/software/projectivize/).
 
-* __java -jar jar/YaraParser.jar train --train-file [train-file] --dev-file [dev-file] --model-file [model-file]__
+* __java -jar jar/YaraParser.jar train --train-file [train-file] --dev-file [dev-file] --model-file [model-file] --punc_file [punc-file]__
 	
 	*	 The model for each iteration is with the pattern [model-file]_iter[iter#]; e.g. mode_iter2
-	
+	* [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line
 	* The inf file is [model-file] for parsing
 	
-	*	 Other options (__there are 128 combinations of features and also beam size and thread but the default is the best setting given a big beam (e.g. 64)__)
+	*	 Other options (__there are 128 combinations of options and also beam size and thread but the default is the best setting given a big beam (e.g. 64)__)
 	 	 
 	 	 * beam:[beam-width] (default:1)
 	 	 
@@ -85,26 +85,25 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	* Example line: He_PRP is_VBZ nice_AJ ._.
 
 ## Evaluate the Parser
-__WARNING__ The current evaluation script does take into account every dependency relation. If you want to ignore the punctuations, you have to either tweak the code or write your own script.
 
-* __java -jar jar/YaraParser.jar eval --gold-file [gold-file] --parsed-file [parsed-file] --inf-file [inf-file]__
-	
+* __java -jar YaraParser.jar eval --gold-file [gold-file] --parsed-file [parsed-file]  --punc_file [punc-file]__
+	* [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line
 	* Both files should have conll 2006 format
 
 ### Example Usage
 There is small portion from Google Universal Treebank for the German language in the __sample\_data__ directory. 
 
-     java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model beam:64 iter:10 nt:1
+     java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model beam:64 iter:10 nt:1 --punc_file punc_files/google_universal.puncs
 
-Note that it is better to have more threads depending on your machine, but since multi-threading is not giving exactly the same answer for approximate search in each run, we give examples with one thread. You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __87.89__ and labeled accuracy __82.78__ on the dev set in the 10th iteration. 
+Note that it is better to have more threads depending on your machine, but since multi-threading is not giving exactly the same answer for approximate search in each run, we give examples with one thread. You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __87.76__ and labeled accuracy __81.88__ on the dev set in the 10th iteration. 
 
 Performance numbers are produced after each iteration. The following is the performance on the dev after the 10th iteration:
 
-    2.88 ms for each arc!
-	38.17 ms for each sentence!
+    3.37 ms for each arc!
+	44.62 ms for each sentence!
 
-	Labeled accuracy: 82.78
-	Unlabeled accuracy:  87.89
+	Labeled accuracy: 81.88
+	Unlabeled accuracy:  87.76
 	Labeled exact match:  26.76
 	Unlabeled exact match:  42.25   
 
@@ -116,10 +115,10 @@ You can finally evaluate the output data:
 
 	java -jar jar/YaraParser.jar eval --gold-file sample_data/test.conll --parsed-file /tmp/test.output.conll --inf-file /tmp/model 
 
-    Labeled accuracy: 71.43
-	Unlabeled accuracy:  76.26
+    Labeled accuracy: 72.20
+	Unlabeled accuracy:  77.74
 	Labeled exact match:  17.54
-	Unlabeled exact match:  24.56  
+	Unlabeled exact match:  28.07  
 
 # API USAGE
 

@@ -5,21 +5,19 @@
 
 package Accessories;
 
-import Structures.IndexMaps;
-import TransitionBasedSystem.Configuration.GoldConfiguration;
-
+import TransitionBasedSystem.Configuration.CompactTree;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class Evaluator {
-    public static void evaluate(String testPath, String predictedPath, IndexMaps maps) throws Exception {
+    public static void evaluate(String testPath, String predictedPath,HashSet<String> puncTags) throws Exception {
         CoNLLReader goldReader = new CoNLLReader(testPath);
         CoNLLReader predictedReader = new CoNLLReader(predictedPath);
 
-        ArrayList<GoldConfiguration> goldConfiguration = goldReader.readData(Integer.MAX_VALUE, true, true, false, false, maps);
-        ArrayList<GoldConfiguration> predConfiguration = predictedReader.readData(Integer.MAX_VALUE, true, true, false, false, maps);
-
+        ArrayList<CompactTree> goldConfiguration = goldReader.readStringData();
+        ArrayList<CompactTree> predConfiguration = predictedReader.readStringData();
 
         float unlabMatch = 0f;
         float labMatch = 0f;
@@ -29,32 +27,34 @@ public class Evaluator {
         float fullLabMatch = 0f;
         int numTree = 0;
 
-        for (int i = 0; i < goldConfiguration.size(); i++) {
-            HashMap<Integer, Pair<Integer, Integer>> goldDeps = goldConfiguration.get(i).getGoldDependencies();
-            HashMap<Integer, Pair<Integer, Integer>> predDeps = predConfiguration.get(i).getGoldDependencies();
+        for (int i = 0; i < predConfiguration.size(); i++) {
+            HashMap<Integer, Pair<Integer, String>> goldDeps = goldConfiguration.get(i).goldDependencies;
+            HashMap<Integer, Pair<Integer, String>> predDeps = predConfiguration.get(i).goldDependencies;
+
+            ArrayList<String> goldTags=  goldConfiguration.get(i).posTags;
 
             numTree++;
             boolean fullMatch = true;
             boolean fullUnlabMatch = true;
             for (int dep : goldDeps.keySet()) {
-                all++;
-                if (predDeps.containsKey(dep)) {
-                    int gh = goldDeps.get(dep).first;
-                    int ph = predDeps.get(dep).first;
-                    int gl = goldDeps.get(dep).second;
-                    int pl = predDeps.get(dep).second;
+                if(!puncTags.contains(goldTags.get(dep-1).trim())) {
+                        all++;
+                        int gh = goldDeps.get(dep).first;
+                        int ph = predDeps.get(dep).first;
+                        String gl = goldDeps.get(dep).second;
+                        String pl = predDeps.get(dep).second;
 
-                    if (ph == gh) {
-                        unlabMatch++;
+                        if (ph == gh) {
+                            unlabMatch++;
 
-                        if (pl == gl)
-                            labMatch++;
-                        else
+                            if (pl.equals(gl))
+                                labMatch++;
+                            else
+                                fullMatch = false;
+                        } else {
                             fullMatch = false;
-                    } else {
-                        fullMatch = false;
-                        fullUnlabMatch = false;
-                    }
+                            fullUnlabMatch = false;
+                        }
                 }
             }
 

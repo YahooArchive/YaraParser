@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class YaraParser {
-
     public static void main(String[] args) throws Exception {
         Options options = Options.processArgs(args);
 
@@ -95,7 +94,7 @@ public class YaraParser {
 
                     ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, 4 + 2 * dependencyLabels.size(), options.numOfThreads),
                             options.rootFirst, options.beamWidth, dependencyLabels, headDepSet, featureLength, options.useDynamicOracle, options.useRandomOracleSelection, maps, options.numOfThreads);
-                    trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase);
+                    trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase,options.punctuations);
                 }
             } else if (options.parseTaggedFile) {
                 if (options.outputFile.equals("") || options.inputFile.equals("")
@@ -141,14 +140,10 @@ public class YaraParser {
                     parser.shutDownLiveThreads();
                 }
             } else if (options.evaluate) {
-                if (options.goldFile.equals("") || options.predFile.equals("") || options.infFile.equals(""))
+                if (options.goldFile.equals("") || options.predFile.equals("") )
                     Options.showHelp();
                 else {
-                    ObjectInputStream reader = new ObjectInputStream(new FileInputStream(options.infFile));
-                    ArrayList<Integer> dependencyLabels = (ArrayList<Integer>) reader.readObject();
-                    IndexMaps maps = (IndexMaps) reader.readObject();
-                    reader.close();
-                    Evaluator.evaluate(options.goldFile, options.predFile, maps);
+                    Evaluator.evaluate(options.goldFile, options.predFile,options.punctuations);
                 }
             } else {
                 Options.showHelp();

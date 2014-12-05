@@ -5,8 +5,11 @@
 
 package Accessories;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class Options implements Serializable {
     public boolean train;
@@ -33,6 +36,8 @@ public class Options implements Serializable {
     public int numOfThreads;
 
     public String goldFile;
+
+    public HashSet<String> punctuations;
     public String predFile;
 
     public Options() {
@@ -57,6 +62,39 @@ public class Options implements Serializable {
         trainingIter = 20;
         evaluate = false;
         numOfThreads = 8;
+
+        punctuations=new HashSet<String>();
+        punctuations.add("#");
+        punctuations.add("''");
+        punctuations.add("(");
+        punctuations.add(")");
+        punctuations.add("[");
+        punctuations.add("]");
+        punctuations.add("{");
+        punctuations.add("}");
+        punctuations.add("\"");
+        punctuations.add(",");
+        punctuations.add(".");
+        punctuations.add(":");
+        punctuations.add("``");
+        punctuations.add("-LRB-");
+        punctuations.add("-RRB-");
+        punctuations.add("-LSB-");
+        punctuations.add("-RSB-");
+        punctuations.add("-LCB-");
+        punctuations.add("-RCB-");
+    }
+
+    public void changePunc(String puncPath) throws  Exception{
+        BufferedReader reader = new BufferedReader(new FileReader(puncPath));
+
+        punctuations=new HashSet<String>();
+        String line;
+        while ((line = reader.readLine()) != null) {
+           line=line.trim();
+            if(line.length()>0)
+                punctuations.add(line.split(" ")[0].trim());
+        }
     }
 
     public static void showHelp() {
@@ -70,9 +108,10 @@ public class Options implements Serializable {
         output.append("Usage:\n");
 
         output.append("* Train a parser:\n");
-        output.append("\tjava -jar YaraParser.jar train --train-file [train-file] --dev-file [dev-file] --model-file [model-file]\n");
+        output.append("\tjava -jar YaraParser.jar train --train-file [train-file] --dev-file [dev-file] --model-file [model-file] --punc_file [punc-file]\n");
         output.append("\t** The model for each iteration is with the pattern [model-file]_iter[iter#]; e.g. mode_iter2\n");
         output.append("\t** The inf file is [model-file] for parsing\n");
+        output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line\n");
         output.append("\t** Other options\n");
         output.append("\t \t beam:[beam-width] (default:1)\n");
         output.append("\t \t iter:[training-iterations] (default:50)\n");
@@ -98,12 +137,13 @@ public class Options implements Serializable {
         output.append("\t \t Example: He_PRP is_VBZ nice_AJ ._.\n\n");
 
         output.append("* Evaluate a Conll file:\n");
-        output.append("\tjava -jar YaraParser.jar eval --gold-file [gold-file] --parsed-file [parsed-file] --inf-file [inf-file] \n");
+        output.append("\tjava -jar YaraParser.jar eval --gold-file [gold-file] --parsed-file [parsed-file]  --punc_file [punc-file]\n");
+        output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line\n");
         output.append("\t** Both files should have conll 2006 format\n");
         System.out.println(output.toString());
     }
 
-    public static Options processArgs(String[] args) {
+    public static Options processArgs(String[] args) throws Exception {
         Options options = new Options();
 
         for (int i = 0; i < args.length; i++) {
@@ -119,6 +159,8 @@ public class Options implements Serializable {
                 options.parseTaggedFile = true;
             else if (args[i].equals("--train-file") || args[i].equals("--test-file"))
                 options.inputFile = args[i + 1];
+            else if (args[i].equals("--punc_file") )
+                options.changePunc( args[i + 1]);
             else if (args[i].equals("--model-file"))
                 options.modelFile = args[i + 1];
             else if (args[i].startsWith("--dev-file"))
@@ -208,130 +250,130 @@ public class Options implements Serializable {
         return "";
     }
 
-    public Options clone(){
-        Options options=new Options();
-        options.train=train;
-        options.labeled=labeled;
-        options.trainingIter=trainingIter;
-        options.useMaxViol=useMaxViol;
-        options.beamWidth=beamWidth;
-        options.devPath=devPath;
-        options.evaluate=evaluate;
-        options.goldFile=goldFile;
-        options.infFile=infFile;
-        options.inputFile=inputFile;
-        options.lowercase=lowercase;
-        options.numOfThreads=numOfThreads;
-        options.outputFile=outputFile;
-        options.useDynamicOracle=useDynamicOracle;
-        options.modelFile=modelFile;
-        options.rootFirst=rootFirst;
-        options.parseConllFile=parseConllFile;
-        options.parseTaggedFile=parseTaggedFile;
-        options.predFile=predFile;
-        options.showHelp=showHelp;
-        options.separator=separator;
-        options.useExtendedFeatures=useExtendedFeatures;
+    public Options clone() {
+        Options options = new Options();
+        options.train = train;
+        options.labeled = labeled;
+        options.trainingIter = trainingIter;
+        options.useMaxViol = useMaxViol;
+        options.beamWidth = beamWidth;
+        options.devPath = devPath;
+        options.evaluate = evaluate;
+        options.goldFile = goldFile;
+        options.infFile = infFile;
+        options.inputFile = inputFile;
+        options.lowercase = lowercase;
+        options.numOfThreads = numOfThreads;
+        options.outputFile = outputFile;
+        options.useDynamicOracle = useDynamicOracle;
+        options.modelFile = modelFile;
+        options.rootFirst = rootFirst;
+        options.parseConllFile = parseConllFile;
+        options.parseTaggedFile = parseTaggedFile;
+        options.predFile = predFile;
+        options.showHelp = showHelp;
+        options.separator = separator;
+        options.useExtendedFeatures = useExtendedFeatures;
         return options;
     }
 
-    public static ArrayList<Options> getAllPossibleOptions(Options option){
-        ArrayList<Options> options=new ArrayList<Options>();
+    public static ArrayList<Options> getAllPossibleOptions(Options option) {
+        ArrayList<Options> options = new ArrayList<Options>();
         options.add(option);
 
-        ArrayList<Options> tmp=new ArrayList<Options>();
+        ArrayList<Options> tmp = new ArrayList<Options>();
 
-        for(Options opt:options){
-            Options o1=opt.clone();
-            o1.labeled=true;
+        for (Options opt : options) {
+            Options o1 = opt.clone();
+            o1.labeled = true;
 
-            Options o2=opt.clone();
-            o2.labeled=false;
+            Options o2 = opt.clone();
+            o2.labeled = false;
             tmp.add(o1);
             tmp.add(o2);
         }
 
-        options=tmp;
-        tmp=  new ArrayList<Options>();
+        options = tmp;
+        tmp = new ArrayList<Options>();
 
 
-        for(Options opt:options){
-            Options o1=opt.clone();
-            o1.lowercase=true;
+        for (Options opt : options) {
+            Options o1 = opt.clone();
+            o1.lowercase = true;
 
-            Options o2=opt.clone();
-            o2.lowercase=false;
+            Options o2 = opt.clone();
+            o2.lowercase = false;
             tmp.add(o1);
             tmp.add(o2);
         }
 
-        options=tmp;
-        tmp=  new ArrayList<Options>();
+        options = tmp;
+        tmp = new ArrayList<Options>();
 
-        for(Options opt:options){
-            Options o1=opt.clone();
-            o1.useExtendedFeatures=true;
+        for (Options opt : options) {
+            Options o1 = opt.clone();
+            o1.useExtendedFeatures = true;
 
-            Options o2=opt.clone();
-            o2.useExtendedFeatures=false;
+            Options o2 = opt.clone();
+            o2.useExtendedFeatures = false;
             tmp.add(o1);
             tmp.add(o2);
         }
 
-        options=tmp;
-        tmp=  new ArrayList<Options>();
+        options = tmp;
+        tmp = new ArrayList<Options>();
 
-        for(Options opt:options){
-            Options o1=opt.clone();
-            o1.useDynamicOracle=true;
+        for (Options opt : options) {
+            Options o1 = opt.clone();
+            o1.useDynamicOracle = true;
 
-            Options o2=opt.clone();
-            o2.useDynamicOracle=false;
+            Options o2 = opt.clone();
+            o2.useDynamicOracle = false;
             tmp.add(o1);
             tmp.add(o2);
         }
 
-        options=tmp;
-        tmp=  new ArrayList<Options>();
+        options = tmp;
+        tmp = new ArrayList<Options>();
 
-        for(Options opt:options){
-            Options o1=opt.clone();
-            o1.useMaxViol=true;
+        for (Options opt : options) {
+            Options o1 = opt.clone();
+            o1.useMaxViol = true;
 
-            Options o2=opt.clone();
-            o2.useMaxViol=false;
+            Options o2 = opt.clone();
+            o2.useMaxViol = false;
             tmp.add(o1);
             tmp.add(o2);
         }
 
-        options=tmp;
-        tmp=  new ArrayList<Options>();
+        options = tmp;
+        tmp = new ArrayList<Options>();
 
-        for(Options opt:options){
-            Options o1=opt.clone();
-            o1.useRandomOracleSelection=true;
+        for (Options opt : options) {
+            Options o1 = opt.clone();
+            o1.useRandomOracleSelection = true;
 
-            Options o2=opt.clone();
-            o2.useRandomOracleSelection=false;
+            Options o2 = opt.clone();
+            o2.useRandomOracleSelection = false;
             tmp.add(o1);
             tmp.add(o2);
         }
 
-        options=tmp;
-        tmp=  new ArrayList<Options>();
+        options = tmp;
+        tmp = new ArrayList<Options>();
 
 
-        for(Options opt:options){
-            Options o1=opt.clone();
-            o1.rootFirst=true;
+        for (Options opt : options) {
+            Options o1 = opt.clone();
+            o1.rootFirst = true;
 
-            Options o2=opt.clone();
-            o2.rootFirst=false;
+            Options o2 = opt.clone();
+            o2.rootFirst = false;
             tmp.add(o1);
             tmp.add(o2);
         }
 
-        options=tmp;
-    return options;
-       }
+        options = tmp;
+        return options;
+    }
 }
