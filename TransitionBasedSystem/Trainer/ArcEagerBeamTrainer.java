@@ -352,7 +352,7 @@ public class ArcEagerBeamTrainer {
                     } else {
                         for (int b = 0; b < beam.size(); b++) {
                             pool.submit(new BeamScorerThread(false, classifier, beam.get(b),
-                                    dependencyRelations, featureLength, headDepSet, b));
+                                    dependencyRelations, featureLength, headDepSet, b,rootFirst));
                         }
                         for (int b = 0; b < beam.size(); b++) {
                             for (BeamElement element : pool.take().get()) {
@@ -549,7 +549,7 @@ public class ArcEagerBeamTrainer {
             System.out.println("\nsaved iteration " + i + " with " + classifier.size() + " features\n");
 
             if (!devPath.equals("")) {
-                AveragedPerceptron averagedPerceptron = AveragedPerceptron.loadModel(modelPath + "_iter" + i, 1);
+                AveragedPerceptron averagedPerceptron = AveragedPerceptron.loadModel(modelPath + "_iter" + i);
                 KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyRelations, headDepSet, featureLength, maps, numOfThreads);
 
                 parser.parseConllFile(devPath, devPath + ".tmp",

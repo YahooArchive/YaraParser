@@ -144,7 +144,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 } else {
                     for (int b = 0; b < beam.size(); b++) {
                         pool.submit(new BeamScorerThread(true, classifier, beam.get(b),
-                                dependencyRelations, featureLength, headDepSet, b));
+                                dependencyRelations, featureLength, headDepSet, b,rootFirst));
                     }
                     for (int b = 0; b < beam.size(); b++) {
                         for (BeamElement element : pool.take().get()) {

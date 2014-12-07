@@ -27,8 +27,9 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
     int featureLength;
     HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet;
     int b;
+    boolean rootFirst;
 
-    public BeamScorerThread(boolean isDecode, AveragedPerceptron classifier, Configuration configuration, ArrayList<Integer> dependencyRelations, int featureLength, HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet, int b) {
+    public BeamScorerThread(boolean isDecode, AveragedPerceptron classifier, Configuration configuration, ArrayList<Integer> dependencyRelations, int featureLength, HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet, int b,boolean rootFirst) {
         this.isDecode = isDecode;
         this.classifier = classifier;
         this.configuration = configuration;
@@ -36,6 +37,7 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
         this.featureLength = featureLength;
         this.headDepSet = headDepSet;
         this.b = b;
+        this.rootFirst=rootFirst;
     }
 
 
@@ -68,7 +70,7 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
             int headPos = sentence.posAt(configuration.state.peek());
             int depPos = sentence.posAt(configuration.state.bufferHead());
             for (int dependency : dependencyRelations) {
-                if ((!canLeftArc && !canShift && !canReduce) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
+                if ((!canLeftArc && !canShift && !canReduce) || (rootFirst && canRightArc) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
                         && headDepSet.get(headPos).get(depPos).contains(dependency))) {
                     float score = classifier.score(features, 3 + dependency, isDecode);
                     float addedScore = score + prevScore;
@@ -80,7 +82,7 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
             int headPos = sentence.posAt(configuration.state.bufferHead());
             int depPos = sentence.posAt(configuration.state.peek());
             for (int dependency : dependencyRelations) {
-                if ((!canShift && !canRightArc && !canReduce) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
+                if ((!canShift && !canRightArc && !canReduce) || (rootFirst && canLeftArc) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
                         && headDepSet.get(headPos).get(depPos).contains(dependency))) {
                     float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, isDecode);
                     float addedScore = score + prevScore;

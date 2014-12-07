@@ -31,7 +31,7 @@ public class API_UsageExample {
         HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet = (HashMap<Integer, HashMap<Integer, HashSet<Integer>>>) reader.readObject();
 
         Options inf_options = (Options) reader.readObject();
-        AveragedPerceptron averagedPerceptron = AveragedPerceptron.loadModel(modelFile, numOfThreads);
+        AveragedPerceptron averagedPerceptron = AveragedPerceptron.loadModel(modelFile);
 
         int templates = averagedPerceptron.featureSize();
         KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, headDepSet, templates, maps, numOfThreads);

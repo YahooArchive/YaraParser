@@ -92,7 +92,7 @@ public class YaraParser {
                     writer.close();
                     System.out.println("done!");
 
-                    ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, 4 + 2 * dependencyLabels.size(), options.numOfThreads),
+                    ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, 4 + 2 * dependencyLabels.size()),
                             options.rootFirst, options.beamWidth, dependencyLabels, headDepSet, featureLength, options.useDynamicOracle, options.useRandomOracleSelection, maps, options.numOfThreads);
                     trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase,options.punctuations);
                 }
@@ -109,7 +109,7 @@ public class YaraParser {
                     HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet = (HashMap<Integer, HashMap<Integer, HashSet<Integer>>>) reader.readObject();
 
                     Options inf_options = (Options) reader.readObject();
-                    AveragedPerceptron averagedPerceptron = AveragedPerceptron.loadModel(options.modelFile, options.numOfThreads);
+                    AveragedPerceptron averagedPerceptron = AveragedPerceptron.loadModel(options.modelFile);
 
                     int templates = averagedPerceptron.featureSize();
                     KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, headDepSet, templates, maps, options.numOfThreads);
@@ -130,7 +130,7 @@ public class YaraParser {
                     HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet = (HashMap<Integer, HashMap<Integer, HashSet<Integer>>>) reader.readObject();
 
                     Options inf_options = (Options) reader.readObject();
-                    AveragedPerceptron averagedPerceptron = AveragedPerceptron.loadModel(options.modelFile, options.numOfThreads);
+                    AveragedPerceptron averagedPerceptron = AveragedPerceptron.loadModel(options.modelFile);
 
                     int templates = averagedPerceptron.featureSize();
                     KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, headDepSet, templates, maps, options.numOfThreads);

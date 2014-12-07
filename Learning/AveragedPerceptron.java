@@ -20,7 +20,7 @@ public class AveragedPerceptron {
      * Harold Charles Daume' III. "Practical Structured Learning Techniques for Natural Language Processing", PhD thesis, ISI USC, 2006.
      * http://www.umiacs.umd.edu/~hal/docs/daume06thesis.pdf
      */
-    protected static int numberOfThreads;
+
     /**
      * For the weights for all features
      */
@@ -32,12 +32,11 @@ public class AveragedPerceptron {
     private HashMap<Long, Float>[][] averagedWeights;
 
 
-    public AveragedPerceptron(int size, int len, int numberOfThreads) {
+    public AveragedPerceptron(int size, int len) {
         featureWeights = new HashMap[len][size];
         for (int i = 0; i < featureWeights.length; i++)
             for (int j = 0; j < featureWeights[i].length; j++)
                 featureWeights[i][j] = new HashMap<Long, Float>();
-        this.numberOfThreads = numberOfThreads;
         iteration = 1;
         this.averagedWeights = new HashMap[len][size];
         for (int i = 0; i < averagedWeights.length; i++)
@@ -45,24 +44,23 @@ public class AveragedPerceptron {
                 averagedWeights[i][j] = new HashMap<Long, Float>();
     }
 
-    public AveragedPerceptron(int size, HashMap<Long, Float>[][] averagedWeights, int len, int numberOfThreads) {
+    public AveragedPerceptron(int size, HashMap<Long, Float>[][] averagedWeights, int len) {
 
         featureWeights = new HashMap[len][size];
         for (int i = 0; i < featureWeights.length; i++)
             for (int j = 0; j < featureWeights[i].length; j++)
                 featureWeights[i][j] = new HashMap<Long, Float>();
 
-        this.numberOfThreads = numberOfThreads;
         iteration = 1;
         this.averagedWeights = averagedWeights;
     }
 
-    public static AveragedPerceptron loadModel(String modelPath, int numberOfThreads) throws IOException, ClassNotFoundException {
+    public static AveragedPerceptron loadModel(String modelPath) throws IOException, ClassNotFoundException {
         ObjectInputStream reader = new ObjectInputStream(new FileInputStream(modelPath));
         HashMap<Long, Float>[][] avg = (HashMap<Long, Float>[][]) reader.readObject();
         reader.close();
 
-        return new AveragedPerceptron(avg.length, avg, avg[0].length, numberOfThreads);
+        return new AveragedPerceptron(avg.length, avg, avg[0].length);
     }
 
     public float changeWeight(int slotNum, Long featureName, int labelIndex, float change) {
