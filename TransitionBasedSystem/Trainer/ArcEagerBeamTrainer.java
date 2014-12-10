@@ -81,7 +81,7 @@ public class ArcEagerBeamTrainer {
         this.numOfThreads = numOfThreads;
     }
 
-    public void train(ArrayList<GoldConfiguration> trainData, String devPath, int maxIteration, String modelPath, boolean lowerCased, HashSet<String> punctuations) throws Exception {
+    public void train(ArrayList<GoldConfiguration> trainData, String devPath, int maxIteration, String modelPath, boolean lowerCased, HashSet<String> punctuations,int partialTreeIter) throws Exception {
         /**
          * Actions: 0=shift, 1=reduce, 2=unshift, ra_dep=3+dep, la_dep=3+dependencyRelations.size()+dep
          */
@@ -99,7 +99,10 @@ public class ArcEagerBeamTrainer {
                 if (dataCount % 100 == 0)
                     System.out.print(dataCount + "...");
 
-                boolean isPartial=goldConfiguration.isPartial();
+                boolean isPartial=goldConfiguration.isPartial(rootFirst);
+
+                if(partialTreeIter>i && isPartial)
+                    continue;
 
                 Sentence sentence = goldConfiguration.getSentence();
 
@@ -467,15 +470,29 @@ public class ArcEagerBeamTrainer {
                     Configuration oracleConfiguration = initialConfiguration.clone();
 
                     for (int action : finalOracle.actionHistory) {
-                        long[] feats = FeatureExtractor.extractAllParseFeatures(oracleConfiguration, featureLength);
-                        for (int f = 0; f < feats.length; f++) {
-                            Pair<Integer, Long> featName = new Pair<Integer, Long>(action, feats[f]);
-                            HashMap<Pair<Integer, Long>, Float> map = (HashMap<Pair<Integer, Long>, Float>) oracleFeatures[f];
-                            Float value = map.get(featName);
-                            if (value == null)
-                                map.put(featName, 1.0f);
-                            else
-                                map.put(featName, value + 1);
+                        boolean isTrueFeature=true;
+                        if(isPartial && action >= 3) {
+                            if (!oracleConfiguration.state.hasHead(oracleConfiguration.state.peek()) || !oracleConfiguration.state.hasHead(oracleConfiguration.state.bufferHead()))
+                                isTrueFeature=false;
+                        }  else if(isPartial && action==0){
+                            if(!oracleConfiguration.state.hasHead(oracleConfiguration.state.bufferHead()))
+                                isTrueFeature=false;
+                        }  else if(isPartial && action==1){
+                            if(!oracleConfiguration.state.hasHead(oracleConfiguration.state.peek()))
+                                isTrueFeature=false;
+                        }
+
+                        if(isTrueFeature) {   // if the made dependency is truely for the word
+                            long[] feats = FeatureExtractor.extractAllParseFeatures(oracleConfiguration, featureLength);
+                            for (int f = 0; f < feats.length; f++) {
+                                Pair<Integer, Long> featName = new Pair<Integer, Long>(action, feats[f]);
+                                HashMap<Pair<Integer, Long>, Float> map = (HashMap<Pair<Integer, Long>, Float>) oracleFeatures[f];
+                                Float value = map.get(featName);
+                                if (value == null)
+                                    map.put(featName, 1.0f);
+                                else
+                                    map.put(featName, value + 1);
+                            }
                         }
 
                         if (action == 0) {
@@ -492,17 +509,32 @@ public class ArcEagerBeamTrainer {
                     }
 
                     for (int action : predicted.actionHistory) {
-                        long[] feats = FeatureExtractor.extractAllParseFeatures(predictedConfiguration, featureLength);
-                        if (action != 2) // do not take into account for unshift
-                            for (int f = 0; f < feats.length; f++) {
-                                Pair<Integer, Long> featName = new Pair<Integer, Long>(action, feats[f]);
-                                HashMap<Pair<Integer, Long>, Float> map = (HashMap<Pair<Integer, Long>, Float>) predictedFeatures[f];
-                                Float value = map.get(featName);
-                                if (value == null)
-                                    map.put(featName, 1.f);
-                                else
-                                    map.put(featName, map.get(featName) + 1);
-                            }
+                        boolean isTrueFeature=true;
+                        if(isPartial && action >= 3) {
+                            if (!predictedConfiguration.state.hasHead(predictedConfiguration.state.peek()) || !predictedConfiguration.state.hasHead(predictedConfiguration.state.bufferHead()))
+                                isTrueFeature=false;
+                        } else if(isPartial && action==0){
+                             if(!predictedConfiguration.state.hasHead(predictedConfiguration.state.bufferHead()))
+                                 isTrueFeature=false;
+                        }  else if(isPartial && action==1){
+                            if(!predictedConfiguration.state.hasHead(predictedConfiguration.state.peek()))
+                                isTrueFeature=false;
+                        }
+
+                        if(isTrueFeature) {   // if the made dependency is truely for the word
+                            long[] feats = FeatureExtractor.extractAllParseFeatures(predictedConfiguration, featureLength);
+                            if (action != 2) // do not take into account for unshift
+                                for (int f = 0; f < feats.length; f++) {
+                                    Pair<Integer, Long> featName = new Pair<Integer, Long>(action, feats[f]);
+                                    HashMap<Pair<Integer, Long>, Float> map = (HashMap<Pair<Integer, Long>, Float>) predictedFeatures[f];
+                                    Float value = map.get(featName);
+                                    if (value == null)
+                                        map.put(featName, 1.f);
+                                    else
+                                        map.put(featName, map.get(featName) + 1);
+                                }
+                        }
+
                         State state = predictedConfiguration.state;
                         if (action == 0) {
                             ArcEager.shift(state);
