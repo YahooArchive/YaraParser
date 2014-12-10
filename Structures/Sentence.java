@@ -73,11 +73,11 @@ public class Sentence implements Comparable {
 
     @Override
     public int hashCode() {
-        StringBuilder builder = new StringBuilder();
+        int hash=0;
         for (int tokenId = 0; tokenId < words.length; tokenId++) {
-            builder.append(words[tokenId] + "/" + tags[tokenId] + " ");
+            hash^=(words[tokenId] * tags[tokenId]) ;
         }
-        return builder.toString().hashCode();
+        return hash;
     }
 
 }

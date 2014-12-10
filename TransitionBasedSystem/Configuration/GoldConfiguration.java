@@ -59,7 +59,6 @@ public class GoldConfiguration {
      * @return true if the tree is non-projective
      */
     public boolean isNonprojective() {
-
         for (int dep1 : goldDependencies.keySet()) {
             int head1 = goldDependencies.get(dep1).first;
             for (int dep2 : goldDependencies.keySet()) {
@@ -72,6 +71,16 @@ public class GoldConfiguration {
                 if (dep1 < head1 && head1 != head2)
                     if ((head1 > head2 && head1 < dep2 && dep1 < head2) || (head1 < head2 && head1 > dep2 && dep1 < dep2))
                         return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isPartial(){
+        for (int i=0;i<sentence.size();i++) {
+            if(sentence.posAt(i+1)!=0) {
+                if (!goldDependencies.containsKey(i+1))
+                    return true;
             }
         }
         return false;

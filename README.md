@@ -8,7 +8,7 @@ Yara Parser
 
 # Yara K-Beam Arc-Eager Dependency Parser
 
-This project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs. For more details, see the technical details. The parser can be trained on any syntactic dependency treebank with Conll'06 format and can parse sentences afterwards. It can also parse partial sentences (a sentence with partial gold dependencies).
+This project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs. For more details, see the technical details. The parser can be trained on any syntactic dependency treebank with Conll'06 format and can parse sentences afterwards. It can also parse partial sentences (a sentence with partial gold dependencies) and it is also possible to train on partial trees.
 
 ## Performance and Speed on WSJ/Penn Treebank
 __Performance__ really depends on the quality of POS taggers. In academic papers, researchers try n-way jackknifing for training a very optimized POS tagger. I basically used the best off-the-shelf POS tagging model from [Stanford POS tagger](http://nlp.stanford.edu/software/tagger.shtml) (which is not as optimized as doing n-way jackknifing) with [Penn2Malt](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html) conversion. The best unlabeled accuracy on the dev file was 93.10 (91.96 labeled, 49.29 exact match) and with that model I got 92.70 (91.66 labeled, 46.85 exact match) on the test data. All the settings that I used were defaults with 64 beams.
@@ -95,6 +95,13 @@ __WARNING__ Because of some technical reasons, all words connected to the dummy 
 	* The inf file is [model-file] for parsing (used in the testing phase)
 	 
 	* Example line: He_PRP is_VBZ nice_AJ ._.
+	
+### Train a Parser with Partial Training data
+There are some occasions that the training data does not always have full trees. In such cases, you can still train a parsing model with CoNLL format but the words that do not have a head, should have ``-1`` as their heads. For the partial trees in the training data, dynamic oracles will be applied, regardless of your choice of using static or dynamic oracles. 
+
+__NOTE:__ If there is a tree in the data that has a cycle or cannot be projectivized at all, the trainer gives a message ``no oracle(sen#)`` and ignores that specific sentence and continues its training procedure. There is no crucial difference in the command line options compared to training a parser on full trees.
+
+__WARNING__ Training on partial trees is noisy because the dynamic oracle decides about what path to choose as a gold tree and in many cases, the choice by the dynamic oracle is not correct, leading to noisy data situation.
 	
 ### Parse a Partial Tree with Some Gold Dependencies
 __NOTE:__ There are some occasions where you need to parse a sentence, but already know about some of its depndencies. Yara tries to find the best parse tree for a sentence: 1) if the original partial tree is projective and there is at least one way to fill in the other heads and preserve projectivity, all gold parses will be preserved, 2) if there is some nonprojectivity or loop in the partial tree, some or even all of gold dependencies will be ignored.

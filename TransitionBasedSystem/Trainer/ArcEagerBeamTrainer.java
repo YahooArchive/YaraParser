@@ -99,6 +99,8 @@ public class ArcEagerBeamTrainer {
                 if (dataCount % 100 == 0)
                     System.out.print(dataCount + "...");
 
+                boolean isPartial=goldConfiguration.isPartial();
+
                 Sentence sentence = goldConfiguration.getSentence();
 
                 Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), rootFirst);
@@ -138,7 +140,7 @@ public class ArcEagerBeamTrainer {
                     HashMap<Configuration, Float> newOracles = new HashMap<Configuration, Float>();
                     float bestScore = Float.NEGATIVE_INFINITY;
 
-                    if (dynamicOracle) {
+                    if (dynamicOracle || isPartial) {
                         for (Configuration configuration : oracles.keySet()) {
                             if (!configuration.state.isTerminalState()) {
                                 State currentState = configuration.state;
@@ -208,9 +210,6 @@ public class ArcEagerBeamTrainer {
                                         bestScoringOracle = newConfig;
                                     }
                                     accepted++;
-                                }
-                                if (accepted > 4) {
-                                    System.out.println("why?");
                                 }
                             } else {
                                 newOracles.put(configuration, oracles.get(configuration));
