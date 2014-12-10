@@ -41,6 +41,8 @@ public class Options implements Serializable {
     public HashSet<String> punctuations;
     public String predFile;
 
+    public int partialTrainingStartingIteration;
+
     public Options() {
         showHelp = false;
         train = false;
@@ -64,6 +66,8 @@ public class Options implements Serializable {
         evaluate = false;
         numOfThreads = 8;
         parsePartialConll = false;
+
+        partialTrainingStartingIteration=3;
 
         punctuations = new HashSet<String>();
         punctuations.add("#");
@@ -112,6 +116,7 @@ public class Options implements Serializable {
         output.append("\t \t static (default: use dynamic oracles, unless explicitly put `static' for static oracles)\n");
         output.append("\t \t random (default: choose maximum scoring oracle, unless explicitly put `random' for randomly choosing an oracle)\n");
         output.append("\t \t nt:[#_of_threads] (default:8)\n");
+        output.append("\t \t pt:[#partail_training_starting_iteration] (default:3; shows the starting iteration for considering partial trees)\n");
         output.append("\t \t root_first (default: put ROOT in the last position, unless explicitly put 'root_first')\n\n");
 
         output.append("* Parse a CoNLL'2006 file:\n");
@@ -176,6 +181,8 @@ public class Options implements Serializable {
                 options.beamWidth = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
             else if (args[i].startsWith("nt:"))
                 options.numOfThreads = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
+            else if (args[i].startsWith("pt:"))
+                options.partialTrainingStartingIteration = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
             else if (args[i].equals("unlabeled"))
                 options.labeled = Boolean.parseBoolean(args[i]);
             else if (args[i].equals("lowercase"))
@@ -330,6 +337,7 @@ public class Options implements Serializable {
 
             builder.append("training-iterations: " + trainingIter + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");
+            builder.append("partial training starting iteration: " + partialTrainingStartingIteration + "\n");
             return builder.toString();
         } else if (parseConllFile) {
             StringBuilder builder = new StringBuilder();
@@ -403,6 +411,7 @@ public class Options implements Serializable {
         options.separator = separator;
         options.useExtendedFeatures = useExtendedFeatures;
         options.parsePartialConll = parsePartialConll;
+        options.partialTrainingStartingIteration=partialTrainingStartingIteration;
         return options;
     }
 }

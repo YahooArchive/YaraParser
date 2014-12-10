@@ -99,6 +99,8 @@ __WARNING__ Because of some technical reasons, all words connected to the dummy 
 ### Train a Parser with Partial Training data
 There are some occasions that the training data does not always have full trees. In such cases, you can still train a parsing model with CoNLL format but the words that do not have a head, should have ``-1`` as their heads. For the partial trees in the training data, dynamic oracles will be applied, regardless of your choice of using static or dynamic oracles. 
 
+The parser starts parsing only on full trees for 2 iterations and then works on partial trees as well. If you want to change its default (3), use __``pt:#pt``__ (e.g. pt:5) as an argument.
+
 __NOTE:__ If there is a tree in the data that has a cycle or cannot be projectivized at all, the trainer gives a message ``no oracle(sen#)`` and ignores that specific sentence and continues its training procedure. There is no crucial difference in the command line options compared to training a parser on full trees.
 
 __WARNING__ Training on partial trees is noisy because the dynamic oracle decides about what path to choose as a gold tree and in many cases, the choice by the dynamic oracle is not correct, leading to noisy data situation.
