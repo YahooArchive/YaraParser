@@ -8,7 +8,7 @@ Yara Parser
 
 # Yara K-Beam Arc-Eager Dependency Parser
 
-This project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs. For more details, see the technical details. The parse can be trained on any syntactic dependency treebank with Conll'06 format and can parse sentences. It can also parse partial sentences.
+This project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs. For more details, see the technical details. The parser can be trained on any syntactic dependency treebank with Conll'06 format and can parse sentences afterwards. It can also parse partial sentences (a sentence with partial gold dependencies).
 
 ## Performance and Speed on WSJ/Penn Treebank
 __Performance__ really depends on the quality of POS taggers. In academic papers, researchers try n-way jackknifing for training a very optimized POS tagger. I basically used the best off-the-shelf POS tagging model from [Stanford POS tagger](http://nlp.stanford.edu/software/tagger.shtml) (which is not as optimized as doing n-way jackknifing) with [Penn2Malt](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html) conversion. The best unlabeled accuracy on the dev file was 93.10 (91.96 labeled, 49.29 exact match) and with that model I got 92.70 (91.66 labeled, 46.85 exact match) on the test data. All the settings that I used were defaults with 64 beams.
