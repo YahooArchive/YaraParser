@@ -53,7 +53,6 @@ public class GoldConfiguration {
         return goldDependencies;
     }
 
-
     /**
      * Shows whether the tree to train is projective or not
      *
@@ -77,7 +76,6 @@ public class GoldConfiguration {
         }
         return false;
     }
-
 
     public HashMap<Integer, HashSet<Integer>> getReversedDependencies() {
         return reversedDependencies;
@@ -105,18 +103,18 @@ public class GoldConfiguration {
             int bufferHead = state.bufferHead();
             int stackHead = state.peek();
 
-            if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first == (bufferHead)
+            if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first == bufferHead
                     && goldDependencies.get(stackHead).second != (dependency))
                 cost += 1;
-        } else if (action == 2) { //right arc
+        } else if (action == 2 && cost == 0) { //right arc
             int bufferHead = state.bufferHead();
             int stackHead = state.peek();
-            if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == (stackHead)
+            if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == stackHead
                     && goldDependencies.get(bufferHead).second != (dependency))
                 cost += 1;
         }
 
-        if (action == 0) { //shift
+        if (action == 0 && cost == 0) { //shift
             int bufferHead = state.bufferHead();
             for (int stackItem : state.getStack()) {
                 if (goldDependencies.containsKey(stackItem) && goldDependencies.get(stackItem).first == (bufferHead))
@@ -125,14 +123,14 @@ public class GoldConfiguration {
                     cost += 1;
             }
 
-        } else if (action == 1) { //reduce
+        } else if (action == 1 && cost == 0) { //reduce
             int stackHead = state.peek();
             if (!state.bufferEmpty())
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
                     if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first == (stackHead))
                         cost += 1;
                 }
-        } else if (action == 3) { //left arc
+        } else if (action == 3 && cost == 0) { //left arc
             int stackHead = state.peek();
             if (!state.bufferEmpty())
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
@@ -142,7 +140,7 @@ public class GoldConfiguration {
                         if (bufferItem != state.bufferHead())
                             cost += 1;
                 }
-        } else if (action == 2) { //right arc
+        } else if (action == 2 && cost == 0) { //right arc
             int stackHead = state.peek();
             int bufferHead = state.bufferHead();
             for (int stackItem : state.getStack()) {

@@ -20,7 +20,6 @@ public class AveragedPerceptron {
      * Harold Charles Daume' III. "Practical Structured Learning Techniques for Natural Language Processing", PhD thesis, ISI USC, 2006.
      * http://www.umiacs.umd.edu/~hal/docs/daume06thesis.pdf
      */
-
     /**
      * For the weights for all features
      */

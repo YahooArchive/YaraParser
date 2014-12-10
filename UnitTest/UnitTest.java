@@ -25,29 +25,29 @@ import java.util.HashSet;
 public class UnitTest {
 
     public static void main(String[] args) throws Exception {
-        Options options=new Options();
-        options.inputFile=args[0];
-        options.devPath=args[1];
-        options.modelFile=args[2];
+        Options options = new Options();
+        options.inputFile = args[0];
+        options.devPath = args[1];
+        options.modelFile = args[2];
         options.changePunc(args[3]);
-        options.trainingIter=3;
-        options.train=true;
-        options.beamWidth=4;
-        options.rootFirst=true;
-        options.useDynamicOracle=false;
-        options.labeled=true;
-        options.useMaxViol=false;
-        options.numOfThreads=8;
+        options.trainingIter = 3;
+        options.train = true;
+        options.beamWidth = 4;
+        options.rootFirst = true;
+        options.useDynamicOracle = false;
+        options.labeled = true;
+        options.useMaxViol = false;
+        options.numOfThreads = 8;
 
-        ArrayList<Options> optionList=Options.getAllPossibleOptions(options);
-        options.numOfThreads=8;
-        for(Options o:optionList)
+        ArrayList<Options> optionList = Options.getAllPossibleOptions(options);
+        options.numOfThreads = 8;
+        for (Options o : optionList)
             testOption(o);
 
         System.exit(0);
     }
 
-    public static  void testOption( Options options) throws  Exception{
+    public static void testOption(Options options) throws Exception {
         System.out.println("**********************************************");
         System.out.print(options);
         System.out.println("**********************************************");
@@ -111,6 +111,6 @@ public class UnitTest {
 
         ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, 4 + 2 * dependencyLabels.size()),
                 options.rootFirst, options.beamWidth, dependencyLabels, headDepSet, featureLength, options.useDynamicOracle, options.useRandomOracleSelection, maps, options.numOfThreads);
-        trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase,options.punctuations);
+        trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase, options.punctuations);
     }
 }

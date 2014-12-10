@@ -29,7 +29,7 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
     int b;
     boolean rootFirst;
 
-    public BeamScorerThread(boolean isDecode, AveragedPerceptron classifier, Configuration configuration, ArrayList<Integer> dependencyRelations, int featureLength, HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet, int b,boolean rootFirst) {
+    public BeamScorerThread(boolean isDecode, AveragedPerceptron classifier, Configuration configuration, ArrayList<Integer> dependencyRelations, int featureLength, HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet, int b, boolean rootFirst) {
         this.isDecode = isDecode;
         this.classifier = classifier;
         this.configuration = configuration;
@@ -37,7 +37,7 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
         this.featureLength = featureLength;
         this.headDepSet = headDepSet;
         this.b = b;
-        this.rootFirst=rootFirst;
+        this.rootFirst = rootFirst;
     }
 
 
@@ -93,5 +93,4 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
         }
         return elements;
     }
-
 }

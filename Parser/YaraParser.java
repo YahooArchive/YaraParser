@@ -27,7 +27,6 @@ public class YaraParser {
 
         if (options.showHelp) {
             Options.showHelp();
-
         } else {
             System.out.println(options);
             if (options.train) {
@@ -94,7 +93,7 @@ public class YaraParser {
 
                     ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, 4 + 2 * dependencyLabels.size()),
                             options.rootFirst, options.beamWidth, dependencyLabels, headDepSet, featureLength, options.useDynamicOracle, options.useRandomOracleSelection, maps, options.numOfThreads);
-                    trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase,options.punctuations);
+                    trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase, options.punctuations);
                 }
             } else if (options.parseTaggedFile) {
                 if (options.outputFile.equals("") || options.inputFile.equals("")
@@ -136,14 +135,35 @@ public class YaraParser {
                     KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, headDepSet, templates, maps, options.numOfThreads);
 
                     parser.parseConllFile(options.inputFile,
-                            options.outputFile, inf_options.rootFirst, inf_options.beamWidth, inf_options.lowercase, options.numOfThreads);
+                            options.outputFile, inf_options.rootFirst, inf_options.beamWidth, true, inf_options.lowercase, options.numOfThreads, false);
+                    parser.shutDownLiveThreads();
+                }
+            } else if (options.parsePartialConll) {
+                if (options.outputFile.equals("") || options.inputFile.equals("")
+                        || options.infFile.equals("") || options.modelFile.equals("")) {
+                    Options.showHelp();
+                } else {
+                    ObjectInputStream reader = new ObjectInputStream(new FileInputStream(options.infFile));
+                    ArrayList<Integer> dependencyLabels = (ArrayList<Integer>) reader.readObject();
+                    IndexMaps maps = (IndexMaps) reader.readObject();
+
+                    HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet = (HashMap<Integer, HashMap<Integer, HashSet<Integer>>>) reader.readObject();
+
+                    Options inf_options = (Options) reader.readObject();
+                    AveragedPerceptron averagedPerceptron = AveragedPerceptron.loadModel(options.modelFile);
+
+                    int templates = averagedPerceptron.featureSize();
+                    KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, headDepSet, templates, maps, options.numOfThreads);
+
+                    parser.parseConllFile(options.inputFile,
+                            options.outputFile, inf_options.rootFirst, inf_options.beamWidth, options.labeled, inf_options.lowercase, options.numOfThreads, true);
                     parser.shutDownLiveThreads();
                 }
             } else if (options.evaluate) {
-                if (options.goldFile.equals("") || options.predFile.equals("") )
+                if (options.goldFile.equals("") || options.predFile.equals(""))
                     Options.showHelp();
                 else {
-                    Evaluator.evaluate(options.goldFile, options.predFile,options.punctuations);
+                    Evaluator.evaluate(options.goldFile, options.predFile, options.punctuations);
                 }
             } else {
                 Options.showHelp();

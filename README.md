@@ -8,7 +8,7 @@ Yara Parser
 
 # Yara K-Beam Arc-Eager Dependency Parser
 
-This project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs. For more details, see the technical details.
+This project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs. For more details, see the technical details. The parse can be trained on any syntactic dependency treebank with Conll'06 format and can parse sentences. It can also parse partial sentences.
 
 ## Performance and Speed on WSJ/Penn Treebank
 __Performance__ really depends on the quality of POS taggers. In academic papers, researchers try n-way jackknifing for training a very optimized POS tagger. I basically used the best off-the-shelf POS tagging model from [Stanford POS tagger](http://nlp.stanford.edu/software/tagger.shtml) (which is not as optimized as doing n-way jackknifing) with [Penn2Malt](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html) conversion. The best unlabeled accuracy on the dev file was 93.10 (91.96 labeled, 49.29 exact match) and with that model I got 92.70 (91.66 labeled, 46.85 exact match) on the test data. All the settings that I used were defaults with 64 beams.
@@ -37,7 +37,7 @@ or
 
 __NOTE:__ All the examples bellow are using the jar file for running the application but you can also use the java class files after manually compiling the code.
 
-### Train a parser
+### Train a Parser
 
 __WARNING:__ The training code ignores non-projective trees in the training data. If you want to include them, try to projectivize them; e.g. by [tree projectivizer](http://www.cs.bgu.ac.il/~yoavg/software/projectivize/).
 
@@ -71,14 +71,21 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	 	 * root_first (default: put ROOT in the last position, unless explicitly put 'root_first')
 	 
 
-### Parse a CoNLL_2006 file
+### Parse a CoNLL_2006 File
+
+__WARNING__ Because of some technical reasons, all words connected to the dummy root word, will be labeled as ``ROOT``. If your treebank convention is different, try to refactor the ``ROOT`` dependency in the final output.
+
 * __java -jar jar/YaraParser.jar parse_conll --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file]__
 	
 	* The inf file is [model-file] for parsing (used in the testing phase)
 	
 	* The test file should have the conll 2006 format
 
-### Parse a POS tagged file:
+### Parse a POS Tagged File
+
+__WARNING__ Because of some technical reasons, all words connected to the dummy root word, will be labeled as ``ROOT``. If your treebank convention is different, try to refactor the ``ROOT`` dependency in the final output.
+
+
 * __java -jar jar/YaraParser.jar parse_tagged --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file]__
 	
 	* The test file should have each sentence in line and word_tag pairs are space-delimited
@@ -88,8 +95,23 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	* The inf file is [model-file] for parsing (used in the testing phase)
 	 
 	* Example line: He_PRP is_VBZ nice_AJ ._.
+	
+### Parse a Partial Tree with Some Gold Dependencies
+__NOTE:__ There are some occasions where you need to parse a sentence, but already know about some of its depndencies. Yara tries to find the best parse tree for a sentence: 1) if the original partial tree is projective and there is at least one way to fill in the other heads and preserve projectivity, all gold parses will be preserved, 2) if there is some nonprojectivity or loop in the partial tree, some or even all of gold dependencies will be ignored.
+
+__WARNING__ Because of some technical reasons, all words connected to the dummy root word, will be labeled as ``ROOT``. If your treebank convention is different, try to refactor the ``ROOT`` dependency in the final output.
+
+
+* __java -jar YaraParser.jar parse_partial --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)]__ 
+		
+	* The inf file is [model-file] for parsing (used in the testing phase)
+	
+	* The test file should have the conll 2006 format; each word that does not have a parent, should have a -1 parent-index
+
 
 ## Evaluate the Parser
+
+__WARNING__ The evaluation script is Yara, takes care of ``ROOT`` output, so you do not have to change anything in the output.
 
 * __java -jar YaraParser.jar eval --gold-file [gold-file] --parsed-file [parsed-file]  --punc_file [punc-file]__
 	* [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line
@@ -125,7 +147,7 @@ You can finally evaluate the output data:
 	Labeled exact match:  17.54
 	Unlabeled exact match:  28.07  
 
-# API USAGE
+# API Usage
 
 You can look at the class __Parser/API_UsageExample__ to see an example of using the parser inside your code.
 
@@ -135,7 +157,7 @@ You can look at the class __Parser/API_UsageExample__ to see an example of using
 It is shown that replacing all numbers (integers and floating points), with a dummy token (e.g. \<num\>) helps the accuracy in _some treebanks but not always_. If you want to try that idea, simply replace the numbers in your training, development and test data with that dummy token.
 
 ## Memory size
-For very large training sets, you may need to increase the java memory heap size by -Xmx option; e.g. java -Xmx3g jar/YaraParser.jar ...
+For very large training sets, you may need to increase the java memory heap size by -Xmx option; e.g. ``java -Xmx3g jar/YaraParser.jar``. For WSJ data, 4g is more than enough.
 
 
 ## Technical Details

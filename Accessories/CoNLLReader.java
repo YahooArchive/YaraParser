@@ -107,7 +107,7 @@ public class CoNLLReader {
                     if (!rootFirst) {
                         for (int gold : goldDependencies.keySet()) {
                             if (goldDependencies.get(gold).first.equals(0))
-                                goldDependencies.get(gold).setFirst(goldDependencies.size() + 1);
+                                goldDependencies.get(gold).setFirst(tokens.size() + 1);
                         }
                         tokens.add(0);
                         tags.add(0);
@@ -162,7 +162,9 @@ public class CoNLLReader {
                 int ri = -1;
                 if (wordmap.containsKey(relation))
                     ri = wordmap.get(relation);
-                goldDependencies.put(wordIndex, new Pair<Integer, Integer>(headIndex, ri));
+
+                if (headIndex >= 0)
+                    goldDependencies.put(wordIndex, new Pair<Integer, Integer>(headIndex, ri));
             }
         }
         if (tokens.size() > 0) {
@@ -193,7 +195,7 @@ public class CoNLLReader {
             line = line.trim();
             if (line.length() == 0) {
                 if (tags.size() >= 1) {
-                    CompactTree goldConfiguration = new CompactTree(goldDependencies,tags);
+                    CompactTree goldConfiguration = new CompactTree(goldDependencies, tags);
                     treeSet.add(goldConfiguration);
                 }
                 tags = new ArrayList<String>();
@@ -210,14 +212,13 @@ public class CoNLLReader {
                 int headIndex = Integer.parseInt(splitLine[6]);
                 String relation = splitLine[7];
 
-                if(headIndex==0)
-                    relation="ROOT";
+                if (headIndex == 0)
+                    relation = "ROOT";
 
-                if (pos.length()>0)
-                goldDependencies.put(wordIndex, new Pair<Integer, String>(headIndex, relation));
+                if (pos.length() > 0)
+                    goldDependencies.put(wordIndex, new Pair<Integer, String>(headIndex, relation));
             }
         }
-
 
 
         if (tags.size() > 0) {

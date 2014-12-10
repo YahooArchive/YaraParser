@@ -81,7 +81,7 @@ public class ArcEagerBeamTrainer {
         this.numOfThreads = numOfThreads;
     }
 
-    public void train(ArrayList<GoldConfiguration> trainData, String devPath, int maxIteration, String modelPath, boolean lowerCased,HashSet<String> punctuations) throws Exception {
+    public void train(ArrayList<GoldConfiguration> trainData, String devPath, int maxIteration, String modelPath, boolean lowerCased, HashSet<String> punctuations) throws Exception {
         /**
          * Actions: 0=shift, 1=reduce, 2=unshift, ra_dep=3+dep, la_dep=3+dependencyRelations.size()+dep
          */
@@ -284,7 +284,7 @@ public class ArcEagerBeamTrainer {
                         }
                     }
                     if (newOracles.size() == 0) {
-                        System.err.println("no oracle");
+                        System.err.print("...no oracle(" + dataCount + ")...");
                     }
                     oracles = newOracles;
 
@@ -352,7 +352,7 @@ public class ArcEagerBeamTrainer {
                     } else {
                         for (int b = 0; b < beam.size(); b++) {
                             pool.submit(new BeamScorerThread(false, classifier, beam.get(b),
-                                    dependencyRelations, featureLength, headDepSet, b,rootFirst));
+                                    dependencyRelations, featureLength, headDepSet, b, rootFirst));
                         }
                         for (int b = 0; b < beam.size(); b++) {
                             for (BeamElement element : pool.take().get()) {
@@ -553,15 +553,15 @@ public class ArcEagerBeamTrainer {
                 KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyRelations, headDepSet, featureLength, maps, numOfThreads);
 
                 parser.parseConllFile(devPath, devPath + ".tmp",
-                        rootFirst, beamWidth, lowerCased, numOfThreads);
-                Evaluator.evaluate(devPath, devPath + ".tmp",punctuations);
+                        rootFirst, beamWidth, true, lowerCased, numOfThreads, false);
+                Evaluator.evaluate(devPath, devPath + ".tmp", punctuations);
                 parser.shutDownLiveThreads();
             }
         }
-        boolean isTerminated=executor.isTerminated();
+        boolean isTerminated = executor.isTerminated();
         while (!isTerminated) {
             executor.shutdownNow();
-            isTerminated=executor.isTerminated();
+            isTerminated = executor.isTerminated();
         }
     }
 

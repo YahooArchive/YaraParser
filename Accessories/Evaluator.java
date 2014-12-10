@@ -6,13 +6,14 @@
 package Accessories;
 
 import TransitionBasedSystem.Configuration.CompactTree;
+
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
 public class Evaluator {
-    public static void evaluate(String testPath, String predictedPath,HashSet<String> puncTags) throws Exception {
+    public static void evaluate(String testPath, String predictedPath, HashSet<String> puncTags) throws Exception {
         CoNLLReader goldReader = new CoNLLReader(testPath);
         CoNLLReader predictedReader = new CoNLLReader(predictedPath);
 
@@ -31,30 +32,30 @@ public class Evaluator {
             HashMap<Integer, Pair<Integer, String>> goldDeps = goldConfiguration.get(i).goldDependencies;
             HashMap<Integer, Pair<Integer, String>> predDeps = predConfiguration.get(i).goldDependencies;
 
-            ArrayList<String> goldTags=  goldConfiguration.get(i).posTags;
+            ArrayList<String> goldTags = goldConfiguration.get(i).posTags;
 
             numTree++;
             boolean fullMatch = true;
             boolean fullUnlabMatch = true;
             for (int dep : goldDeps.keySet()) {
-                if(!puncTags.contains(goldTags.get(dep-1).trim())) {
-                        all++;
-                        int gh = goldDeps.get(dep).first;
-                        int ph = predDeps.get(dep).first;
-                        String gl = goldDeps.get(dep).second;
-                        String pl = predDeps.get(dep).second;
+                if (!puncTags.contains(goldTags.get(dep - 1).trim())) {
+                    all++;
+                    int gh = goldDeps.get(dep).first;
+                    int ph = predDeps.get(dep).first;
+                    String gl = goldDeps.get(dep).second;
+                    String pl = predDeps.get(dep).second;
 
-                        if (ph == gh) {
-                            unlabMatch++;
+                    if (ph == gh) {
+                        unlabMatch++;
 
-                            if (pl.equals(gl))
-                                labMatch++;
-                            else
-                                fullMatch = false;
-                        } else {
+                        if (pl.equals(gl))
+                            labMatch++;
+                        else
                             fullMatch = false;
-                            fullUnlabMatch = false;
-                        }
+                    } else {
+                        fullMatch = false;
+                        fullUnlabMatch = false;
+                    }
                 }
             }
 

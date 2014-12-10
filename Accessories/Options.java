@@ -24,6 +24,7 @@ public class Options implements Serializable {
     public String devPath;
     public int trainingIter;
     public boolean evaluate;
+    public boolean parsePartialConll;
 
     public String infFile;
     public String modelFile;
@@ -62,8 +63,9 @@ public class Options implements Serializable {
         trainingIter = 20;
         evaluate = false;
         numOfThreads = 8;
+        parsePartialConll = false;
 
-        punctuations=new HashSet<String>();
+        punctuations = new HashSet<String>();
         punctuations.add("#");
         punctuations.add("''");
         punctuations.add("(");
@@ -83,18 +85,6 @@ public class Options implements Serializable {
         punctuations.add("-RSB-");
         punctuations.add("-LCB-");
         punctuations.add("-RCB-");
-    }
-
-    public void changePunc(String puncPath) throws  Exception{
-        BufferedReader reader = new BufferedReader(new FileReader(puncPath));
-
-        punctuations=new HashSet<String>();
-        String line;
-        while ((line = reader.readLine()) != null) {
-           line=line.trim();
-            if(line.length()>0)
-                punctuations.add(line.split(" ")[0].trim());
-        }
     }
 
     public static void showHelp() {
@@ -136,6 +126,11 @@ public class Options implements Serializable {
         output.append("\t** The inf file is [model-file] for parsing (used in the testing phase)\n");
         output.append("\t \t Example: He_PRP is_VBZ nice_AJ ._.\n\n");
 
+        output.append("* Parse a CoNLL'2006 file with partial gold trees:\n");
+        output.append("\tjava -jar YaraParser.jar parse_partial --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
+        output.append("\t** The inf file is [model-file] for parsing (used in the testing phase)\n");
+        output.append("\t** The test file should have the conll 2006 format; each word that does not have a parent, should have a -1 parent-index\n\n");
+
         output.append("* Evaluate a Conll file:\n");
         output.append("\tjava -jar YaraParser.jar eval --gold-file [gold-file] --parsed-file [parsed-file]  --punc_file [punc-file]\n");
         output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line\n");
@@ -153,14 +148,16 @@ public class Options implements Serializable {
                 options.train = true;
             else if (args[i].equals("parse_conll"))
                 options.parseConllFile = true;
+            else if (args[i].equals("parse_partial"))
+                options.parsePartialConll = true;
             else if (args[i].equals("eval"))
                 options.evaluate = true;
             else if (args[i].equals("parse_tagged"))
                 options.parseTaggedFile = true;
             else if (args[i].equals("--train-file") || args[i].equals("--test-file"))
                 options.inputFile = args[i + 1];
-            else if (args[i].equals("--punc_file") )
-                options.changePunc( args[i + 1]);
+            else if (args[i].equals("--punc_file"))
+                options.changePunc(args[i + 1]);
             else if (args[i].equals("--model-file"))
                 options.modelFile = args[i + 1];
             else if (args[i].startsWith("--dev-file"))
@@ -200,80 +197,6 @@ public class Options implements Serializable {
         if (options.train || options.parseTaggedFile || options.parseConllFile)
             options.showHelp = false;
 
-        return options;
-    }
-
-    public String toString() {
-        if (train) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("train file: " + inputFile + "\n");
-            builder.append("dev file: " + devPath + "\n");
-            builder.append("model/inf file: " + modelFile + "\n");
-            builder.append("beam width: " + beamWidth + "\n");
-            builder.append("rootFirst: " + rootFirst + "\n");
-            builder.append("labeled: " + labeled + "\n");
-            builder.append("lower-case: " + lowercase + "\n");
-            builder.append("extended features: " + useExtendedFeatures + "\n");
-            builder.append("updateModel: " + (useMaxViol ? "max violation" : "early") + "\n");
-            builder.append("oracle: " + (useDynamicOracle ? "dynamic" : "static") + "\n");
-            if (useDynamicOracle)
-                builder.append("oracle selection: " + (!useRandomOracleSelection ? "latent max" : "random") + "\n");
-
-            builder.append("training-iterations: " + trainingIter + "\n");
-            builder.append("number of threads: " + numOfThreads + "\n");
-            return builder.toString();
-        } else if (parseConllFile) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("parse conll" + "\n");
-            builder.append("input file: " + inputFile + "\n");
-            builder.append("output file: " + outputFile + "\n");
-            builder.append("model file: " + modelFile + "\n");
-            builder.append("inf file: " + infFile + "\n");
-            builder.append("number of threads: " + numOfThreads + "\n");
-            return builder.toString();
-        } else if (parseTaggedFile) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("parse  tag file" + "\n");
-            builder.append("input file: " + inputFile + "\n");
-            builder.append("output file: " + outputFile + "\n");
-            builder.append("model file: " + modelFile + "\n");
-            builder.append("inf file: " + infFile + "\n");
-            builder.append("number of threads: " + numOfThreads + "\n");
-            return builder.toString();
-        } else if (evaluate) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("Evaluate" + "\n");
-            builder.append("gold file: " + goldFile + "\n");
-            builder.append("parsed file: " + predFile + "\n");
-            return builder.toString();
-        }
-        return "";
-    }
-
-    public Options clone() {
-        Options options = new Options();
-        options.train = train;
-        options.labeled = labeled;
-        options.trainingIter = trainingIter;
-        options.useMaxViol = useMaxViol;
-        options.beamWidth = beamWidth;
-        options.devPath = devPath;
-        options.evaluate = evaluate;
-        options.goldFile = goldFile;
-        options.infFile = infFile;
-        options.inputFile = inputFile;
-        options.lowercase = lowercase;
-        options.numOfThreads = numOfThreads;
-        options.outputFile = outputFile;
-        options.useDynamicOracle = useDynamicOracle;
-        options.modelFile = modelFile;
-        options.rootFirst = rootFirst;
-        options.parseConllFile = parseConllFile;
-        options.parseTaggedFile = parseTaggedFile;
-        options.predFile = predFile;
-        options.showHelp = showHelp;
-        options.separator = separator;
-        options.useExtendedFeatures = useExtendedFeatures;
         return options;
     }
 
@@ -374,6 +297,112 @@ public class Options implements Serializable {
         }
 
         options = tmp;
+        return options;
+    }
+
+    public void changePunc(String puncPath) throws Exception {
+        BufferedReader reader = new BufferedReader(new FileReader(puncPath));
+
+        punctuations = new HashSet<String>();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            line = line.trim();
+            if (line.length() > 0)
+                punctuations.add(line.split(" ")[0].trim());
+        }
+    }
+
+    public String toString() {
+        if (train) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("train file: " + inputFile + "\n");
+            builder.append("dev file: " + devPath + "\n");
+            builder.append("model/inf file: " + modelFile + "\n");
+            builder.append("beam width: " + beamWidth + "\n");
+            builder.append("rootFirst: " + rootFirst + "\n");
+            builder.append("labeled: " + labeled + "\n");
+            builder.append("lower-case: " + lowercase + "\n");
+            builder.append("extended features: " + useExtendedFeatures + "\n");
+            builder.append("updateModel: " + (useMaxViol ? "max violation" : "early") + "\n");
+            builder.append("oracle: " + (useDynamicOracle ? "dynamic" : "static") + "\n");
+            if (useDynamicOracle)
+                builder.append("oracle selection: " + (!useRandomOracleSelection ? "latent max" : "random") + "\n");
+
+            builder.append("training-iterations: " + trainingIter + "\n");
+            builder.append("number of threads: " + numOfThreads + "\n");
+            return builder.toString();
+        } else if (parseConllFile) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("parse conll" + "\n");
+            builder.append("input file: " + inputFile + "\n");
+            builder.append("output file: " + outputFile + "\n");
+            builder.append("model file: " + modelFile + "\n");
+            builder.append("inf file: " + infFile + "\n");
+            builder.append("number of threads: " + numOfThreads + "\n");
+            return builder.toString();
+        } else if (parseTaggedFile) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("parse  tag file" + "\n");
+            builder.append("input file: " + inputFile + "\n");
+            builder.append("output file: " + outputFile + "\n");
+            builder.append("model file: " + modelFile + "\n");
+            builder.append("inf file: " + infFile + "\n");
+            builder.append("number of threads: " + numOfThreads + "\n");
+            return builder.toString();
+        } else if (parseConllFile) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("parse conll" + "\n");
+            builder.append("input file: " + inputFile + "\n");
+            builder.append("output file: " + outputFile + "\n");
+            builder.append("model file: " + modelFile + "\n");
+            builder.append("inf file: " + infFile + "\n");
+            builder.append("number of threads: " + numOfThreads + "\n");
+            return builder.toString();
+        } else if (parsePartialConll) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("parse partial conll" + "\n");
+            builder.append("input file: " + inputFile + "\n");
+            builder.append("output file: " + outputFile + "\n");
+            builder.append("model file: " + modelFile + "\n");
+            builder.append("inf file: " + infFile + "\n");
+            builder.append("labeled: " + labeled + "\n");
+            builder.append("number of threads: " + numOfThreads + "\n");
+            return builder.toString();
+        } else if (evaluate) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("Evaluate" + "\n");
+            builder.append("gold file: " + goldFile + "\n");
+            builder.append("parsed file: " + predFile + "\n");
+            return builder.toString();
+        }
+        return "";
+    }
+
+    public Options clone() {
+        Options options = new Options();
+        options.train = train;
+        options.labeled = labeled;
+        options.trainingIter = trainingIter;
+        options.useMaxViol = useMaxViol;
+        options.beamWidth = beamWidth;
+        options.devPath = devPath;
+        options.evaluate = evaluate;
+        options.goldFile = goldFile;
+        options.infFile = infFile;
+        options.inputFile = inputFile;
+        options.lowercase = lowercase;
+        options.numOfThreads = numOfThreads;
+        options.outputFile = outputFile;
+        options.useDynamicOracle = useDynamicOracle;
+        options.modelFile = modelFile;
+        options.rootFirst = rootFirst;
+        options.parseConllFile = parseConllFile;
+        options.parseTaggedFile = parseTaggedFile;
+        options.predFile = predFile;
+        options.showHelp = showHelp;
+        options.separator = separator;
+        options.useExtendedFeatures = useExtendedFeatures;
+        options.parsePartialConll = parsePartialConll;
         return options;
     }
 }

@@ -15,7 +15,7 @@ public class CompactTree {
     public ArrayList<String> posTags;
 
     public CompactTree(HashMap<Integer, Pair<Integer, String>> goldDependencies, ArrayList<String> posTags) {
-       this.goldDependencies=goldDependencies;
-        this.posTags=posTags;
+        this.goldDependencies = goldDependencies;
+        this.posTags = posTags;
     }
 }

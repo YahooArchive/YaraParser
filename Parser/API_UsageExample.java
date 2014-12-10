@@ -21,7 +21,7 @@ public class API_UsageExample {
     public static void main(String[] args) throws Exception {
         String infFile = args[0];
         String modelFile = args[1];
-        int numOfThreads =8;
+        int numOfThreads = 8;
 
 
         ObjectInputStream reader = new ObjectInputStream(new FileInputStream(infFile));
