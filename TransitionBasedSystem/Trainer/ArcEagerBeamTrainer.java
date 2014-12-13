@@ -583,9 +583,9 @@ public class ArcEagerBeamTrainer {
                 AveragedPerceptron averagedPerceptron = AveragedPerceptron.loadModel(modelPath + "_iter" + i);
                 KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyRelations, headDepSet, featureLength, maps, numOfThreads);
 
-                parser.parseConllFile(devPath, devPath + ".tmp",
+                parser.parseConllFile(devPath, modelPath + ".__tmp__",
                         rootFirst, beamWidth, true, lowerCased, numOfThreads, false);
-                Evaluator.evaluate(devPath, devPath + ".tmp", punctuations);
+                Evaluator.evaluate(devPath, modelPath + ".__tmp__", punctuations);
                 parser.shutDownLiveThreads();
             }
         }
