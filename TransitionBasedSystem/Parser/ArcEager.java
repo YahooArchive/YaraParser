@@ -50,19 +50,14 @@ public class ArcEager extends TransitionBasedParser {
         if (action == 0) { //shift
             if (!state.bufferEmpty() && state.bufferHead() == state.rootIndex && !state.stackEmpty())
                 return false;
-            if (!state.bufferEmpty() && !state.isEmptyFlag())
-                return true;
-
-            return false;
+            return !state.bufferEmpty() && !state.isEmptyFlag();
         } else if (action == 2) { //right arc
             if (state.stackEmpty())
                 return false;
             if (!state.bufferEmpty() && state.bufferHead() == state.rootIndex)
                 return false;
 
-            if (!state.bufferEmpty() && !state.stackEmpty())
-                return true;
-            return false;
+            return !state.bufferEmpty() && !state.stackEmpty();
         } else if (action == 3) { //left arc
             if (state.stackEmpty() || state.bufferEmpty())
                 return false;
@@ -72,19 +67,13 @@ public class ArcEager extends TransitionBasedParser {
 
             if (state.peek() == state.rootIndex)
                 return false;
-            if (!state.hasHead(state.peek()) && !state.stackEmpty())
-                return true;
-            return false;
+            return !state.hasHead(state.peek()) && !state.stackEmpty();
         } else if (action == 1) { //reduce
             if (!state.stackEmpty() && state.hasHead(state.peek()))
                 return true;
-            if (!state.stackEmpty() && state.stackSize() == 1 && state.bufferSize() == 0 && state.peek() == state.rootIndex)
-                return true;
-            return false;
+            return !state.stackEmpty() && state.stackSize() == 1 && state.bufferSize() == 0 && state.peek() == state.rootIndex;
         } else if (action == 4) { //unshift
-            if (!state.stackEmpty() && !state.hasHead(state.peek()) && state.isEmptyFlag())
-                return true;
-            return false;
+            return !state.stackEmpty() && !state.hasHead(state.peek()) && state.isEmptyFlag();
         }
         return false;
     }

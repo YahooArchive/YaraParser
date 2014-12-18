@@ -23,10 +23,6 @@ public class Configuration implements Comparable, Cloneable, Serializable {
 
     public float score;
 
-    public Configuration() {
-
-    }
-
     public Configuration(Sentence sentence, boolean rootFirst) {
         this.sentence = sentence;
         state = new State(sentence.size(), rootFirst);
@@ -91,7 +87,7 @@ public class Configuration implements Comparable, Cloneable, Serializable {
             if (configuration.actionHistory.size() != actionHistory.size())
                 return false;
             for (int i = 0; i < actionHistory.size(); i++)
-                if (actionHistory.get(i) != (configuration.actionHistory.get(i)))
+                if (!actionHistory.get(i).equals(configuration.actionHistory.get(i)))
                     return false;
             return true;
         }

@@ -60,6 +60,79 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         pool = new ExecutorCompletionService<ArrayList<BeamElement>>(executor);
     }
 
+    private void parseWithOneThread( ArrayList<Configuration> beam ,TreeSet<BeamElement> beamPreserver, Sentence sentence, boolean rootFirst, int beamWidth)  throws Exception{
+        for (int b = 0; b < beam.size(); b++) {
+            Configuration configuration = beam.get(b);
+            State currentState = configuration.state;
+            float prevScore = configuration.score;
+            boolean canShift = ArcEager.canDo(0, currentState);
+            boolean canReduce = ArcEager.canDo(1, currentState);
+            boolean canRightArc = ArcEager.canDo(2, currentState);
+            boolean canLeftArc = ArcEager.canDo(3, currentState);
+            long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+            if (!canShift
+                    && !canReduce
+                    && !canRightArc
+                    && !canLeftArc) {
+                float addedScore = prevScore;
+                beamPreserver.add(new BeamElement(addedScore, b, 4, -1));
+
+                if (beamPreserver.size() > beamWidth)
+                    beamPreserver.pollFirst();
+            }
+
+            if (canShift) {
+                float score = classifier.score(features, 0, true);
+                float addedScore = score + prevScore;
+                beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
+
+                if (beamPreserver.size() > beamWidth)
+                    beamPreserver.pollFirst();
+            }
+
+            if (canReduce) {
+                float score = classifier.score(features, 1, true);
+                float addedScore = score + prevScore;
+                beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
+
+                if (beamPreserver.size() > beamWidth)
+                    beamPreserver.pollFirst();
+            }
+
+            if (canRightArc) {
+                int headPos = sentence.posAt(configuration.state.peek());
+                int depPos = sentence.posAt(configuration.state.bufferHead());
+                for (int dependency : dependencyRelations) {
+                    if ((!canLeftArc && !canShift && !canReduce) || (rootFirst && canRightArc) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
+                            && headDepSet.get(headPos).get(depPos).contains(dependency))) {
+                        float score = classifier.score(features, 3 + dependency, true);
+                        float addedScore = score + prevScore;
+                        beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
+
+                        if (beamPreserver.size() > beamWidth)
+                            beamPreserver.pollFirst();
+                    }
+                }
+            }
+
+            if (canLeftArc) {
+                int headPos = sentence.posAt(configuration.state.bufferHead());
+                int depPos = sentence.posAt(configuration.state.peek());
+                for (int dependency : dependencyRelations) {
+                    if ((!canShift && !canRightArc && !canReduce) || (rootFirst && canLeftArc) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
+                            && headDepSet.get(headPos).get(depPos).contains(dependency))) {
+                        float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, true);
+                        float addedScore = score + prevScore;
+                        beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
+
+                        if (beamPreserver.size() > beamWidth)
+                            beamPreserver.pollFirst();
+                    }
+                }
+            }
+        }
+    }
+
     public Configuration parse(Sentence sentence, boolean rootFirst, int beamWidth, int numOfThreads) throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
 
@@ -70,76 +143,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
 
             if (numOfThreads == 1) {
-                for (int b = 0; b < beam.size(); b++) {
-                    Configuration configuration = beam.get(b);
-                    State currentState = configuration.state;
-                    float prevScore = configuration.score;
-                    boolean canShift = ArcEager.canDo(0, currentState);
-                    boolean canReduce = ArcEager.canDo(1, currentState);
-                    boolean canRightArc = ArcEager.canDo(2, currentState);
-                    boolean canLeftArc = ArcEager.canDo(3, currentState);
-                    long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
-                    if (!canShift
-                            && !canReduce
-                            && !canRightArc
-                            && !canLeftArc) {
-                        float addedScore = prevScore;
-                        beamPreserver.add(new BeamElement(addedScore, b, 4, -1));
-
-                        if (beamPreserver.size() > beamWidth)
-                            beamPreserver.pollFirst();
-                    }
-
-                    if (canShift) {
-                        float score = classifier.score(features, 0, true);
-                        float addedScore = score + prevScore;
-                        beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
-
-                        if (beamPreserver.size() > beamWidth)
-                            beamPreserver.pollFirst();
-                    }
-
-                    if (canReduce) {
-                        float score = classifier.score(features, 1, true);
-                        float addedScore = score + prevScore;
-                        beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
-
-                        if (beamPreserver.size() > beamWidth)
-                            beamPreserver.pollFirst();
-                    }
-
-                    if (canRightArc) {
-                        int headPos = sentence.posAt(configuration.state.peek());
-                        int depPos = sentence.posAt(configuration.state.bufferHead());
-                        for (int dependency : dependencyRelations) {
-                            if ((!canLeftArc && !canShift && !canReduce) || (rootFirst && canRightArc) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
-                                    && headDepSet.get(headPos).get(depPos).contains(dependency))) {
-                                float score = classifier.score(features, 3 + dependency, true);
-                                float addedScore = score + prevScore;
-                                beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
-
-                                if (beamPreserver.size() > beamWidth)
-                                    beamPreserver.pollFirst();
-                            }
-                        }
-                    }
-
-                    if (canLeftArc) {
-                        int headPos = sentence.posAt(configuration.state.bufferHead());
-                        int depPos = sentence.posAt(configuration.state.peek());
-                        for (int dependency : dependencyRelations) {
-                            if ((!canShift && !canRightArc && !canReduce) || (rootFirst && canLeftArc) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
-                                    && headDepSet.get(headPos).get(depPos).contains(dependency))) {
-                                float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, true);
-                                float addedScore = score + prevScore;
-                                beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
-
-                                if (beamPreserver.size() > beamWidth)
-                                    beamPreserver.pollFirst();
-                            }
-                        }
-                    }
-                }
+               parseWithOneThread(beam,beamPreserver,sentence,rootFirst,beamWidth);
             } else {
                 for (int b = 0; b < beam.size(); b++) {
                     pool.submit(new BeamScorerThread(true, classifier, beam.get(b),
@@ -199,6 +203,139 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         return bestConfiguration;
     }
 
+    private void parsePartialWithOneThread( ArrayList<Configuration> beam ,TreeSet<BeamElement> beamPreserver, Boolean isNonProjective, GoldConfiguration goldConfiguration, int beamWidth)  throws Exception{
+        for (int b = 0; b < beam.size(); b++) {
+            Configuration configuration = beam.get(b);
+            State currentState = configuration.state;
+            float prevScore = configuration.score;
+            boolean canShift = ArcEager.canDo(0, currentState);
+            boolean canReduce = ArcEager.canDo(1, currentState);
+            boolean canRightArc = ArcEager.canDo(2, currentState);
+            boolean canLeftArc = ArcEager.canDo(3, currentState);
+            long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+            if (!canShift
+                    && !canReduce
+                    && !canRightArc
+                    && !canLeftArc) {
+                beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
+
+                if (beamPreserver.size() > beamWidth)
+                    beamPreserver.pollFirst();
+            }
+
+            if (canShift) {
+                if (isNonProjective || goldConfiguration.actionCost(0, -1, currentState) == 0) {
+                    float score = classifier.score(features, 0, true);
+                    float addedScore = score + prevScore;
+                    beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
+
+                    if (beamPreserver.size() > beamWidth)
+                        beamPreserver.pollFirst();
+                }
+            }
+
+            if (canReduce) {
+                if (isNonProjective || goldConfiguration.actionCost(1, -1, currentState) == 0) {
+                    float score = classifier.score(features, 1, true);
+                    float addedScore = score + prevScore;
+                    beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
+
+                    if (beamPreserver.size() > beamWidth)
+                        beamPreserver.pollFirst();
+                }
+            }
+
+            if (canRightArc) {
+                for (int dependency : dependencyRelations) {
+                    if (isNonProjective || goldConfiguration.actionCost(2, dependency, currentState) == 0) {
+                        float score = classifier.score(features, 3 + dependency, true);
+                        float addedScore = score + prevScore;
+                        beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
+
+                        if (beamPreserver.size() > beamWidth)
+                            beamPreserver.pollFirst();
+                    }
+                }
+            }
+
+            if (canLeftArc) {
+                for (int dependency : dependencyRelations) {
+                    if (isNonProjective || goldConfiguration.actionCost(3, dependency, currentState) == 0) {
+                        float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, true);
+                        float addedScore = score + prevScore;
+                        beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
+
+                        if (beamPreserver.size() > beamWidth)
+                            beamPreserver.pollFirst();
+                    }
+                }
+            }
+        }
+
+        //todo
+        if (beamPreserver.size() == 0) {
+            for (int b = 0; b < beam.size(); b++) {
+                Configuration configuration = beam.get(b);
+                State currentState = configuration.state;
+                float prevScore = configuration.score;
+                boolean canShift = ArcEager.canDo(0, currentState);
+                boolean canReduce = ArcEager.canDo(1, currentState);
+                boolean canRightArc = ArcEager.canDo(2, currentState);
+                boolean canLeftArc = ArcEager.canDo(3, currentState);
+                long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+                if (!canShift
+                        && !canReduce
+                        && !canRightArc
+                        && !canLeftArc) {
+                    beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
+
+                    if (beamPreserver.size() > beamWidth)
+                        beamPreserver.pollFirst();
+                }
+
+                if (canShift) {
+                    float score = classifier.score(features, 0, true);
+                    float addedScore = score + prevScore;
+                    beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
+
+                    if (beamPreserver.size() > beamWidth)
+                        beamPreserver.pollFirst();
+                }
+
+                if (canReduce) {
+                    float score = classifier.score(features, 1, true);
+                    float addedScore = score + prevScore;
+                    beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
+
+                    if (beamPreserver.size() > beamWidth)
+                        beamPreserver.pollFirst();
+                }
+
+                if (canRightArc) {
+                    for (int dependency : dependencyRelations) {
+                        float score = classifier.score(features, 3 + dependency, true);
+                        float addedScore = score + prevScore;
+                        beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
+
+                        if (beamPreserver.size() > beamWidth)
+                            beamPreserver.pollFirst();
+                    }
+                }
+
+                if (canLeftArc) {
+                    for (int dependency : dependencyRelations) {
+                        float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, true);
+                        float addedScore = score + prevScore;
+                        beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
+
+                        if (beamPreserver.size() > beamWidth)
+                            beamPreserver.pollFirst();
+                    }
+                }
+            }
+        }
+    }
+
     public Configuration parsePartial(GoldConfiguration goldConfiguration, Sentence sentence, boolean rootFirst, int beamWidth, int numOfThreads) throws Exception {
         Configuration initialConfiguration = new Configuration(sentence, rootFirst);
         boolean isNonProjective = false;
@@ -213,139 +350,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
 
             if (numOfThreads == 1) {
-                for (int b = 0; b < beam.size(); b++) {
-                    Configuration configuration = beam.get(b);
-                    State currentState = configuration.state;
-                    float prevScore = configuration.score;
-                    boolean canShift = ArcEager.canDo(0, currentState);
-                    boolean canReduce = ArcEager.canDo(1, currentState);
-                    boolean canRightArc = ArcEager.canDo(2, currentState);
-                    boolean canLeftArc = ArcEager.canDo(3, currentState);
-                    long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
-                    if (!canShift
-                            && !canReduce
-                            && !canRightArc
-                            && !canLeftArc) {
-                        float addedScore = prevScore;
-                        beamPreserver.add(new BeamElement(addedScore, b, 4, -1));
-
-                        if (beamPreserver.size() > beamWidth)
-                            beamPreserver.pollFirst();
-                    }
-
-                    if (canShift) {
-                        if (isNonProjective || goldConfiguration.actionCost(0, -1, currentState) == 0) {
-                            float score = classifier.score(features, 0, true);
-                            float addedScore = score + prevScore;
-                            beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
-
-                            if (beamPreserver.size() > beamWidth)
-                                beamPreserver.pollFirst();
-                        }
-                    }
-
-                    if (canReduce) {
-                        if (isNonProjective || goldConfiguration.actionCost(1, -1, currentState) == 0) {
-                            float score = classifier.score(features, 1, true);
-                            float addedScore = score + prevScore;
-                            beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
-
-                            if (beamPreserver.size() > beamWidth)
-                                beamPreserver.pollFirst();
-                        }
-                    }
-
-                    if (canRightArc) {
-                        for (int dependency : dependencyRelations) {
-                            if (isNonProjective || goldConfiguration.actionCost(2, dependency, currentState) == 0) {
-                                float score = classifier.score(features, 3 + dependency, true);
-                                float addedScore = score + prevScore;
-                                beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
-
-                                if (beamPreserver.size() > beamWidth)
-                                    beamPreserver.pollFirst();
-                            }
-                        }
-                    }
-
-                    if (canLeftArc) {
-                        for (int dependency : dependencyRelations) {
-                            if (isNonProjective || goldConfiguration.actionCost(3, dependency, currentState) == 0) {
-                                float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, true);
-                                float addedScore = score + prevScore;
-                                beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
-
-                                if (beamPreserver.size() > beamWidth)
-                                    beamPreserver.pollFirst();
-                            }
-                        }
-                    }
-                }
-
-                //todo
-                if (beamPreserver.size() == 0) {
-                    for (int b = 0; b < beam.size(); b++) {
-                        Configuration configuration = beam.get(b);
-                        State currentState = configuration.state;
-                        float prevScore = configuration.score;
-                        boolean canShift = ArcEager.canDo(0, currentState);
-                        boolean canReduce = ArcEager.canDo(1, currentState);
-                        boolean canRightArc = ArcEager.canDo(2, currentState);
-                        boolean canLeftArc = ArcEager.canDo(3, currentState);
-                        long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
-                        if (!canShift
-                                && !canReduce
-                                && !canRightArc
-                                && !canLeftArc) {
-                            float addedScore = prevScore;
-                            beamPreserver.add(new BeamElement(addedScore, b, 4, -1));
-
-                            if (beamPreserver.size() > beamWidth)
-                                beamPreserver.pollFirst();
-                        }
-
-                        if (canShift) {
-                            float score = classifier.score(features, 0, true);
-                            float addedScore = score + prevScore;
-                            beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
-
-                            if (beamPreserver.size() > beamWidth)
-                                beamPreserver.pollFirst();
-                        }
-
-                        if (canReduce) {
-                            float score = classifier.score(features, 1, true);
-                            float addedScore = score + prevScore;
-                            beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
-
-                            if (beamPreserver.size() > beamWidth)
-                                beamPreserver.pollFirst();
-                        }
-
-                        if (canRightArc) {
-                            for (int dependency : dependencyRelations) {
-                                float score = classifier.score(features, 3 + dependency, true);
-                                float addedScore = score + prevScore;
-                                beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
-
-                                if (beamPreserver.size() > beamWidth)
-                                    beamPreserver.pollFirst();
-                            }
-                        }
-
-                        if (canLeftArc) {
-                            for (int dependency : dependencyRelations) {
-                                float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, true);
-                                float addedScore = score + prevScore;
-                                beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
-
-                                if (beamPreserver.size() > beamWidth)
-                                    beamPreserver.pollFirst();
-                            }
-                        }
-                    }
-                }
-
+               parsePartialWithOneThread(beam,beamPreserver,isNonProjective,goldConfiguration,beamWidth);
             } else {
                 for (int b = 0; b < beam.size(); b++) {
                     pool.submit(new PartialTreeBeamScorerThread(true, classifier, goldConfiguration, beam.get(b),
@@ -359,7 +364,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     }
                 }
             }
-
 
             ArrayList<Configuration> repBeam = new ArrayList<Configuration>(beamWidth);
             for (BeamElement beamElement : beamPreserver.descendingSet()) {
@@ -404,7 +408,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         }
         return bestConfiguration;
     }
-
 
     public void parseConllFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean labeled, boolean lowerCased, int numThreads, boolean partial) throws Exception {
         if (partial || numThreads == 1)
@@ -503,7 +506,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 gs[7] = ps[1];
                 StringBuilder output = new StringBuilder();
                 for (int i = 0; i < gs.length; i++) {
-                    output.append(gs[i] + "\t");
+                    output.append(gs[i]).append("\t");
                 }
                 pwriter.write(output.toString().trim() + "\n");
             } else {
@@ -693,7 +696,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 gs[7] = ps[1];
                 StringBuilder output = new StringBuilder();
                 for (int i = 0; i < gs.length; i++) {
-                    output.append(gs[i] + "\t");
+                    output.append(gs[i]).append("\t");
                 }
                 pwriter.write(output.toString().trim() + "\n");
             } else {

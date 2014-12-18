@@ -63,8 +63,6 @@ public class AveragedPerceptron {
     }
 
     public float changeWeight(int slotNum, Long featureName, int labelIndex, float change) {
-        float newWeight = change;
-
         HashMap<Long, Float> map = featureWeights[labelIndex][slotNum];
         Float value = map.get(featureName);
         if (value != null)
@@ -80,7 +78,7 @@ public class AveragedPerceptron {
         else
             map.put(featureName, iteration * change);
 
-        return newWeight;
+        return change;
     }
 
     public void saveModel(String modelPath) throws IOException {

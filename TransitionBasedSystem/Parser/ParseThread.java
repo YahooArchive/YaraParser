@@ -75,8 +75,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                             && !canReduce
                             && !canRightArc
                             && !canLeftArc) {
-                        float addedScore = prevScore;
-                        beamPreserver.add(new BeamElement(addedScore, b, 4, -1));
+                        beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
 
                         if (beamPreserver.size() > beamWidth)
                             beamPreserver.pollFirst();

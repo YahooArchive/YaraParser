@@ -67,7 +67,7 @@ public class Options implements Serializable {
         numOfThreads = 8;
         parsePartialConll = false;
 
-        partialTrainingStartingIteration=3;
+        partialTrainingStartingIteration = 3;
 
         punctuations = new HashSet<String>();
         punctuations.add("#");
@@ -411,7 +411,7 @@ public class Options implements Serializable {
         options.separator = separator;
         options.useExtendedFeatures = useExtendedFeatures;
         options.parsePartialConll = parsePartialConll;
-        options.partialTrainingStartingIteration=partialTrainingStartingIteration;
+        options.partialTrainingStartingIteration = partialTrainingStartingIteration;
         return options;
     }
 }

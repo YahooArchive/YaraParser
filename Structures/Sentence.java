@@ -73,9 +73,9 @@ public class Sentence implements Comparable {
 
     @Override
     public int hashCode() {
-        int hash=0;
+        int hash = 0;
         for (int tokenId = 0; tokenId < words.length; tokenId++) {
-            hash^=(words[tokenId] * tags[tokenId]) ;
+            hash ^= (words[tokenId] * tags[tokenId]);
         }
         return hash;
     }
