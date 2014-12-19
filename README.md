@@ -129,19 +129,19 @@ __WARNING__ The evaluation script is Yara, takes care of ``ROOT`` output, so you
 ### Example Usage
 There is small portion from Google Universal Treebank for the German language in the __sample\_data__ directory. 
 
-     java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model beam:64 iter:10 nt:1 --punc_file punc_files/google_universal.puncs
+     java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model beam:64 iter:10 --punc_file punc_files/google_universal.puncs
 
-Note that it is better to have more threads depending on your machine, but since multi-threading is not giving exactly the same answer for approximate search in each run, we give examples with one thread. You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __87.76__ and labeled accuracy __81.88__ on the dev set in the 10th iteration. 
+You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __87.27__ and labeled accuracy __80.54__ on the dev set in the 10th iteration. 
 
 Performance numbers are produced after each iteration. The following is the performance on the dev after the 10th iteration:
 
-    3.37 ms for each arc!
-	44.62 ms for each sentence!
+    2.35 ms for each arc!
+	31.17 ms for each sentence!
 
-	Labeled accuracy: 81.88
-	Unlabeled accuracy:  87.76
-	Labeled exact match:  26.76
-	Unlabeled exact match:  42.25   
+	Labeled accuracy: 80.54
+	Unlabeled accuracy:  87.27
+	Labeled exact match:  29.58
+	Unlabeled exact match:  45.07  
 
 Next, you can run the developed model on the test data:
 
@@ -151,10 +151,10 @@ You can finally evaluate the output data:
 
 	java -jar jar/YaraParser.jar eval --gold-file sample_data/test.conll --parsed-file /tmp/test.output.conll --inf-file /tmp/model 
 
-    Labeled accuracy: 72.20
-	Unlabeled accuracy:  77.74
-	Labeled exact match:  17.54
-	Unlabeled exact match:  28.07  
+    Labeled accuracy: 71.02
+	Unlabeled accuracy:  76.56
+	Labeled exact match:  19.30
+	Unlabeled exact match:  29.82
 
 # API Usage
 
@@ -192,4 +192,4 @@ __[Nivre and Fernández-González, 2014]__ Nivre, Joakim, and Daniel Fernández-
 
 __[Sun et al., 2013]__ Sun, Xu, Takuya Matsuzaki, and Wenjie Li. "Latent structured perceptrons for large-scale learning with hidden information." IEEE Transactions on Knowledge and Data Engineering, 25.9 (2013): 2063-2075.
 
-__[Zhang and Nivre, 2011]__ Zhang, Yue, and Joakim Nivre. "Transition-based dependency parsing with rich non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.
+__[Zhang and Nivre, 2011]__ Zhang, Yue, and Joakim Nivre. "Transition-based dependency parsing with rich non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.ch non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.

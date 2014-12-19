@@ -48,16 +48,12 @@ public class ArcEager extends TransitionBasedParser {
 
     public static boolean canDo(int action, State state) {
         if (action == 0) { //shift
-            if (!state.bufferEmpty() && state.bufferHead() == state.rootIndex && !state.stackEmpty())
-                return false;
-            return !state.bufferEmpty() && !state.isEmptyFlag();
+            return !(!state.bufferEmpty() && state.bufferHead() == state.rootIndex && !state.stackEmpty()) && !state.bufferEmpty() && !state.isEmptyFlag();
         } else if (action == 2) { //right arc
             if (state.stackEmpty())
                 return false;
-            if (!state.bufferEmpty() && state.bufferHead() == state.rootIndex)
-                return false;
+            return !(!state.bufferEmpty() && state.bufferHead() == state.rootIndex) && !state.bufferEmpty() && !state.stackEmpty();
 
-            return !state.bufferEmpty() && !state.stackEmpty();
         } else if (action == 3) { //left arc
             if (state.stackEmpty() || state.bufferEmpty())
                 return false;
@@ -65,13 +61,9 @@ public class ArcEager extends TransitionBasedParser {
             if (!state.stackEmpty() && state.peek() == state.rootIndex)
                 return false;
 
-            if (state.peek() == state.rootIndex)
-                return false;
-            return !state.hasHead(state.peek()) && !state.stackEmpty();
+            return state.peek() != state.rootIndex && !state.hasHead(state.peek()) && !state.stackEmpty();
         } else if (action == 1) { //reduce
-            if (!state.stackEmpty() && state.hasHead(state.peek()))
-                return true;
-            return !state.stackEmpty() && state.stackSize() == 1 && state.bufferSize() == 0 && state.peek() == state.rootIndex;
+            return !state.stackEmpty() && state.hasHead(state.peek()) || !state.stackEmpty() && state.stackSize() == 1 && state.bufferSize() == 0 && state.peek() == state.rootIndex;
         } else if (action == 4) { //unshift
             return !state.stackEmpty() && !state.hasHead(state.peek()) && state.isEmptyFlag();
         }

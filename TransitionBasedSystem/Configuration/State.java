@@ -129,9 +129,7 @@ public class State implements Cloneable {
     }
 
     public boolean isTerminalState() {
-        if (bufferEmpty() && stackEmpty())
-            return true;
-        return stack.size() == 0 && bufferH == rootIndex;
+        return bufferEmpty() && stackEmpty() || stack.size() == 0 && bufferH == rootIndex;
     }
 
     public boolean hasHead(int dependent) {
