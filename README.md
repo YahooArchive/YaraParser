@@ -49,9 +49,9 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	
 	*	 Other options (__there are 128 combinations of options and also beam size and thread but the default is the best setting given a big beam (e.g. 64)__)
 	 	 
-	 	 * beam:[beam-width] (default:1)
+	 	 * beam:[beam-width] (default:64)
 	 	 
-	 	 * iter:[training-iterations] (default:50)
+	 	 * iter:[training-iterations] (default:20)
 	 	 
 	 	 * unlabeled (default: labeled parsing, unless explicitly put `unlabeled')
 	 	 
@@ -66,7 +66,7 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	 	 
 	 	 * random (default: choose maximum scoring oracle, unless explicitly put `random' for randomly choosing an oracle)
 	 	 
-	 	 * nt:[#_of_threads] (default:1)
+	 	 * nt:[#_of_threads] (default:8)
 	 	 
 	 	 * root_first (default: put ROOT in the last position, unless explicitly put 'root_first')
 	 
@@ -106,7 +106,7 @@ __NOTE:__ If there is a tree in the data that has a cycle or cannot be projectiv
 __WARNING__ Training on partial trees is noisy because the dynamic oracle decides about what path to choose as a gold tree and in many cases, the choice by the dynamic oracle is not correct, leading to noisy data situation.
 	
 ### Parse a Partial Tree with Some Gold Dependencies
-__NOTE:__ There are some occasions where you need to parse a sentence, but already know about some of its depndencies. Yara tries to find the best parse tree for a sentence: 1) if the original partial tree is projective and there is at least one way to fill in the other heads and preserve projectivity, all gold parses will be preserved, 2) if there is some nonprojectivity or loop in the partial tree, some or even all of gold dependencies will be ignored.
+__NOTE:__ There are some occasions where you need to parse a sentence, but already know about some of its dependencies. Yara tries to find the best parse tree for a sentence: 1) if the original partial tree is projective and there is at least one way to fill in the other heads and preserve projectivity, all gold parses will be preserved, 2) if there is some nonprojectivity or loop in the partial tree, some or even all of gold dependencies will be ignored.
 
 __WARNING__ Because of some technical reasons, all words connected to the dummy root word, will be labeled as ``ROOT``. If your treebank convention is different, try to refactor the ``ROOT`` dependency in the final output.
 
@@ -192,4 +192,4 @@ __[Nivre and Fernández-González, 2014]__ Nivre, Joakim, and Daniel Fernández-
 
 __[Sun et al., 2013]__ Sun, Xu, Takuya Matsuzaki, and Wenjie Li. "Latent structured perceptrons for large-scale learning with hidden information." IEEE Transactions on Knowledge and Data Engineering, 25.9 (2013): 2063-2075.
 
-__[Zhang and Nivre, 2011]__ Zhang, Yue, and Joakim Nivre. "Transition-based dependency parsing with rich non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.ch non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.
+__[Zhang and Nivre, 2011]__ Zhang, Yue, and Joakim Nivre. "Transition-based dependency parsing with rich non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011. non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.

@@ -48,7 +48,7 @@ public class Options implements Serializable {
         train = false;
         parseConllFile = false;
         parseTaggedFile = false;
-        beamWidth = 1;
+        beamWidth = 64;
         rootFirst = false;
         infFile = "";
         modelFile = "";
@@ -107,7 +107,7 @@ public class Options implements Serializable {
         output.append("\t** The inf file is [model-file] for parsing\n");
         output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line\n");
         output.append("\t** Other options\n");
-        output.append("\t \t beam:[beam-width] (default:1)\n");
+        output.append("\t \t beam:[beam-width] (default:64)\n");
         output.append("\t \t iter:[training-iterations] (default:50)\n");
         output.append("\t \t unlabeled (default: labeled parsing, unless explicitly put `unlabeled')\n");
         output.append("\t \t lowercase (default: case-sensitive words, unless explicitly put 'lowercase')\n");
