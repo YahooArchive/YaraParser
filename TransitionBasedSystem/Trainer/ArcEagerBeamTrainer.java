@@ -15,6 +15,7 @@ import TransitionBasedSystem.Configuration.Configuration;
 import TransitionBasedSystem.Configuration.GoldConfiguration;
 import TransitionBasedSystem.Configuration.State;
 import TransitionBasedSystem.Features.FeatureExtractor;
+import TransitionBasedSystem.Parser.Actions;
 import TransitionBasedSystem.Parser.ArcEager;
 import TransitionBasedSystem.Parser.BeamScorerThread;
 import TransitionBasedSystem.Parser.KBeamArcEagerParser;
@@ -361,7 +362,7 @@ public class ArcEagerBeamTrainer {
                 long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                 int accepted = 0;
                 // I only assumed that we need zero cost ones
-                if (goldConfiguration.actionCost(0, -1, currentState) == 0) {
+                if (goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
                     Configuration newConfig = configuration.clone();
                     float score = classifier.score(features, 0, false);
                     ArcEager.shift(newConfig.state);
@@ -375,9 +376,9 @@ public class ArcEagerBeamTrainer {
                     }
                     accepted++;
                 }
-                if (ArcEager.canDo(2, currentState)) {
+                if (ArcEager.canDo(Actions.RightArc, currentState)) {
                     for (int dependency : dependencyRelations) {
-                        if (goldConfiguration.actionCost(2, dependency, currentState) == 0) {
+                        if (goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
                             Configuration newConfig = configuration.clone();
                             float score = classifier.score(features, 3 + dependency, false);
                             ArcEager.rightArc(newConfig.state, dependency);
@@ -393,9 +394,9 @@ public class ArcEagerBeamTrainer {
                         }
                     }
                 }
-                if (ArcEager.canDo(3, currentState)) {
+                if (ArcEager.canDo(Actions.LeftArc, currentState)) {
                     for (int dependency : dependencyRelations) {
-                        if (goldConfiguration.actionCost(3, dependency, currentState) == 0) {
+                        if (goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
                             Configuration newConfig = configuration.clone();
                             float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, false);
                             ArcEager.leftArc(newConfig.state, dependency);
@@ -411,7 +412,7 @@ public class ArcEagerBeamTrainer {
                         }
                     }
                 }
-                if (goldConfiguration.actionCost(1, -1, currentState) == 0) {
+                if (goldConfiguration.actionCost(Actions.Reduce, -1, currentState) == 0) {
                     Configuration newConfig = configuration.clone();
                     float score = classifier.score(features, 1, false);
                     ArcEager.reduce(newConfig.state);
@@ -438,10 +439,10 @@ public class ArcEagerBeamTrainer {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
             float prevScore = configuration.score;
-            boolean canShift = ArcEager.canDo(0, currentState);
-            boolean canReduce = ArcEager.canDo(1, currentState);
-            boolean canRightArc = ArcEager.canDo(2, currentState);
-            boolean canLeftArc = ArcEager.canDo(3, currentState);
+            boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
+            boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
+            boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
+            boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
             long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
 
             if (canShift) {

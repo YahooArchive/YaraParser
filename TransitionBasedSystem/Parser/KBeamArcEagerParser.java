@@ -65,10 +65,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
             float prevScore = configuration.score;
-            boolean canShift = ArcEager.canDo(0, currentState);
-            boolean canReduce = ArcEager.canDo(1, currentState);
-            boolean canRightArc = ArcEager.canDo(2, currentState);
-            boolean canLeftArc = ArcEager.canDo(3, currentState);
+            boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
+            boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
+            boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
+            boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
             long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
             if (!canShift
                     && !canReduce
@@ -208,10 +208,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
             float prevScore = configuration.score;
-            boolean canShift = ArcEager.canDo(0, currentState);
-            boolean canReduce = ArcEager.canDo(1, currentState);
-            boolean canRightArc = ArcEager.canDo(2, currentState);
-            boolean canLeftArc = ArcEager.canDo(3, currentState);
+            boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
+            boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
+            boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
+            boolean canLeftArc = ArcEager.canDo(Actions.Reduce, currentState);
             long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
             if (!canShift
                     && !canReduce
@@ -224,7 +224,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
 
             if (canShift) {
-                if (isNonProjective || goldConfiguration.actionCost(0, -1, currentState) == 0) {
+                if (isNonProjective || goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
                     float score = classifier.score(features, 0, true);
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
@@ -235,7 +235,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             }
 
             if (canReduce) {
-                if (isNonProjective || goldConfiguration.actionCost(1, -1, currentState) == 0) {
+                if (isNonProjective || goldConfiguration.actionCost(Actions.Reduce, -1, currentState) == 0) {
                     float score = classifier.score(features, 1, true);
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
@@ -247,7 +247,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
             if (canRightArc) {
                 for (int dependency : dependencyRelations) {
-                    if (isNonProjective || goldConfiguration.actionCost(2, dependency, currentState) == 0) {
+                    if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
                         float score = classifier.score(features, 3 + dependency, true);
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
@@ -260,7 +260,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
             if (canLeftArc) {
                 for (int dependency : dependencyRelations) {
-                    if (isNonProjective || goldConfiguration.actionCost(3, dependency, currentState) == 0) {
+                    if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
                         float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, true);
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
@@ -278,10 +278,10 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 Configuration configuration = beam.get(b);
                 State currentState = configuration.state;
                 float prevScore = configuration.score;
-                boolean canShift = ArcEager.canDo(0, currentState);
-                boolean canReduce = ArcEager.canDo(1, currentState);
-                boolean canRightArc = ArcEager.canDo(2, currentState);
-                boolean canLeftArc = ArcEager.canDo(3, currentState);
+                boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
+                boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
+                boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
+                boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
                 long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                 if (!canShift
                         && !canReduce

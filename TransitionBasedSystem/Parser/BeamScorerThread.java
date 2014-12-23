@@ -48,10 +48,10 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
         float prevScore = configuration.score;
         Sentence sentence = configuration.sentence;
 
-        boolean canShift = ArcEager.canDo(0, currentState);
-        boolean canReduce = ArcEager.canDo(1, currentState);
-        boolean canRightArc = ArcEager.canDo(2, currentState);
-        boolean canLeftArc = ArcEager.canDo(3, currentState);
+        boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
+        boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
+        boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
+        boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
         long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
 
         if (canShift) {

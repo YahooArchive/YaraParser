@@ -66,10 +66,10 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     Configuration configuration = beam.get(b);
                     State currentState = configuration.state;
                     float prevScore = configuration.score;
-                    boolean canShift = ArcEager.canDo(0, currentState);
-                    boolean canReduce = ArcEager.canDo(1, currentState);
-                    boolean canRightArc = ArcEager.canDo(2, currentState);
-                    boolean canLeftArc = ArcEager.canDo(3, currentState);
+                    boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
+                    boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
+                    boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
+                    boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
                     long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                     if (!canShift
                             && !canReduce
@@ -170,10 +170,10 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 float bestScore = Float.NEGATIVE_INFINITY;
                 int bestAction = -1;
 
-                boolean canShift = ArcEager.canDo(0, currentState);
-                boolean canReduce = ArcEager.canDo(1, currentState);
-                boolean canRightArc = ArcEager.canDo(2, currentState);
-                boolean canLeftArc = ArcEager.canDo(3, currentState);
+                boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
+                boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
+                boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
+                boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
 
                 if (!canShift
                         && !canReduce
@@ -217,7 +217,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                         }
                     }
                 }
-                if (ArcEager.canDo(3, currentState)) {
+                if (ArcEager.canDo(Actions.LeftArc, currentState)) {
                     int headPos = sentence.posAt(configuration.state.bufferHead());
                     int depPos = sentence.posAt(configuration.state.peek());
                     for (int dependency : dependencyRelations) {
@@ -266,5 +266,4 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         }
         return new Pair<Configuration, Integer>(bestConfiguration, id);
     }
-
 }

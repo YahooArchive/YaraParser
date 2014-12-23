@@ -8,6 +8,7 @@ package TransitionBasedSystem.Configuration;
 
 import Accessories.Pair;
 import Structures.Sentence;
+import TransitionBasedSystem.Parser.Actions;
 import TransitionBasedSystem.Parser.ArcEager;
 
 import java.util.HashMap;
@@ -102,20 +103,20 @@ public class GoldConfiguration {
      * @return oracle cost of the action
      * @throws Exception
      */
-    public int actionCost(int action, int dependency, State state) throws Exception {
+    public int actionCost(Actions action, int dependency, State state) throws Exception {
         if (!ArcEager.canDo(action, state))
             return Integer.MAX_VALUE;
         int cost = 0;
 
         // added by me to take care of labels
-        if (action == 3) { // left arc
+        if (action == Actions.LeftArc) { // left arc
             int bufferHead = state.bufferHead();
             int stackHead = state.peek();
 
             if (goldDependencies.containsKey(stackHead) && goldDependencies.get(stackHead).first == bufferHead
                     && goldDependencies.get(stackHead).second != (dependency))
                 cost += 1;
-        } else if (action == 2 && cost == 0) { //right arc
+        } else if (action == Actions.RightArc && cost == 0) { //right arc
             int bufferHead = state.bufferHead();
             int stackHead = state.peek();
             if (goldDependencies.containsKey(bufferHead) && goldDependencies.get(bufferHead).first == stackHead
@@ -123,7 +124,7 @@ public class GoldConfiguration {
                 cost += 1;
         }
 
-        if (action == 0 && cost == 0) { //shift
+        if (action == Actions.Shift && cost == 0) { //shift
             int bufferHead = state.bufferHead();
             for (int stackItem : state.getStack()) {
                 if (goldDependencies.containsKey(stackItem) && goldDependencies.get(stackItem).first == (bufferHead))
@@ -132,14 +133,14 @@ public class GoldConfiguration {
                     cost += 1;
             }
 
-        } else if (action == 1 && cost == 0) { //reduce
+        } else if (action == Actions.Reduce && cost == 0) { //reduce
             int stackHead = state.peek();
             if (!state.bufferEmpty())
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
                     if (goldDependencies.containsKey(bufferItem) && goldDependencies.get(bufferItem).first == (stackHead))
                         cost += 1;
                 }
-        } else if (action == 3 && cost == 0) { //left arc
+        } else if (action == Actions.LeftArc && cost == 0) { //left arc
             int stackHead = state.peek();
             if (!state.bufferEmpty())
                 for (int bufferItem = state.bufferHead(); bufferItem <= state.maxSentenceSize; bufferItem++) {
@@ -149,7 +150,7 @@ public class GoldConfiguration {
                         if (bufferItem != state.bufferHead())
                             cost += 1;
                 }
-        } else if (action == 2 && cost == 0) { //right arc
+        } else if (action == Actions.RightArc && cost == 0) { //right arc
             int stackHead = state.peek();
             int bufferHead = state.bufferHead();
             for (int stackItem : state.getStack()) {

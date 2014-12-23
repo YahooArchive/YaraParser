@@ -46,15 +46,15 @@ public class ArcEager extends TransitionBasedParser {
             state.setEmptyFlag(true);
     }
 
-    public static boolean canDo(int action, State state) {
-        if (action == 0) { //shift
+    public static boolean canDo(Actions action, State state) {
+        if (action == Actions.Shift) { //shift
             return !(!state.bufferEmpty() && state.bufferHead() == state.rootIndex && !state.stackEmpty()) && !state.bufferEmpty() && !state.isEmptyFlag();
-        } else if (action == 2) { //right arc
+        } else if (action == Actions.RightArc) { //right arc
             if (state.stackEmpty())
                 return false;
             return !(!state.bufferEmpty() && state.bufferHead() == state.rootIndex) && !state.bufferEmpty() && !state.stackEmpty();
 
-        } else if (action == 3) { //left arc
+        } else if (action == Actions.LeftArc) { //left arc
             if (state.stackEmpty() || state.bufferEmpty())
                 return false;
 
@@ -62,9 +62,9 @@ public class ArcEager extends TransitionBasedParser {
                 return false;
 
             return state.peek() != state.rootIndex && !state.hasHead(state.peek()) && !state.stackEmpty();
-        } else if (action == 1) { //reduce
+        } else if (action == Actions.Reduce) { //reduce
             return !state.stackEmpty() && state.hasHead(state.peek()) || !state.stackEmpty() && state.stackSize() == 1 && state.bufferSize() == 0 && state.peek() == state.rootIndex;
-        } else if (action == 4) { //unshift
+        } else if (action ==Actions.Unshift) { //unshift
             return !state.stackEmpty() && !state.hasHead(state.peek()) && state.isEmptyFlag();
         }
         return false;

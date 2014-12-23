@@ -108,7 +108,7 @@ public class Options implements Serializable {
         output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line\n");
         output.append("\t** Other options\n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
-        output.append("\t \t iter:[training-iterations] (default:50)\n");
+        output.append("\t \t iter:[training-iterations] (default:20)\n");
         output.append("\t \t unlabeled (default: labeled parsing, unless explicitly put `unlabeled')\n");
         output.append("\t \t lowercase (default: case-sensitive words, unless explicitly put 'lowercase')\n");
         output.append("\t \t basic (default: use extended feature set, unless explicitly put 'basic')\n");
