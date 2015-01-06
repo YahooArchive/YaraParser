@@ -80,6 +80,8 @@ __WARNING__ Because of some technical reasons, all words connected to the dummy 
 	* The inf file is [model-file] for parsing (used in the testing phase)
 	
 	* The test file should have the conll 2006 format
+	
+	* Optional: nt:#_of_threads (default:8) 
 
 ### Parse a POS Tagged File
 
@@ -91,6 +93,8 @@ __WARNING__ Because of some technical reasons, all words connected to the dummy 
 	* The test file should have each sentence in line and word_tag pairs are space-delimited
 	
 	* Optional:  --delim [delim] (default is _)
+	
+	* Optional: nt:#_of_threads (default:8) 
 	
 	* The inf file is [model-file] for parsing (used in the testing phase)
 	 
