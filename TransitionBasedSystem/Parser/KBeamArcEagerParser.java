@@ -520,82 +520,56 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
     public void parseTaggedFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean lowerCased, String separator, int numOfThreads) throws Exception {
         BufferedReader reader = new BufferedReader(new FileReader(inputFile));
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
-        HashMap<String, Integer> wordMap = maps.getWordMap();
         long start = System.currentTimeMillis();
+
+        ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
+        CompletionService<Pair<String,Integer>> pool = new ExecutorCompletionService<Pair<String,Integer>>(executor);
+
 
         String line;
         int count = 0;
+        int lineNum=0;
         while ((line = reader.readLine()) != null) {
-            count++;
-            if (count % 100 == 0)
-                System.err.print(count + "...");
-            line = line.trim();
-            String[] wrds = line.split(" ");
-            String[] words = new String[wrds.length];
-            String[] posTags = new String[wrds.length];
+            pool.submit(new ParseTaggedThread(lineNum++,line,separator,rootFirst,lowerCased,maps,beamWidth,this));
 
-            ArrayList<Integer> tokens = new ArrayList<Integer>();
-            ArrayList<Integer> tags = new ArrayList<Integer>();
-
-
-            int i = 0;
-            for (String w : wrds) {
-                if (w.length() == 0)
-                    continue;
-                int index = w.lastIndexOf(separator);
-                String word = w.substring(0, index);
-                if (lowerCased)
-                    word = word.toLowerCase();
-                String pos = w.substring(index + 1);
-                words[i] = word;
-                posTags[i++] = pos;
-
-                int wi = -1;
-                if (wordMap.containsKey(word))
-                    wi = wordMap.get(word);
-
-                int pi = -1;
-                if (wordMap.containsKey(pos))
-                    pi = wordMap.get(pos);
-
-                tokens.add(wi);
-                tags.add(pi);
-            }
-
-            if (tokens.size() > 0) {
-                if (!rootFirst) {
-                    tokens.add(0);
-                    tags.add(0);
+            if(lineNum%1000==0){
+                String[] outs=new String[lineNum];
+                for(int i=0;i<lineNum;i++){
+                    count++;
+                    if (count % 100 == 0)
+                        System.err.print(count + "...");
+                    Pair<String,Integer> result=pool.take().get();
+                    outs[result.second]=result.first;
                 }
-                Sentence sentence = new Sentence(tokens, tags);
-                Configuration bestParse = parse(sentence, rootFirst, beamWidth, numOfThreads);
 
-
-                StringBuilder finalOutput = new StringBuilder();
-                for (i = 0; i < words.length; i++) {
-
-                    String word = words[i];
-                    String pos = posTags[i];
-
-                    int w = i + 1;
-                    int head = bestParse.state.getHead(w);
-                    int dep = bestParse.state.getDependency(w);
-
-
-                    String lemma = "_";
-
-                    String fpos = "_";
-
-                    if (head == bestParse.state.rootIndex)
-                        head = 0;
-                    String output = w + "\t" + word + "\t" + lemma + "\t" + pos + "\t" + fpos + "\t_\t" + head + "\t" + maps.revWords[dep] + "\t_\t_\n";
-                    finalOutput.append(output);
+                for (int i=0;i<lineNum;i++){
+                    if(outs[i].length()>0){
+                        writer.write(outs[i]);
+                    }
                 }
-                if (words.length > 0)
-                    finalOutput.append("\n");
-                writer.write(finalOutput.toString());
+
+                lineNum=0;
             }
         }
+
+        if(lineNum>0){
+            String[] outs=new String[lineNum];
+            for(int i=0;i<lineNum;i++){
+                count++;
+                if (count % 100 == 0)
+                    System.err.print(count + "...");
+                Pair<String,Integer> result=pool.take().get();
+                outs[result.second]=result.first;
+            }
+
+            for (int i=0;i<lineNum;i++){
+
+                if(outs[i].length()>0){
+                    writer.write(outs[i]);
+                }
+            }
+        }
+
         long end = System.currentTimeMillis();
         System.out.println("\n" + (end - start) + " ms");
         writer.flush();
