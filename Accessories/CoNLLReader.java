@@ -36,6 +36,7 @@ public class CoNLLReader {
         HashMap<String, Integer> wordMap = new HashMap<String, Integer>();
         HashMap<Integer, Integer> labels = new HashMap<Integer, Integer>();
         int labelCount = 1;
+        String rootString="ROOT";
 
         int wi = 1;
         wordMap.put("ROOT", 0);
@@ -47,6 +48,10 @@ public class CoNLLReader {
             String[] spl = line.trim().split("\t");
             if (spl.length > 7) {
                 String label = spl[7];
+                int head=Integer.parseInt(spl[6]);
+                if(head==0)
+                    rootString=label;
+
                 if (label.equals("_"))
                     label = "-";
                 if (!labeled)
@@ -82,7 +87,7 @@ public class CoNLLReader {
             }
         }
 
-        return new IndexMaps(wordMap, labels);
+        return new IndexMaps(wordMap, labels,rootString);
     }
 
     /**
@@ -212,8 +217,9 @@ public class CoNLLReader {
                 int headIndex = Integer.parseInt(splitLine[6]);
                 String relation = splitLine[7];
 
-                if (headIndex == 0)
+                if (headIndex == 0) {
                     relation = "ROOT";
+                }
 
                 if (pos.length() > 0)
                     goldDependencies.put(wordIndex, new Pair<Integer, String>(headIndex, relation));

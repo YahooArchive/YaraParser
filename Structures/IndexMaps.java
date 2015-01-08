@@ -13,8 +13,9 @@ public class IndexMaps implements Serializable {
     public String[] revWords;
     private HashMap<String, Integer> wordMap;
     private HashMap<Integer, Integer> labels;
+    public final String rootString;
 
-    public IndexMaps(HashMap<String, Integer> wordMap, HashMap<Integer, Integer> labels) {
+    public IndexMaps(HashMap<String, Integer> wordMap, HashMap<Integer, Integer> labels,String rootString) {
         this.wordMap = wordMap;
         this.labels = labels;
 
@@ -24,6 +25,8 @@ public class IndexMaps implements Serializable {
         for (String word : wordMap.keySet()) {
             revWords[wordMap.get(word)] = word;
         }
+
+        this.rootString=rootString;
     }
 
     public Sentence makeSentence(String[] words, String[] posTags, boolean rootFirst, boolean lowerCased) {

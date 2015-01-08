@@ -73,8 +73,6 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 
 ### Parse a CoNLL_2006 File
 
-__WARNING__ Because of some technical reasons, all words connected to the dummy root word, will be labeled as ``ROOT``. If your treebank convention is different, try to refactor the ``ROOT`` dependency in the final output.
-
 * __java -jar jar/YaraParser.jar parse_conll --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file]__
 	
 	* The inf file is [model-file] for parsing (used in the testing phase)
@@ -84,9 +82,6 @@ __WARNING__ Because of some technical reasons, all words connected to the dummy 
 	* Optional: nt:#_of_threads (default:8) 
 
 ### Parse a POS Tagged File
-
-__WARNING__ Because of some technical reasons, all words connected to the dummy root word, will be labeled as ``ROOT``. If your treebank convention is different, try to refactor the ``ROOT`` dependency in the final output.
-
 
 * __java -jar jar/YaraParser.jar parse_tagged --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file]__
 	

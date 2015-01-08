@@ -455,9 +455,6 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 StringBuilder finalOutput = new StringBuilder();
                 for (int i = 0; i < words.length; i++) {
                     int w = i + 1;
-                    if (bestParse == null) {
-                        int head = bestParse.state.getHead(w);
-                    }
                     int head = bestParse.state.getHead(w);
                     int dep = bestParse.state.getDependency(w);
 
@@ -467,7 +464,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     if (head == bestParse.state.rootIndex)
                         head = 0;
 
-                    String output = head + "\t" + maps.revWords[dep] + "\n";
+                    String label=head==0 ? maps.rootString : maps.revWords[dep];
+                    String output = head + "\t" +label  + "\n";
                     finalOutput.append(output);
                 }
                 finalOutput.append("\n");
@@ -632,7 +630,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     if (head == bestParse.state.rootIndex)
                         head = 0;
 
-                    String output = head + "\t" + maps.revWords[dep] + "\n";
+                    String label=head==0 ? maps.rootString : maps.revWords[dep];
+                    String output = head + "\t" + label + "\n";
                     finalOutput.append(output);
                 }
                 finalOutput.append("\n");

@@ -101,7 +101,9 @@ public class ParseTaggedThread  implements Callable<Pair<String,Integer>> {
 
                 if (head == bestParse.state.rootIndex)
                     head = 0;
-                String output = w + "\t" + word + "\t" + lemma + "\t" + pos + "\t" + fpos + "\t_\t" + head + "\t" + maps.revWords[dep] + "\t_\t_\n";
+                String label=head==0 ? maps.rootString : maps.revWords[dep];
+
+                String output = w + "\t" + word + "\t" + lemma + "\t" + pos + "\t" + fpos + "\t_\t" + head + "\t" + label + "\t_\t_\n";
                 finalOutput.append(output);
             }
             if (words.length > 0)
