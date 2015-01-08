@@ -44,8 +44,8 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 * __java -jar jar/YaraParser.jar train --train-file [train-file] --dev-file [dev-file] --model-file [model-file] --punc_file [punc-file]__
 	
 	*	 The model for each iteration is with the pattern [model-file]_iter[iter#]; e.g. mode_iter2
+	
 	* [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line
-	* The inf file is [model-file] for parsing
 	
 	*	 Other options (__there are 128 combinations of options and also beam size and thread but the default is the best setting given a big beam (e.g. 64)__)
 	 	 
@@ -73,9 +73,7 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 
 ### Parse a CoNLL_2006 File
 
-* __java -jar jar/YaraParser.jar parse_conll --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file]__
-	
-	* The inf file is [model-file] for parsing (used in the testing phase)
+* __java -jar jar/YaraParser.jar parse_conll --test-file [test-file] --out [output-file] --model-file [model-file]__
 	
 	* The test file should have the conll 2006 format
 	
@@ -83,7 +81,7 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 
 ### Parse a POS Tagged File
 
-* __java -jar jar/YaraParser.jar parse_tagged --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file]__
+* __java -jar jar/YaraParser.jar parse_tagged --test-file [test-file] --out [output-file] --model-file [model-file]__
 	
 	* The test file should have each sentence in line and word_tag pairs are space-delimited
 	
@@ -91,8 +89,6 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	
 	* Optional: nt:#_of_threads (default:8) 
 	
-	* The inf file is [model-file] for parsing (used in the testing phase)
-	 
 	* Example line: He_PRP is_VBZ nice_AJ ._.
 	
 ### Train a Parser with Partial Training data
@@ -110,10 +106,8 @@ __NOTE:__ There are some occasions where you need to parse a sentence, but alrea
 __WARNING__ Because of some technical reasons, all words connected to the dummy root word, will be labeled as ``ROOT``. If your treebank convention is different, try to refactor the ``ROOT`` dependency in the final output.
 
 
-* __java -jar YaraParser.jar parse_partial --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)]__ 
+* __java -jar YaraParser.jar parse_partial --test-file [test-file] --out [output-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)]__ 
 		
-	* The inf file is [model-file] for parsing (used in the testing phase)
-	
 	* The test file should have the conll 2006 format; each word that does not have a parent, should have a -1 parent-index
 
 
@@ -144,11 +138,11 @@ Performance numbers are produced after each iteration. The following is the perf
 
 Next, you can run the developed model on the test data:
 
-     java -jar jar/YaraParser.jar parse_conll --test-file sample_data/test.conll --model-file /tmp/model_iter10 --inf-file /tmp/model --out /tmp/test.output.conll
+     java -jar jar/YaraParser.jar parse_conll --test-file sample_data/test.conll --model-file /tmp/model_iter10  --out /tmp/test.output.conll
 
 You can finally evaluate the output data:
 
-	java -jar jar/YaraParser.jar eval --gold-file sample_data/test.conll --parsed-file /tmp/test.output.conll --inf-file /tmp/model 
+	java -jar jar/YaraParser.jar eval --gold-file sample_data/test.conll --parsed-file /tmp/test.output.conll 
 
     Labeled accuracy: 71.02
 	Unlabeled accuracy:  76.56
@@ -190,5 +184,7 @@ __[Nivre and Fernández-González, 2014]__ Nivre, Joakim, and Daniel Fernández-
 
 
 __[Sun et al., 2013]__ Sun, Xu, Takuya Matsuzaki, and Wenjie Li. "Latent structured perceptrons for large-scale learning with hidden information." IEEE Transactions on Knowledge and Data Engineering, 25.9 (2013): 2063-2075.
+
+__[Zhang and Nivre, 2011]__ Zhang, Yue, and Joakim Nivre. "Transition-based dependency parsing with rich non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.n Knowledge and Data Engineering, 25.9 (2013): 2063-2075.
 
 __[Zhang and Nivre, 2011]__ Zhang, Yue, and Joakim Nivre. "Transition-based dependency parsing with rich non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.

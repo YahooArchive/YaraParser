@@ -5,8 +5,14 @@
 
 package Learning;
 
+import Accessories.Options;
+import Accessories.Pair;
+import Structures.IndexMaps;
+
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class AveragedPerceptron {
     /**
@@ -23,12 +29,12 @@ public class AveragedPerceptron {
     /**
      * For the weights for all features
      */
-    protected HashMap<Long, Float>[][] featureWeights;
-    int iteration;
+    public  HashMap<Long, Float>[][] featureWeights;
+    public int iteration;
     /**
      * This is the main part of the extension to the original perceptron algorithm which the averaging over all the history
      */
-    private HashMap<Long, Float>[][] averagedWeights;
+    public HashMap<Long, Float>[][] averagedWeights;
 
 
     public AveragedPerceptron(int size, int len) {
@@ -54,14 +60,6 @@ public class AveragedPerceptron {
         this.averagedWeights = averagedWeights;
     }
 
-    public static AveragedPerceptron loadModel(String modelPath) throws IOException, ClassNotFoundException {
-        ObjectInputStream reader = new ObjectInputStream(new FileInputStream(modelPath));
-        HashMap<Long, Float>[][] avg = (HashMap<Long, Float>[][]) reader.readObject();
-        reader.close();
-
-        return new AveragedPerceptron(avg.length, avg, avg[0].length);
-    }
-
     public float changeWeight(int slotNum, Long featureName, int labelIndex, float change) {
         HashMap<Long, Float> map = featureWeights[labelIndex][slotNum];
         Float value = map.get(featureName);
@@ -79,27 +77,6 @@ public class AveragedPerceptron {
             map.put(featureName, iteration * change);
 
         return change;
-    }
-
-    public void saveModel(String modelPath) throws IOException {
-        HashMap<Long, Float>[][] avg = new HashMap[featureWeights.length][featureWeights[0].length];
-        for (int i = 0; i < avg.length; i++) {
-            for (int j = 0; j < avg[i].length; j++) {
-                avg[i][j] = new HashMap<Long, Float>();
-                HashMap<Long, Float> map = featureWeights[i][j];
-                HashMap<Long, Float> avgMap = averagedWeights[i][j];
-                for (long feat : map.keySet()) {
-                    float weight = map.get(feat) - (avgMap.get(feat) / iteration);
-                    if (weight != 0)
-                        (avg[i][j]).put(feat, weight);
-                }
-            }
-        }
-
-        ObjectOutput writer = new ObjectOutputStream(new FileOutputStream(modelPath));
-        writer.writeObject(avg);
-        writer.flush();
-        writer.close();
     }
 
     /**

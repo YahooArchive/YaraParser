@@ -6,9 +6,11 @@
 package TransitionBasedSystem.Trainer;
 
 import Accessories.Evaluator;
+import Accessories.Options;
 import Accessories.Pair;
 import Learning.AveragedPerceptron;
 import Structures.IndexMaps;
+import Structures.InfStruct;
 import Structures.Sentence;
 import TransitionBasedSystem.Configuration.BeamElement;
 import TransitionBasedSystem.Configuration.Configuration;
@@ -44,19 +46,13 @@ public class ArcEagerBeamTrainer {
      * Miguel Ballesteros and Joakim Nivre. "Going to the roots of dependency parsing."
      * Computational Linguistics 39, no. 1 (2013): 5-13.
      */
-    private boolean rootFirst;
 
-    int beamWidth;
 
     private ArrayList<Integer> dependencyRelations;
 
     private int featureLength;
 
-    private boolean dynamicOracle;
-
-    private boolean isRandomDynamicSelection;
-
-    private int numOfThreads;
+    Options options;
 
     // for pruning irrelevant search space
     private HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet;
@@ -64,29 +60,25 @@ public class ArcEagerBeamTrainer {
     private Random randGen;
     private IndexMaps maps;
 
-    public ArcEagerBeamTrainer(String updateMode, AveragedPerceptron classifier, boolean rootFirst,
-                               int beamWidth, ArrayList<Integer> dependencyRelations,
+    public ArcEagerBeamTrainer(String updateMode, AveragedPerceptron classifier, Options options,
+                               ArrayList<Integer> dependencyRelations,
                                HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet, int featureLength
-            , boolean dynamicOracle, boolean isRandomDynamicSelection, IndexMaps maps, int numOfThreads) {
+            , IndexMaps maps) {
         this.updateMode = updateMode;
         this.classifier = classifier;
-        this.rootFirst = rootFirst;
-        this.beamWidth = beamWidth;
+      this.options=options;
         this.dependencyRelations = dependencyRelations;
         this.featureLength = featureLength;
-        this.dynamicOracle = dynamicOracle;
         randGen = new Random();
-        this.isRandomDynamicSelection = isRandomDynamicSelection;
         this.headDepSet = headDepSet;
         this.maps = maps;
-        this.numOfThreads = numOfThreads;
     }
 
     public void train(ArrayList<GoldConfiguration> trainData, String devPath, int maxIteration, String modelPath, boolean lowerCased, HashSet<String> punctuations, int partialTreeIter) throws Exception {
         /**
          * Actions: 0=shift, 1=reduce, 2=unshift, ra_dep=3+dep, la_dep=3+dependencyRelations.size()+dep
          */
-        ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
+        ExecutorService executor = Executors.newFixedThreadPool(options.numOfThreads);
         CompletionService<ArrayList<BeamElement>> pool = new ExecutorCompletionService<ArrayList<BeamElement>>(executor);
 
 
@@ -107,16 +99,19 @@ public class ArcEagerBeamTrainer {
             long end = System.currentTimeMillis();
             long timeSec = (end - start) / 1000;
             System.out.println("this iteration took " + timeSec + " seconds\n");
-            classifier.saveModel(modelPath + "_iter" + i);
+
+            System.out.println("saving the model");
+            InfStruct infStruct=new InfStruct(classifier,maps,dependencyRelations,headDepSet,options);
+            infStruct.saveModel(modelPath + "_iter" + i);
 
             System.out.println("\nsaved iteration " + i + " with " + classifier.size() + " features\n");
 
             if (!devPath.equals("")) {
-                AveragedPerceptron averagedPerceptron = AveragedPerceptron.loadModel(modelPath + "_iter" + i);
-                KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyRelations, headDepSet, featureLength, maps, numOfThreads);
+                AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct.avg.length,infStruct.avg,infStruct.avg[0].length);
+                KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyRelations, headDepSet, featureLength, maps, options.numOfThreads);
 
                 parser.parseConllFile(devPath, modelPath + ".__tmp__",
-                        rootFirst, beamWidth, true, lowerCased, numOfThreads, false);
+                        options.rootFirst, options.beamWidth, true, lowerCased, options.numOfThreads, false);
                 Evaluator.evaluate(devPath, modelPath + ".__tmp__", punctuations);
                 parser.shutDownLiveThreads();
             }
@@ -129,16 +124,16 @@ public class ArcEagerBeamTrainer {
     }
 
     private void trainOnOneSample(GoldConfiguration goldConfiguration, int partialTreeIter, int i, int dataCount, CompletionService<ArrayList<BeamElement>> pool) throws  Exception{
-        boolean isPartial = goldConfiguration.isPartial(rootFirst);
+        boolean isPartial = goldConfiguration.isPartial( options.rootFirst);
 
         if (partialTreeIter > i && isPartial)
             return;
 
         Sentence sentence = goldConfiguration.getSentence();
 
-        Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(), rootFirst);
+        Configuration initialConfiguration = new Configuration(goldConfiguration.getSentence(),  options.rootFirst);
         Configuration firstOracle = initialConfiguration.clone();
-        ArrayList<Configuration> beam = new ArrayList<Configuration>(beamWidth);
+        ArrayList<Configuration> beam = new ArrayList<Configuration>( options.beamWidth);
         beam.add(initialConfiguration);
 
         /**
@@ -172,7 +167,7 @@ public class ArcEagerBeamTrainer {
              */
             HashMap<Configuration, Float> newOracles = new HashMap<Configuration, Float>();
 
-            if (dynamicOracle || isPartial) {
+            if (options.useDynamicOracle || isPartial) {
                 bestScoringOracle = zeroCostDynamicOracle(goldConfiguration, oracles, newOracles);
             } else {
                 bestScoringOracle = staticOracle(goldConfiguration, oracles, newOracles);
@@ -185,17 +180,17 @@ public class ArcEagerBeamTrainer {
 
             TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
 
-            if (numOfThreads == 1 || beam.size() == 1) {
+            if ( options.numOfThreads == 1 || beam.size() == 1) {
                 beamSortOneThread(beam, beamPreserver, sentence);
             } else {
                 for (int b = 0; b < beam.size(); b++) {
                     pool.submit(new BeamScorerThread(false, classifier, beam.get(b),
-                            dependencyRelations, featureLength, headDepSet, b, rootFirst));
+                            dependencyRelations, featureLength, headDepSet, b,  options.rootFirst));
                 }
                 for (int b = 0; b < beam.size(); b++) {
                     for (BeamElement element : pool.take().get()) {
                         beamPreserver.add(element);
-                        if (beamPreserver.size() > beamWidth)
+                        if (beamPreserver.size() >  options.beamWidth)
                             beamPreserver.pollFirst();
                     }
                 }
@@ -206,9 +201,9 @@ public class ArcEagerBeamTrainer {
             } else {
                 oracleInBeam = false;
 
-                ArrayList<Configuration> repBeam = new ArrayList<Configuration>(beamWidth);
+                ArrayList<Configuration> repBeam = new ArrayList<Configuration>( options.beamWidth);
                 for (BeamElement beamElement : beamPreserver.descendingSet()) {
-                    if (repBeam.size() >= beamWidth)
+                    if (repBeam.size() >=  options.beamWidth)
                         break;
                     int b = beamElement.number;
                     int action = beamElement.action;
@@ -247,7 +242,7 @@ public class ArcEagerBeamTrainer {
                         oracles = new HashMap<Configuration, Float>();
                         oracles.put(bestConfig, 0.0f);
                     } else {
-                        if (isRandomDynamicSelection) { // choosing randomly, otherwise using latent structured Perceptron
+                        if ( options.useRandomOracleSelection) { // choosing randomly, otherwise using latent structured Perceptron
                             List<Configuration> keys = new ArrayList<Configuration>(oracles.keySet());
                             Configuration randomKey = keys.get(randGen.nextInt(keys.size()));
                             oracles = new HashMap<Configuration, Float>();
@@ -450,7 +445,7 @@ public class ArcEagerBeamTrainer {
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
-                if (beamPreserver.size() > beamWidth)
+                if (beamPreserver.size() >  options.beamWidth)
                     beamPreserver.pollFirst();
             }
             if (canReduce) {
@@ -458,7 +453,7 @@ public class ArcEagerBeamTrainer {
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
-                if (beamPreserver.size() > beamWidth)
+                if (beamPreserver.size() >  options.beamWidth)
                     beamPreserver.pollFirst();
             }
 
@@ -472,7 +467,7 @@ public class ArcEagerBeamTrainer {
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
-                        if (beamPreserver.size() > beamWidth)
+                        if (beamPreserver.size() >  options.beamWidth)
                             beamPreserver.pollFirst();
                     }
                 }
@@ -487,7 +482,7 @@ public class ArcEagerBeamTrainer {
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
-                        if (beamPreserver.size() > beamWidth)
+                        if (beamPreserver.size() >  options.beamWidth)
                             beamPreserver.pollFirst();
                     }
                 }

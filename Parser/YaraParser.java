@@ -11,6 +11,7 @@ import Accessories.Options;
 import Accessories.Pair;
 import Learning.AveragedPerceptron;
 import Structures.IndexMaps;
+import Structures.InfStruct;
 import Structures.Sentence;
 import TransitionBasedSystem.Configuration.GoldConfiguration;
 import TransitionBasedSystem.Parser.KBeamArcEagerParser;
@@ -52,18 +53,18 @@ public class YaraParser {
 
     private static void parse(Options options) throws Exception {
         if (options.outputFile.equals("") || options.inputFile.equals("")
-                || options.infFile.equals("") || options.modelFile.equals("")) {
+                /*|| options.infFile.equals("") */ || options.modelFile.equals("")) {
             Options.showHelp();
 
         } else {
-            ObjectInputStream reader = new ObjectInputStream(new FileInputStream(options.infFile));
-            ArrayList<Integer> dependencyLabels = (ArrayList<Integer>) reader.readObject();
-            IndexMaps maps = (IndexMaps) reader.readObject();
+            InfStruct infStruct=new InfStruct(options.modelFile);
+            ArrayList<Integer> dependencyLabels =infStruct.dependencyLabels;
+            IndexMaps maps = infStruct.maps;
 
-            HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet = (HashMap<Integer, HashMap<Integer, HashSet<Integer>>>) reader.readObject();
+            HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet = infStruct.headDepSet;
 
-            Options inf_options = (Options) reader.readObject();
-            AveragedPerceptron averagedPerceptron = AveragedPerceptron.loadModel(options.modelFile);
+            Options inf_options = infStruct.options;
+            AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct.avg.length,infStruct.avg,infStruct.avg[0].length);
 
             int templates = averagedPerceptron.featureSize();
             KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, headDepSet, templates, maps, options.numOfThreads);
@@ -144,7 +145,7 @@ public class YaraParser {
             System.out.println("done!");
 
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, 4 + 2 * dependencyLabels.size()),
-                    options.rootFirst, options.beamWidth, dependencyLabels, headDepSet, featureLength, options.useDynamicOracle, options.useRandomOracleSelection, maps, options.numOfThreads);
+                    options, dependencyLabels, headDepSet, featureLength, maps);
             trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase, options.punctuations, options.partialTrainingStartingIteration);
         }
     }

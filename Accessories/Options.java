@@ -26,7 +26,7 @@ public class Options implements Serializable {
     public boolean evaluate;
     public boolean parsePartialConll;
 
-    public String infFile;
+   // public String infFile;
     public String modelFile;
     public boolean lowercase;
     public boolean useExtendedFeatures;
@@ -50,7 +50,7 @@ public class Options implements Serializable {
         parseTaggedFile = false;
         beamWidth = 64;
         rootFirst = false;
-        infFile = "";
+      //   infFile = "";
         modelFile = "";
         outputFile = "";
         inputFile = "";
@@ -173,8 +173,8 @@ public class Options implements Serializable {
                 options.predFile = args[i + 1];
             else if (args[i].startsWith("--out"))
                 options.outputFile = args[i + 1];
-            else if (args[i].startsWith("--inf-file"))
-                options.infFile = args[i + 1];
+           // else if (args[i].startsWith("--inf-file"))
+           //     options.infFile = args[i + 1];
             else if (args[i].startsWith("--delim"))
                 options.separator = args[i + 1];
             else if (args[i].startsWith("beam:"))
@@ -345,7 +345,7 @@ public class Options implements Serializable {
             builder.append("input file: " + inputFile + "\n");
             builder.append("output file: " + outputFile + "\n");
             builder.append("model file: " + modelFile + "\n");
-            builder.append("inf file: " + infFile + "\n");
+         //   builder.append("inf file: " + infFile + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");
             return builder.toString();
         } else if (parseTaggedFile) {
@@ -354,7 +354,7 @@ public class Options implements Serializable {
             builder.append("input file: " + inputFile + "\n");
             builder.append("output file: " + outputFile + "\n");
             builder.append("model file: " + modelFile + "\n");
-            builder.append("inf file: " + infFile + "\n");
+          //  builder.append("inf file: " + infFile + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");
             return builder.toString();
         } else if (parseConllFile) {
@@ -363,7 +363,7 @@ public class Options implements Serializable {
             builder.append("input file: " + inputFile + "\n");
             builder.append("output file: " + outputFile + "\n");
             builder.append("model file: " + modelFile + "\n");
-            builder.append("inf file: " + infFile + "\n");
+         //   builder.append("inf file: " + infFile + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");
             return builder.toString();
         } else if (parsePartialConll) {
@@ -372,7 +372,7 @@ public class Options implements Serializable {
             builder.append("input file: " + inputFile + "\n");
             builder.append("output file: " + outputFile + "\n");
             builder.append("model file: " + modelFile + "\n");
-            builder.append("inf file: " + infFile + "\n");
+         //   builder.append("inf file: " + infFile + "\n");
             builder.append("labeled: " + labeled + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");
             return builder.toString();
@@ -396,7 +396,7 @@ public class Options implements Serializable {
         options.devPath = devPath;
         options.evaluate = evaluate;
         options.goldFile = goldFile;
-        options.infFile = infFile;
+       // options.infFile = infFile;
         options.inputFile = inputFile;
         options.lowercase = lowercase;
         options.numOfThreads = numOfThreads;
