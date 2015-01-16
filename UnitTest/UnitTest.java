@@ -37,10 +37,10 @@ public class UnitTest {
         options.useDynamicOracle = false;
         options.labeled = true;
         options.useMaxViol = false;
-        options.numOfThreads = 8;
+        options.numOfThreads = 2;
 
         ArrayList<Options> optionList = Options.getAllPossibleOptions(options);
-        options.numOfThreads = 8;
+        options.numOfThreads = 2;
         for (Options o : optionList)
             testOption(o);
 

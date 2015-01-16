@@ -26,7 +26,6 @@ public class Options implements Serializable {
     public boolean evaluate;
     public boolean parsePartialConll;
 
-   // public String infFile;
     public String modelFile;
     public boolean lowercase;
     public boolean useExtendedFeatures;
@@ -50,7 +49,6 @@ public class Options implements Serializable {
         parseTaggedFile = false;
         beamWidth = 64;
         rootFirst = false;
-      //   infFile = "";
         modelFile = "";
         outputFile = "";
         inputFile = "";
@@ -104,7 +102,6 @@ public class Options implements Serializable {
         output.append("* Train a parser:\n");
         output.append("\tjava -jar YaraParser.jar train --train-file [train-file] --dev-file [dev-file] --model-file [model-file] --punc_file [punc-file]\n");
         output.append("\t** The model for each iteration is with the pattern [model-file]_iter[iter#]; e.g. mode_iter2\n");
-        output.append("\t** The inf file is [model-file] for parsing\n");
         output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line\n");
         output.append("\t** Other options\n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
@@ -120,20 +117,17 @@ public class Options implements Serializable {
         output.append("\t \t root_first (default: put ROOT in the last position, unless explicitly put 'root_first')\n\n");
 
         output.append("* Parse a CoNLL'2006 file:\n");
-        output.append("\tjava -jar YaraParser.jar parse_conll --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
-        output.append("\t** The inf file is [model-file] for parsing (used in the testing phase)\n");
+        output.append("\tjava -jar YaraParser.jar parse_conll --test-file [test-file] --out [output-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
         output.append("\t** The test file should have the conll 2006 format\n\n");
 
         output.append("* Parse a tagged file:\n");
-        output.append("\tjava -jar YaraParser.jar parse_tagged --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
+        output.append("\tjava -jar YaraParser.jar parse_tagged --test-file [test-file] --out [output-file]  --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
         output.append("\t** The test file should have each sentence in line and word_tag pairs are space-delimited\n");
         output.append("\t** Optional:  --delim [delim] (default is _)\n");
-        output.append("\t** The inf file is [model-file] for parsing (used in the testing phase)\n");
         output.append("\t \t Example: He_PRP is_VBZ nice_AJ ._.\n\n");
 
         output.append("* Parse a CoNLL'2006 file with partial gold trees:\n");
-        output.append("\tjava -jar YaraParser.jar parse_partial --test-file [test-file] --out [output-file] --inf-file [inf-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
-        output.append("\t** The inf file is [model-file] for parsing (used in the testing phase)\n");
+        output.append("\tjava -jar YaraParser.jar parse_partial --test-file [test-file] --out [output-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
         output.append("\t** The test file should have the conll 2006 format; each word that does not have a parent, should have a -1 parent-index\n\n");
 
         output.append("* Evaluate a Conll file:\n");
@@ -173,8 +167,6 @@ public class Options implements Serializable {
                 options.predFile = args[i + 1];
             else if (args[i].startsWith("--out"))
                 options.outputFile = args[i + 1];
-           // else if (args[i].startsWith("--inf-file"))
-           //     options.infFile = args[i + 1];
             else if (args[i].startsWith("--delim"))
                 options.separator = args[i + 1];
             else if (args[i].startsWith("beam:"))
@@ -324,7 +316,6 @@ public class Options implements Serializable {
             StringBuilder builder = new StringBuilder();
             builder.append("train file: " + inputFile + "\n");
             builder.append("dev file: " + devPath + "\n");
-            builder.append("model/inf file: " + modelFile + "\n");
             builder.append("beam width: " + beamWidth + "\n");
             builder.append("rootFirst: " + rootFirst + "\n");
             builder.append("labeled: " + labeled + "\n");
@@ -345,7 +336,6 @@ public class Options implements Serializable {
             builder.append("input file: " + inputFile + "\n");
             builder.append("output file: " + outputFile + "\n");
             builder.append("model file: " + modelFile + "\n");
-         //   builder.append("inf file: " + infFile + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");
             return builder.toString();
         } else if (parseTaggedFile) {
@@ -354,7 +344,6 @@ public class Options implements Serializable {
             builder.append("input file: " + inputFile + "\n");
             builder.append("output file: " + outputFile + "\n");
             builder.append("model file: " + modelFile + "\n");
-          //  builder.append("inf file: " + infFile + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");
             return builder.toString();
         } else if (parseConllFile) {
@@ -363,7 +352,6 @@ public class Options implements Serializable {
             builder.append("input file: " + inputFile + "\n");
             builder.append("output file: " + outputFile + "\n");
             builder.append("model file: " + modelFile + "\n");
-         //   builder.append("inf file: " + infFile + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");
             return builder.toString();
         } else if (parsePartialConll) {
@@ -372,7 +360,6 @@ public class Options implements Serializable {
             builder.append("input file: " + inputFile + "\n");
             builder.append("output file: " + outputFile + "\n");
             builder.append("model file: " + modelFile + "\n");
-         //   builder.append("inf file: " + infFile + "\n");
             builder.append("labeled: " + labeled + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");
             return builder.toString();
@@ -396,7 +383,6 @@ public class Options implements Serializable {
         options.devPath = devPath;
         options.evaluate = evaluate;
         options.goldFile = goldFile;
-       // options.infFile = infFile;
         options.inputFile = inputFile;
         options.lowercase = lowercase;
         options.numOfThreads = numOfThreads;

@@ -5,14 +5,7 @@
 
 package Learning;
 
-import Accessories.Options;
-import Accessories.Pair;
-import Structures.IndexMaps;
-
-import java.io.*;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class AveragedPerceptron {
     /**

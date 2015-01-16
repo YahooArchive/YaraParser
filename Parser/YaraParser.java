@@ -53,7 +53,7 @@ public class YaraParser {
 
     private static void parse(Options options) throws Exception {
         if (options.outputFile.equals("") || options.inputFile.equals("")
-                /*|| options.infFile.equals("") */ || options.modelFile.equals("")) {
+               || options.modelFile.equals("")) {
             Options.showHelp();
 
         } else {
@@ -132,17 +132,6 @@ public class YaraParser {
                     labels.put("la_" + label, 4);
                 }
             }
-
-            System.out.print("writing objects....");
-
-            ObjectOutput writer = new ObjectOutputStream(new FileOutputStream(options.modelFile));
-            writer.writeObject(dependencyLabels);
-            writer.writeObject(maps);
-            writer.writeObject(headDepSet);
-            writer.writeObject(options);
-            writer.flush();
-            writer.close();
-            System.out.println("done!");
 
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, 4 + 2 * dependencyLabels.size()),
                     options, dependencyLabels, headDepSet, featureLength, maps);
