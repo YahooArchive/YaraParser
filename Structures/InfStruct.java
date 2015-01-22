@@ -17,11 +17,11 @@ import java.util.HashSet;
  */
 
 public class InfStruct {
-   public  HashMap<Long, Float>[][] avg;
-    public   IndexMaps maps;
-    public   ArrayList<Integer> dependencyLabels;
-    public   HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet;
-    public    Options options;
+    public HashMap<Long, Float>[][] avg;
+    public IndexMaps maps;
+    public ArrayList<Integer> dependencyLabels;
+    public HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet;
+    public Options options;
 
     public InfStruct(HashMap<Long, Float>[][] avg, IndexMaps maps, ArrayList<Integer> dependencyLabels, HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet, Options options) {
         this.avg = avg;
@@ -51,13 +51,13 @@ public class InfStruct {
         this.options = options;
     }
 
-    public InfStruct(String modelPath) throws Exception{
+    public InfStruct(String modelPath) throws Exception {
         ObjectInputStream reader = new ObjectInputStream(new FileInputStream(modelPath));
-        dependencyLabels=(ArrayList<Integer>) reader.readObject();
-        headDepSet=( HashMap<Integer, HashMap<Integer, HashSet<Integer>>>)    reader.readObject();
-        maps=(IndexMaps)reader.readObject();
-        options=(Options)reader.readObject();
-        avg= (HashMap<Long, Float>[][]) reader.readObject();
+        dependencyLabels = (ArrayList<Integer>) reader.readObject();
+        headDepSet = (HashMap<Integer, HashMap<Integer, HashSet<Integer>>>) reader.readObject();
+        maps = (IndexMaps) reader.readObject();
+        options = (Options) reader.readObject();
+        avg = (HashMap<Long, Float>[][]) reader.readObject();
     }
 
     public void saveModel(String modelPath) throws Exception {

@@ -22,7 +22,7 @@ public class AveragedPerceptron {
     /**
      * For the weights for all features
      */
-    public  HashMap<Long, Float>[][] featureWeights;
+    public HashMap<Long, Float>[][] featureWeights;
     public int iteration;
     /**
      * This is the main part of the extension to the original perceptron algorithm which the averaging over all the history

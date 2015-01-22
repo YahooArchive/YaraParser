@@ -60,7 +60,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         pool = new ExecutorCompletionService<ArrayList<BeamElement>>(executor);
     }
 
-    private void parseWithOneThread( ArrayList<Configuration> beam ,TreeSet<BeamElement> beamPreserver, Sentence sentence, boolean rootFirst, int beamWidth)  throws Exception{
+    private void parseWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Sentence sentence, boolean rootFirst, int beamWidth) throws Exception {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
@@ -143,7 +143,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
 
             if (numOfThreads == 1) {
-               parseWithOneThread(beam,beamPreserver,sentence,rootFirst,beamWidth);
+                parseWithOneThread(beam, beamPreserver, sentence, rootFirst, beamWidth);
             } else {
                 for (int b = 0; b < beam.size(); b++) {
                     pool.submit(new BeamScorerThread(true, classifier, beam.get(b),
@@ -203,7 +203,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         return bestConfiguration;
     }
 
-    private void parsePartialWithOneThread( ArrayList<Configuration> beam ,TreeSet<BeamElement> beamPreserver, Boolean isNonProjective, GoldConfiguration goldConfiguration, int beamWidth)  throws Exception{
+    private void parsePartialWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Boolean isNonProjective, GoldConfiguration goldConfiguration, int beamWidth, boolean rootFirst) throws Exception {
         for (int b = 0; b < beam.size(); b++) {
             Configuration configuration = beam.get(b);
             State currentState = configuration.state;
@@ -211,12 +211,12 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
             boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
             boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
-            boolean canLeftArc = ArcEager.canDo(Actions.Reduce, currentState);
+            boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
             long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
             if (!canShift
                     && !canReduce
                     && !canRightArc
-                    && !canLeftArc) {
+                    && !canLeftArc && rootFirst) {
                 beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
 
                 if (beamPreserver.size() > beamWidth)
@@ -350,7 +350,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
 
             if (numOfThreads == 1) {
-               parsePartialWithOneThread(beam,beamPreserver,isNonProjective,goldConfiguration,beamWidth);
+                parsePartialWithOneThread(beam, beamPreserver, isNonProjective, goldConfiguration, beamWidth, rootFirst);
             } else {
                 for (int b = 0; b < beam.size(); b++) {
                     pool.submit(new PartialTreeBeamScorerThread(true, classifier, goldConfiguration, beam.get(b),
@@ -409,11 +409,11 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         return bestConfiguration;
     }
 
-    public void parseConllFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean labeled, boolean lowerCased, int numThreads, boolean partial) throws Exception {
-        if (partial || numThreads == 1)
-            parseConllFileNoParallel(inputFile, outputFile, rootFirst, beamWidth, labeled, lowerCased, numThreads, partial);
+    public void parseConllFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean labeled, boolean lowerCased, int numThreads, boolean partial, String scorePath) throws Exception {
+        if (numThreads == 1)
+            parseConllFileNoParallel(inputFile, outputFile, rootFirst, beamWidth, labeled, lowerCased, numThreads, partial, scorePath);
         else
-            parseConllFileParallel(inputFile, outputFile, rootFirst, beamWidth, lowerCased, numThreads);
+            parseConllFileParallel(inputFile, outputFile, rootFirst, beamWidth, lowerCased, numThreads, partial, scorePath);
     }
 
     /**
@@ -425,8 +425,12 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
      * @param beamWidth
      * @throws Exception
      */
-    public void parseConllFileNoParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean labeled, boolean lowerCased, int numOfThreads, boolean partial) throws Exception {
+    public void parseConllFileNoParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean labeled, boolean lowerCased, int numOfThreads, boolean partial, String scorePath) throws Exception {
         CoNLLReader reader = new CoNLLReader(inputFile);
+        boolean addScore = false;
+        if (scorePath.trim().length() > 0)
+            addScore = true;
+        ArrayList<Float> scoreList = new ArrayList<Float>();
 
         long start = System.currentTimeMillis();
         int allArcs = 0;
@@ -451,6 +455,8 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
 
                 int[] words = goldConfiguration.getSentence().getWords();
                 allArcs += words.length - 1;
+                if (addScore)
+                    scoreList.add(bestParse.score / bestParse.sentence.size());
 
                 StringBuilder finalOutput = new StringBuilder();
                 for (int i = 0; i < words.length; i++) {
@@ -464,173 +470,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                     if (head == bestParse.state.rootIndex)
                         head = 0;
 
-                    String label=head==0 ? maps.rootString : maps.revWords[dep];
-                    String output = head + "\t" +label  + "\n";
-                    finalOutput.append(output);
-                }
-                finalOutput.append("\n");
-                writer.write(finalOutput.toString());
-
-            }
-        }
-
-        System.err.print("\n");
-        long end = System.currentTimeMillis();
-        float each = (1.0f * (end - start)) / size;
-        float eacharc = (1.0f * (end - start)) / allArcs;
-
-        writer.flush();
-        writer.close();
-
-        DecimalFormat format = new DecimalFormat("##.00");
-
-        System.err.print(format.format(eacharc) + " ms for each arc!\n");
-        System.err.print(format.format(each) + " ms for each sentence!\n\n");
-
-        BufferedReader gReader = new BufferedReader(new FileReader(inputFile));
-        BufferedReader pReader = new BufferedReader(new FileReader(outputFile + ".tmp"));
-        BufferedWriter pwriter = new BufferedWriter(new FileWriter(outputFile));
-
-        String line;
-
-        while ((line = pReader.readLine()) != null) {
-            String gLine = gReader.readLine();
-            if (line.trim().length() > 0) {
-                while (gLine.trim().length() == 0)
-                    gLine = gReader.readLine();
-                String[] ps = line.split("\t");
-                String[] gs = gLine.split("\t");
-                gs[6] = ps[0];
-                gs[7] = ps[1];
-                StringBuilder output = new StringBuilder();
-                for (int i = 0; i < gs.length; i++) {
-                    output.append(gs[i]).append("\t");
-                }
-                pwriter.write(output.toString().trim() + "\n");
-            } else {
-                pwriter.write("\n");
-            }
-        }
-        pwriter.flush();
-        pwriter.close();
-    }
-
-    public void parseTaggedFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean lowerCased, String separator, int numOfThreads) throws Exception {
-        BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
-        long start = System.currentTimeMillis();
-
-        ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
-        CompletionService<Pair<String,Integer>> pool = new ExecutorCompletionService<Pair<String,Integer>>(executor);
-
-
-        String line;
-        int count = 0;
-        int lineNum=0;
-        while ((line = reader.readLine()) != null) {
-            pool.submit(new ParseTaggedThread(lineNum++,line,separator,rootFirst,lowerCased,maps,beamWidth,this));
-
-            if(lineNum%1000==0){
-                String[] outs=new String[lineNum];
-                for(int i=0;i<lineNum;i++){
-                    count++;
-                    if (count % 100 == 0)
-                        System.err.print(count + "...");
-                    Pair<String,Integer> result=pool.take().get();
-                    outs[result.second]=result.first;
-                }
-
-                for (int i=0;i<lineNum;i++){
-                    if(outs[i].length()>0){
-                        writer.write(outs[i]);
-                    }
-                }
-
-                lineNum=0;
-            }
-        }
-
-        if(lineNum>0){
-            String[] outs=new String[lineNum];
-            for(int i=0;i<lineNum;i++){
-                count++;
-                if (count % 100 == 0)
-                    System.err.print(count + "...");
-                Pair<String,Integer> result=pool.take().get();
-                outs[result.second]=result.first;
-            }
-
-            for (int i=0;i<lineNum;i++){
-
-                if(outs[i].length()>0){
-                    writer.write(outs[i]);
-                }
-            }
-        }
-
-        long end = System.currentTimeMillis();
-        System.out.println("\n" + (end - start) + " ms");
-        writer.flush();
-        writer.close();
-        System.out.println("done!");
-    }
-
-    public void parseConllFileParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean lowerCased, int numThreads) throws Exception {
-        CoNLLReader reader = new CoNLLReader(inputFile);
-
-        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-        CompletionService<Pair<Configuration, Integer>> pool = new ExecutorCompletionService<Pair<Configuration, Integer>>(executor);
-
-        long start = System.currentTimeMillis();
-        int allArcs = 0;
-        int size = 0;
-        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile + ".tmp"));
-        int dataCount = 0;
-
-        while (true) {
-            ArrayList<GoldConfiguration> data = reader.readData(15000, true, true, rootFirst, lowerCased, maps);
-            size += data.size();
-            if (data.size() == 0)
-                break;
-
-            int index = 0;
-            Configuration[] confs = new Configuration[data.size()];
-
-            for (GoldConfiguration goldConfiguration : data) {
-                ParseThread thread = new ParseThread(index, classifier, dependencyRelations, featureLength, headDepSet, goldConfiguration.getSentence(), rootFirst, beamWidth);
-                pool.submit(thread);
-                index++;
-            }
-
-            for (int i = 0; i < confs.length; i++) {
-                dataCount++;
-                if (dataCount % 100 == 0)
-                    System.err.print(dataCount + " ... ");
-
-                Pair<Configuration, Integer> configurationIntegerPair = pool.take().get();
-                confs[configurationIntegerPair.second] = configurationIntegerPair.first;
-            }
-
-            for (int j = 0; j < confs.length; j++) {
-                Configuration bestParse = confs[j];
-
-                int[] words = data.get(j).getSentence().getWords();
-
-                allArcs += words.length - 1;
-
-                StringBuilder finalOutput = new StringBuilder();
-                for (int i = 0; i < words.length; i++) {
-                    int w = i + 1;
-                    int head = bestParse.state.getHead(w);
-                    int dep = bestParse.state.getDependency(w);
-
-                    if (w == bestParse.state.rootIndex && !rootFirst)
-                        continue;
-
-                    if (head == bestParse.state.rootIndex)
-                        head = 0;
-
-                    String label=head==0 ? maps.rootString : maps.revWords[dep];
+                    String label = head == 0 ? maps.rootString : maps.revWords[dep];
                     String output = head + "\t" + label + "\n";
                     finalOutput.append(output);
                 }
@@ -678,6 +518,197 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
         }
         pwriter.flush();
         pwriter.close();
+
+        if (addScore) {
+            BufferedWriter scoreWriter = new BufferedWriter(new FileWriter(scorePath));
+
+            for (int i = 0; i < scoreList.size(); i++)
+                scoreWriter.write(scoreList.get(i) + "\n");
+            scoreWriter.flush();
+            scoreWriter.close();
+        }
+    }
+
+    public void parseTaggedFile(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean lowerCased, String separator, int numOfThreads) throws Exception {
+        BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
+        long start = System.currentTimeMillis();
+
+        ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
+        CompletionService<Pair<String, Integer>> pool = new ExecutorCompletionService<Pair<String, Integer>>(executor);
+
+
+        String line;
+        int count = 0;
+        int lineNum = 0;
+        while ((line = reader.readLine()) != null) {
+            pool.submit(new ParseTaggedThread(lineNum++, line, separator, rootFirst, lowerCased, maps, beamWidth, this));
+
+            if (lineNum % 1000 == 0) {
+                String[] outs = new String[lineNum];
+                for (int i = 0; i < lineNum; i++) {
+                    count++;
+                    if (count % 100 == 0)
+                        System.err.print(count + "...");
+                    Pair<String, Integer> result = pool.take().get();
+                    outs[result.second] = result.first;
+                }
+
+                for (int i = 0; i < lineNum; i++) {
+                    if (outs[i].length() > 0) {
+                        writer.write(outs[i]);
+                    }
+                }
+
+                lineNum = 0;
+            }
+        }
+
+        if (lineNum > 0) {
+            String[] outs = new String[lineNum];
+            for (int i = 0; i < lineNum; i++) {
+                count++;
+                if (count % 100 == 0)
+                    System.err.print(count + "...");
+                Pair<String, Integer> result = pool.take().get();
+                outs[result.second] = result.first;
+            }
+
+            for (int i = 0; i < lineNum; i++) {
+
+                if (outs[i].length() > 0) {
+                    writer.write(outs[i]);
+                }
+            }
+        }
+
+        long end = System.currentTimeMillis();
+        System.out.println("\n" + (end - start) + " ms");
+        writer.flush();
+        writer.close();
+
+        System.out.println("done!");
+    }
+
+    public void parseConllFileParallel(String inputFile, String outputFile, boolean rootFirst, int beamWidth, boolean lowerCased, int numThreads, boolean partial, String scorePath) throws Exception {
+        CoNLLReader reader = new CoNLLReader(inputFile);
+
+        boolean addScore = false;
+        if (scorePath.trim().length() > 0)
+            addScore = true;
+        ArrayList<Float> scoreList = new ArrayList<Float>();
+
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+        CompletionService<Pair<Configuration, Integer>> pool = new ExecutorCompletionService<Pair<Configuration, Integer>>(executor);
+
+        long start = System.currentTimeMillis();
+        int allArcs = 0;
+        int size = 0;
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile + ".tmp"));
+        int dataCount = 0;
+
+        while (true) {
+            ArrayList<GoldConfiguration> data = reader.readData(15000, true, true, rootFirst, lowerCased, maps);
+            size += data.size();
+            if (data.size() == 0)
+                break;
+
+            int index = 0;
+            Configuration[] confs = new Configuration[data.size()];
+
+            for (GoldConfiguration goldConfiguration : data) {
+                ParseThread thread = new ParseThread(index, classifier, dependencyRelations, featureLength, headDepSet, goldConfiguration.getSentence(), rootFirst, beamWidth, goldConfiguration, partial);
+                pool.submit(thread);
+                index++;
+            }
+
+            for (int i = 0; i < confs.length; i++) {
+                dataCount++;
+                if (dataCount % 100 == 0)
+                    System.err.print(dataCount + " ... ");
+
+                Pair<Configuration, Integer> configurationIntegerPair = pool.take().get();
+                confs[configurationIntegerPair.second] = configurationIntegerPair.first;
+            }
+
+            for (int j = 0; j < confs.length; j++) {
+                Configuration bestParse = confs[j];
+                if (addScore) {
+                    scoreList.add(bestParse.score / bestParse.sentence.size());
+                }
+                int[] words = data.get(j).getSentence().getWords();
+
+                allArcs += words.length - 1;
+
+                StringBuilder finalOutput = new StringBuilder();
+                for (int i = 0; i < words.length; i++) {
+                    int w = i + 1;
+                    int head = bestParse.state.getHead(w);
+                    int dep = bestParse.state.getDependency(w);
+
+                    if (w == bestParse.state.rootIndex && !rootFirst)
+                        continue;
+
+                    if (head == bestParse.state.rootIndex)
+                        head = 0;
+
+                    String label = head == 0 ? maps.rootString : maps.revWords[dep];
+                    String output = head + "\t" + label + "\n";
+                    finalOutput.append(output);
+                }
+                finalOutput.append("\n");
+                writer.write(finalOutput.toString());
+            }
+        }
+
+        System.err.print("\n");
+        long end = System.currentTimeMillis();
+        float each = (1.0f * (end - start)) / size;
+        float eacharc = (1.0f * (end - start)) / allArcs;
+
+        writer.flush();
+        writer.close();
+
+        DecimalFormat format = new DecimalFormat("##.00");
+
+        System.err.print(format.format(eacharc) + " ms for each arc!\n");
+        System.err.print(format.format(each) + " ms for each sentence!\n\n");
+
+        BufferedReader gReader = new BufferedReader(new FileReader(inputFile));
+        BufferedReader pReader = new BufferedReader(new FileReader(outputFile + ".tmp"));
+        BufferedWriter pwriter = new BufferedWriter(new FileWriter(outputFile));
+
+        String line;
+
+        while ((line = pReader.readLine()) != null) {
+            String gLine = gReader.readLine();
+            if (line.trim().length() > 0) {
+                while (gLine.trim().length() == 0)
+                    gLine = gReader.readLine();
+                String[] ps = line.split("\t");
+                String[] gs = gLine.split("\t");
+                gs[6] = ps[0];
+                gs[7] = ps[1];
+                StringBuilder output = new StringBuilder();
+                for (int i = 0; i < gs.length; i++) {
+                    output.append(gs[i]).append("\t");
+                }
+                pwriter.write(output.toString().trim() + "\n");
+            } else {
+                pwriter.write("\n");
+            }
+        }
+        pwriter.flush();
+        pwriter.close();
+
+        if (addScore) {
+            BufferedWriter scoreWriter = new BufferedWriter(new FileWriter(scorePath));
+
+            for (int i = 0; i < scoreList.size(); i++)
+                scoreWriter.write(scoreList.get(i) + "\n");
+            scoreWriter.flush();
+            scoreWriter.close();
+        }
     }
 
     public void shutDownLiveThreads() {

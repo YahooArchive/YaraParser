@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class IndexMaps implements Serializable {
+    public final String rootString;
     public String[] revWords;
     private HashMap<String, Integer> wordMap;
     private HashMap<Integer, Integer> labels;
-    public final String rootString;
 
-    public IndexMaps(HashMap<String, Integer> wordMap, HashMap<Integer, Integer> labels,String rootString) {
+    public IndexMaps(HashMap<String, Integer> wordMap, HashMap<Integer, Integer> labels, String rootString) {
         this.wordMap = wordMap;
         this.labels = labels;
 
@@ -26,7 +26,7 @@ public class IndexMaps implements Serializable {
             revWords[wordMap.get(word)] = word;
         }
 
-        this.rootString=rootString;
+        this.rootString = rootString;
     }
 
     public Sentence makeSentence(String[] words, String[] posTags, boolean rootFirst, boolean lowerCased) {

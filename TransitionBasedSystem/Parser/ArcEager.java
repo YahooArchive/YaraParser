@@ -64,7 +64,7 @@ public class ArcEager extends TransitionBasedParser {
             return state.peek() != state.rootIndex && !state.hasHead(state.peek()) && !state.stackEmpty();
         } else if (action == Actions.Reduce) { //reduce
             return !state.stackEmpty() && state.hasHead(state.peek()) || !state.stackEmpty() && state.stackSize() == 1 && state.bufferSize() == 0 && state.peek() == state.rootIndex;
-        } else if (action ==Actions.Unshift) { //unshift
+        } else if (action == Actions.Unshift) { //unshift
             return !state.stackEmpty() && !state.hasHead(state.peek()) && state.isEmptyFlag();
         }
         return false;

@@ -11,6 +11,7 @@ import Learning.AveragedPerceptron;
 import Structures.Sentence;
 import TransitionBasedSystem.Configuration.BeamElement;
 import TransitionBasedSystem.Configuration.Configuration;
+import TransitionBasedSystem.Configuration.GoldConfiguration;
 import TransitionBasedSystem.Configuration.State;
 import TransitionBasedSystem.Features.FeatureExtractor;
 
@@ -34,10 +35,14 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
     Sentence sentence;
     boolean rootFirst;
     int beamWidth;
+    GoldConfiguration goldConfiguration;
+    boolean partial;
 
     int id;
 
-    public ParseThread(int id, AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations, int featureLength, HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet, Sentence sentence, boolean rootFirst, int beamWidth) {
+    public ParseThread(int id, AveragedPerceptron classifier, ArrayList<Integer> dependencyRelations, int featureLength,
+                       HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet, Sentence sentence,
+                       boolean rootFirst, int beamWidth, GoldConfiguration goldConfiguration, boolean partial) {
         this.id = id;
         this.classifier = classifier;
         this.dependencyRelations = dependencyRelations;
@@ -46,11 +51,15 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         this.sentence = sentence;
         this.rootFirst = rootFirst;
         this.beamWidth = beamWidth;
+        this.goldConfiguration = goldConfiguration;
+        this.partial = partial;
     }
 
     @Override
     public Pair<Configuration, Integer> call() throws Exception {
-        return parse();
+        if (!partial)
+            return parse();
+        else return new Pair<Configuration, Integer>(parsePartial(), id);
     }
 
     Pair<Configuration, Integer> parse() throws Exception {
@@ -266,4 +275,197 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
         }
         return new Pair<Configuration, Integer>(bestConfiguration, id);
     }
+
+    public Configuration parsePartial() throws Exception {
+        Configuration initialConfiguration = new Configuration(sentence, rootFirst);
+        boolean isNonProjective = false;
+        if (goldConfiguration.isNonprojective()) {
+            isNonProjective = true;
+        }
+
+        ArrayList<Configuration> beam = new ArrayList<Configuration>(beamWidth);
+        beam.add(initialConfiguration);
+
+        while (!ArcEager.isTerminal(beam)) {
+            TreeSet<BeamElement> beamPreserver = new TreeSet<BeamElement>();
+
+            parsePartialWithOneThread(beam, beamPreserver, isNonProjective, goldConfiguration, beamWidth);
+
+            ArrayList<Configuration> repBeam = new ArrayList<Configuration>(beamWidth);
+            for (BeamElement beamElement : beamPreserver.descendingSet()) {
+                if (repBeam.size() >= beamWidth)
+                    break;
+                int b = beamElement.number;
+                int action = beamElement.action;
+                int label = beamElement.label;
+                float score = beamElement.score;
+
+                Configuration newConfig = beam.get(b).clone();
+
+                if (action == 0) {
+                    ArcEager.shift(newConfig.state);
+                    newConfig.addAction(0);
+                } else if (action == 1) {
+                    ArcEager.reduce(newConfig.state);
+                    newConfig.addAction(1);
+                } else if (action == 2) {
+                    ArcEager.rightArc(newConfig.state, label);
+                    newConfig.addAction(3 + label);
+                } else if (action == 3) {
+                    ArcEager.leftArc(newConfig.state, label);
+                    newConfig.addAction(3 + dependencyRelations.size() + label);
+                } else if (action == 4) {
+                    ArcEager.unShift(newConfig.state);
+                    newConfig.addAction(2);
+                }
+                newConfig.setScore(score);
+                repBeam.add(newConfig);
+            }
+            beam = repBeam;
+        }
+
+        Configuration bestConfiguration = null;
+        float bestScore = Float.NEGATIVE_INFINITY;
+        for (Configuration configuration : beam) {
+            if (configuration.getScore(true) > bestScore) {
+                bestScore = configuration.getScore(true);
+                bestConfiguration = configuration;
+            }
+        }
+        return bestConfiguration;
+    }
+
+    private void parsePartialWithOneThread(ArrayList<Configuration> beam, TreeSet<BeamElement> beamPreserver, Boolean isNonProjective, GoldConfiguration goldConfiguration, int beamWidth) throws Exception {
+        for (int b = 0; b < beam.size(); b++) {
+            Configuration configuration = beam.get(b);
+            State currentState = configuration.state;
+            float prevScore = configuration.score;
+            boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
+            boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
+            boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
+            boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
+            long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+            if (!canShift
+                    && !canReduce
+                    && !canRightArc
+                    && !canLeftArc) {
+                beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
+
+                if (beamPreserver.size() > beamWidth)
+                    beamPreserver.pollFirst();
+            }
+
+            if (canShift) {
+                if (isNonProjective || goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
+                    float score = classifier.score(features, 0, true);
+                    float addedScore = score + prevScore;
+                    beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
+
+                    if (beamPreserver.size() > beamWidth)
+                        beamPreserver.pollFirst();
+                }
+            }
+
+            if (canReduce) {
+                if (isNonProjective || goldConfiguration.actionCost(Actions.Reduce, -1, currentState) == 0) {
+                    float score = classifier.score(features, 1, true);
+                    float addedScore = score + prevScore;
+                    beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
+
+                    if (beamPreserver.size() > beamWidth)
+                        beamPreserver.pollFirst();
+                }
+            }
+
+            if (canRightArc) {
+                for (int dependency : dependencyRelations) {
+                    if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
+                        float score = classifier.score(features, 3 + dependency, true);
+                        float addedScore = score + prevScore;
+                        beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
+
+                        if (beamPreserver.size() > beamWidth)
+                            beamPreserver.pollFirst();
+                    }
+                }
+            }
+
+            if (canLeftArc) {
+                for (int dependency : dependencyRelations) {
+                    if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
+                        float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, true);
+                        float addedScore = score + prevScore;
+                        beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
+
+                        if (beamPreserver.size() > beamWidth)
+                            beamPreserver.pollFirst();
+                    }
+                }
+            }
+        }
+
+        //todo
+        if (beamPreserver.size() == 0) {
+            for (int b = 0; b < beam.size(); b++) {
+                Configuration configuration = beam.get(b);
+                State currentState = configuration.state;
+                float prevScore = configuration.score;
+                boolean canShift = ArcEager.canDo(Actions.Shift, currentState);
+                boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
+                boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
+                boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
+                long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+                if (!canShift
+                        && !canReduce
+                        && !canRightArc
+                        && !canLeftArc) {
+                    beamPreserver.add(new BeamElement(prevScore, b, 4, -1));
+
+                    if (beamPreserver.size() > beamWidth)
+                        beamPreserver.pollFirst();
+                }
+
+                if (canShift) {
+                    float score = classifier.score(features, 0, true);
+                    float addedScore = score + prevScore;
+                    beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
+
+                    if (beamPreserver.size() > beamWidth)
+                        beamPreserver.pollFirst();
+                }
+
+                if (canReduce) {
+                    float score = classifier.score(features, 1, true);
+                    float addedScore = score + prevScore;
+                    beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
+
+                    if (beamPreserver.size() > beamWidth)
+                        beamPreserver.pollFirst();
+                }
+
+                if (canRightArc) {
+                    for (int dependency : dependencyRelations) {
+                        float score = classifier.score(features, 3 + dependency, true);
+                        float addedScore = score + prevScore;
+                        beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
+
+                        if (beamPreserver.size() > beamWidth)
+                            beamPreserver.pollFirst();
+                    }
+                }
+
+                if (canLeftArc) {
+                    for (int dependency : dependencyRelations) {
+                        float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, true);
+                        float addedScore = score + prevScore;
+                        beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
+
+                        if (beamPreserver.size() > beamWidth)
+                            beamPreserver.pollFirst();
+                    }
+                }
+            }
+        }
+    }
+
 }

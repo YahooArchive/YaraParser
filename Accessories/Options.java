@@ -25,6 +25,7 @@ public class Options implements Serializable {
     public int trainingIter;
     public boolean evaluate;
     public boolean parsePartialConll;
+    public String scorePath;
 
     public String modelFile;
     public boolean lowercase;
@@ -53,6 +54,7 @@ public class Options implements Serializable {
         outputFile = "";
         inputFile = "";
         devPath = "";
+        scorePath = "";
         separator = "_";
         labeled = true;
         lowercase = false;
@@ -118,7 +120,8 @@ public class Options implements Serializable {
 
         output.append("* Parse a CoNLL'2006 file:\n");
         output.append("\tjava -jar YaraParser.jar parse_conll --test-file [test-file] --out [output-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
-        output.append("\t** The test file should have the conll 2006 format\n\n");
+        output.append("\t** The test file should have the conll 2006 format\n");
+        output.append("\t** Optional: --score-file [score file] averaged score of each output parse tree in a file\n\n");
 
         output.append("* Parse a tagged file:\n");
         output.append("\tjava -jar YaraParser.jar parse_tagged --test-file [test-file] --out [output-file]  --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
@@ -128,7 +131,8 @@ public class Options implements Serializable {
 
         output.append("* Parse a CoNLL'2006 file with partial gold trees:\n");
         output.append("\tjava -jar YaraParser.jar parse_partial --test-file [test-file] --out [output-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
-        output.append("\t** The test file should have the conll 2006 format; each word that does not have a parent, should have a -1 parent-index\n\n");
+        output.append("\t** The test file should have the conll 2006 format; each word that does not have a parent, should have a -1 parent-index");
+        output.append("\t** Optional: --score-file [score file] averaged score of each output parse tree in a file\n\n");
 
         output.append("* Evaluate a Conll file:\n");
         output.append("\tjava -jar YaraParser.jar eval --gold-file [gold-file] --parsed-file [parsed-file]  --punc_file [punc-file]\n");
@@ -179,6 +183,8 @@ public class Options implements Serializable {
                 options.labeled = Boolean.parseBoolean(args[i]);
             else if (args[i].equals("lowercase"))
                 options.lowercase = Boolean.parseBoolean(args[i]);
+            else if (args[i].startsWith("--score-file"))
+                options.scorePath = args[i + 1];
             else if (args[i].equals("basic"))
                 options.useExtendedFeatures = false;
             else if (args[i].equals("early"))
@@ -336,6 +342,7 @@ public class Options implements Serializable {
             builder.append("input file: " + inputFile + "\n");
             builder.append("output file: " + outputFile + "\n");
             builder.append("model file: " + modelFile + "\n");
+            builder.append("score file: " + scorePath + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");
             return builder.toString();
         } else if (parseTaggedFile) {
@@ -344,14 +351,7 @@ public class Options implements Serializable {
             builder.append("input file: " + inputFile + "\n");
             builder.append("output file: " + outputFile + "\n");
             builder.append("model file: " + modelFile + "\n");
-            builder.append("number of threads: " + numOfThreads + "\n");
-            return builder.toString();
-        } else if (parseConllFile) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("parse conll" + "\n");
-            builder.append("input file: " + inputFile + "\n");
-            builder.append("output file: " + outputFile + "\n");
-            builder.append("model file: " + modelFile + "\n");
+            builder.append("score file: " + scorePath + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");
             return builder.toString();
         } else if (parsePartialConll) {
@@ -359,6 +359,7 @@ public class Options implements Serializable {
             builder.append("parse partial conll" + "\n");
             builder.append("input file: " + inputFile + "\n");
             builder.append("output file: " + outputFile + "\n");
+            builder.append("score file: " + scorePath + "\n");
             builder.append("model file: " + modelFile + "\n");
             builder.append("labeled: " + labeled + "\n");
             builder.append("number of threads: " + numOfThreads + "\n");

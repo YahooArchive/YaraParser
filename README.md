@@ -78,6 +78,8 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	* The test file should have the conll 2006 format
 	
 	* Optional: nt:#_of_threads (default:8) 
+	
+	* Optional: --score-file [score file] averaged score of each output parse tree in a file
 
 ### Parse a POS Tagged File
 
@@ -109,6 +111,8 @@ __WARNING__ Because of some technical reasons, all words connected to the dummy 
 * __java -jar YaraParser.jar parse_partial --test-file [test-file] --out [output-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)]__ 
 		
 	* The test file should have the conll 2006 format; each word that does not have a parent, should have a -1 parent-index
+	
+	* Optional: --score-file [score file] averaged score of each output parse tree in a file
 
 
 ## Evaluate the Parser
@@ -185,6 +189,4 @@ __[Nivre and Fernández-González, 2014]__ Nivre, Joakim, and Daniel Fernández-
 
 __[Sun et al., 2013]__ Sun, Xu, Takuya Matsuzaki, and Wenjie Li. "Latent structured perceptrons for large-scale learning with hidden information." IEEE Transactions on Knowledge and Data Engineering, 25.9 (2013): 2063-2075.
 
-__[Zhang and Nivre, 2011]__ Zhang, Yue, and Joakim Nivre. "Transition-based dependency parsing with rich non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.n Knowledge and Data Engineering, 25.9 (2013): 2063-2075.
-
-__[Zhang and Nivre, 2011]__ Zhang, Yue, and Joakim Nivre. "Transition-based dependency parsing with rich non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.
+__[Zhang and Nivre, 2011]__ Zhang, Yue, and Joakim Nivre. "Transition-based dependency parsing with rich non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011. Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.

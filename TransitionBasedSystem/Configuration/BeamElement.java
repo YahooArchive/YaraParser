@@ -25,9 +25,9 @@ public class BeamElement implements Comparable<BeamElement> {
             return 2;
         if (diff < 0)
             return -2;
-        if(number!=beamElement.number)
-            return beamElement.number-number;
-        return beamElement.action-action;
+        if (number != beamElement.number)
+            return beamElement.number - number;
+        return beamElement.action - action;
     }
 
     @Override

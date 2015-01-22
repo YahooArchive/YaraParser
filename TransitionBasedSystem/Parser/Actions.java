@@ -18,6 +18,6 @@ public enum Actions {
     private int value;
 
     Actions(int value) {
-       this.value=value;
+        this.value = value;
     }
 }

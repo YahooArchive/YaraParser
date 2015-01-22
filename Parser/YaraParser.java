@@ -17,7 +17,6 @@ import TransitionBasedSystem.Configuration.GoldConfiguration;
 import TransitionBasedSystem.Parser.KBeamArcEagerParser;
 import TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,18 +52,18 @@ public class YaraParser {
 
     private static void parse(Options options) throws Exception {
         if (options.outputFile.equals("") || options.inputFile.equals("")
-               || options.modelFile.equals("")) {
+                || options.modelFile.equals("")) {
             Options.showHelp();
 
         } else {
-            InfStruct infStruct=new InfStruct(options.modelFile);
-            ArrayList<Integer> dependencyLabels =infStruct.dependencyLabels;
+            InfStruct infStruct = new InfStruct(options.modelFile);
+            ArrayList<Integer> dependencyLabels = infStruct.dependencyLabels;
             IndexMaps maps = infStruct.maps;
 
             HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet = infStruct.headDepSet;
 
             Options inf_options = infStruct.options;
-            AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct.avg.length,infStruct.avg,infStruct.avg[0].length);
+            AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct.avg.length, infStruct.avg, infStruct.avg[0].length);
 
             int templates = averagedPerceptron.featureSize();
             KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, headDepSet, templates, maps, options.numOfThreads);
@@ -74,10 +73,10 @@ public class YaraParser {
                         options.outputFile, inf_options.rootFirst, inf_options.beamWidth, inf_options.lowercase, options.separator, options.numOfThreads);
             else if (options.parseConllFile)
                 parser.parseConllFile(options.inputFile,
-                        options.outputFile, inf_options.rootFirst, inf_options.beamWidth, true, inf_options.lowercase, options.numOfThreads, false);
+                        options.outputFile, inf_options.rootFirst, inf_options.beamWidth, true, inf_options.lowercase, options.numOfThreads, false, options.scorePath);
             else if (options.parsePartialConll)
                 parser.parseConllFile(options.inputFile,
-                        options.outputFile, inf_options.rootFirst, inf_options.beamWidth, options.labeled, inf_options.lowercase, options.numOfThreads, true);
+                        options.outputFile, inf_options.rootFirst, inf_options.beamWidth, options.labeled, inf_options.lowercase, options.numOfThreads, true, options.scorePath);
             parser.shutDownLiveThreads();
         }
     }

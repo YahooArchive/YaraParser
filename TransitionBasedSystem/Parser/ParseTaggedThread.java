@@ -17,7 +17,7 @@ import java.util.concurrent.Callable;
  * To report any bugs or problems contact rasooli@cs.columbia.edu
  */
 
-public class ParseTaggedThread  implements Callable<Pair<String,Integer>> {
+public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
     int lineNum;
     String line;
     String delim;
@@ -27,8 +27,8 @@ public class ParseTaggedThread  implements Callable<Pair<String,Integer>> {
     int beamWidth;
     KBeamArcEagerParser parser;
 
-    public ParseTaggedThread(int lineNum,String line, String delim, boolean rootFirst, boolean lowerCased, IndexMaps maps, int beamWidth, KBeamArcEagerParser parser) {
-        this.lineNum=lineNum;
+    public ParseTaggedThread(int lineNum, String line, String delim, boolean rootFirst, boolean lowerCased, IndexMaps maps, int beamWidth, KBeamArcEagerParser parser) {
+        this.lineNum = lineNum;
         this.line = line;
         this.delim = delim;
         this.rootFirst = rootFirst;
@@ -39,7 +39,7 @@ public class ParseTaggedThread  implements Callable<Pair<String,Integer>> {
     }
 
     @Override
-    public Pair<String,Integer> call() throws Exception {
+    public Pair<String, Integer> call() throws Exception {
         HashMap<String, Integer> wordMap = maps.getWordMap();
 
         line = line.trim();
@@ -101,7 +101,7 @@ public class ParseTaggedThread  implements Callable<Pair<String,Integer>> {
 
                 if (head == bestParse.state.rootIndex)
                     head = 0;
-                String label=head==0 ? maps.rootString : maps.revWords[dep];
+                String label = head == 0 ? maps.rootString : maps.revWords[dep];
 
                 String output = w + "\t" + word + "\t" + lemma + "\t" + pos + "\t" + fpos + "\t_\t" + head + "\t" + label + "\t_\t_\n";
                 finalOutput.append(output);
@@ -109,8 +109,8 @@ public class ParseTaggedThread  implements Callable<Pair<String,Integer>> {
             if (words.length > 0)
                 finalOutput.append("\n");
 
-            return new Pair<String, Integer>(finalOutput.toString(),lineNum);
+            return new Pair<String, Integer>(finalOutput.toString(), lineNum);
         }
-        return new Pair<String, Integer>("",lineNum);
+        return new Pair<String, Integer>("", lineNum);
     }
 }
