@@ -126,7 +126,7 @@ __WARNING__ The evaluation script is Yara, takes care of ``ROOT`` output, so you
 ### Example Usage
 There is small portion from Google Universal Treebank for the German language in the __sample\_data__ directory. 
 
-     java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model beam:64 iter:10 --punc_file punc_files/google_universal.puncs
+     java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model iter:10 --punc_file punc_files/google_universal.puncs
 
 You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __87.27__ and labeled accuracy __80.54__ on the dev set in the 10th iteration. 
 
@@ -189,4 +189,4 @@ __[Nivre and Fernández-González, 2014]__ Nivre, Joakim, and Daniel Fernández-
 
 __[Sun et al., 2013]__ Sun, Xu, Takuya Matsuzaki, and Wenjie Li. "Latent structured perceptrons for large-scale learning with hidden information." IEEE Transactions on Knowledge and Data Engineering, 25.9 (2013): 2063-2075.
 
-__[Zhang and Nivre, 2011]__ Zhang, Yue, and Joakim Nivre. "Transition-based dependency parsing with rich non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011. Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.
+__[Zhang and Nivre, 2011]__ Zhang, Yue, and Joakim Nivre. "Transition-based dependency parsing with rich non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.
