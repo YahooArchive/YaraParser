@@ -14,12 +14,31 @@ public class Sentence implements Comparable {
     private int[] words;
     private int[] tags;
 
+    private int[] brownCluster4thPrefix;
+    private int[] brownCluster6thPrefix;
+    private int[] brownClusterFullString;
+
     public Sentence(ArrayList<Integer> tokens, ArrayList<Integer> pos) {
         words = new int[tokens.size()];
         tags = new int[tokens.size()];
         for (int i = 0; i < tokens.size(); i++) {
             words[i] = tokens.get(i);
             tags[i] = pos.get(i);
+        }
+    }
+
+    public Sentence(ArrayList<Integer> tokens, ArrayList<Integer> pos, ArrayList<Integer> brownCluster4thPrefix, ArrayList<Integer> brownCluster6thPrefix, ArrayList<Integer> brownClusterFullString) {
+        words = new int[tokens.size()];
+        tags = new int[tokens.size()];
+        this.brownCluster4thPrefix = new int[tokens.size()];
+        this.brownCluster6thPrefix = new int[tokens.size()];
+        this.brownClusterFullString = new int[tokens.size()];
+        for (int i = 0; i < tokens.size(); i++) {
+            words[i] = tokens.get(i);
+            tags[i] = pos.get(i);
+            this.brownCluster4thPrefix[i] = brownCluster4thPrefix.get(i);
+            this.brownCluster6thPrefix[i] = brownCluster6thPrefix.get(i);
+            this.brownClusterFullString[i] = brownClusterFullString.get(i);
         }
     }
 
@@ -45,6 +64,20 @@ public class Sentence implements Comparable {
 
     public int[] getTags() {
         return tags;
+    }
+
+
+    public int[] getBrownCluster4thPrefix() {
+        return brownCluster4thPrefix;
+    }
+
+
+    public int[] getBrownCluster6thPrefix() {
+        return brownCluster6thPrefix;
+    }
+
+    public int[] getBrownClusterFullString() {
+        return brownClusterFullString;
     }
 
     @Override

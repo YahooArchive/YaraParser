@@ -11,10 +11,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Configuration implements Comparable, Cloneable, Serializable {
-    /**
-     * Sentence in the configuration
-     * Unlike the traditional way, this is a dynamic (changeable) sentence
-     */
     public Sentence sentence;
 
     public State state;

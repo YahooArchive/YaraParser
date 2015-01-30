@@ -12,8 +12,6 @@ import TransitionBasedSystem.Configuration.Configuration;
 import TransitionBasedSystem.Parser.KBeamArcEagerParser;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 
 public class API_UsageExample {
     public static void main(String[] args) throws Exception {
@@ -24,11 +22,10 @@ public class API_UsageExample {
 
         ArrayList<Integer> dependencyLabels = infStruct.dependencyLabels;
         IndexMaps maps = infStruct.maps;
-        HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet = infStruct.headDepSet;
-        AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct.avg.length, infStruct.avg, infStruct.avg[0].length);
+        AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
 
-        int templates = averagedPerceptron.featureSize();
-        KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, headDepSet, templates, maps, numOfThreads);
+        int featureSize = averagedPerceptron.featureSize();
+        KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize, maps, numOfThreads);
 
         String[] words = {"I", "am", "here", "."};
         String[] tags = {"PRP", "VBP", "RB", "."};

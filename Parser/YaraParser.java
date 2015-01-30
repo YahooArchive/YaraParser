@@ -8,23 +8,19 @@ package Parser;
 import Accessories.CoNLLReader;
 import Accessories.Evaluator;
 import Accessories.Options;
-import Accessories.Pair;
 import Learning.AveragedPerceptron;
 import Structures.IndexMaps;
 import Structures.InfStruct;
-import Structures.Sentence;
 import TransitionBasedSystem.Configuration.GoldConfiguration;
 import TransitionBasedSystem.Parser.KBeamArcEagerParser;
 import TransitionBasedSystem.Trainer.ArcEagerBeamTrainer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class YaraParser {
     public static void main(String[] args) throws Exception {
         Options options = Options.processArgs(args);
-
         if (options.showHelp) {
             Options.showHelp();
         } else {
@@ -60,13 +56,12 @@ public class YaraParser {
             ArrayList<Integer> dependencyLabels = infStruct.dependencyLabels;
             IndexMaps maps = infStruct.maps;
 
-            HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet = infStruct.headDepSet;
 
             Options inf_options = infStruct.options;
-            AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct.avg.length, infStruct.avg, infStruct.avg[0].length);
+            AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
 
-            int templates = averagedPerceptron.featureSize();
-            KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, headDepSet, templates, maps, options.numOfThreads);
+            int featureSize = averagedPerceptron.featureSize();
+            KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyLabels, featureSize, maps, options.numOfThreads);
 
             if (options.parseTaggedFile)
                 parser.parseTaggedFile(options.inputFile,
@@ -85,7 +80,7 @@ public class YaraParser {
         if (options.inputFile.equals("") || options.modelFile.equals("")) {
             Options.showHelp();
         } else {
-            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase);
+            IndexMaps maps = CoNLLReader.createIndices(options.inputFile, options.labeled, options.lowercase, options.clusterFile);
             CoNLLReader reader = new CoNLLReader(options.inputFile);
             ArrayList<GoldConfiguration> dataSet = reader.readData(Integer.MAX_VALUE, false, options.labeled, options.rootFirst, options.lowercase, maps);
             System.out.println("CoNLL data reading done!");
@@ -94,26 +89,9 @@ public class YaraParser {
             for (int lab : maps.getLabels().keySet())
                 dependencyLabels.add(lab);
 
-            HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet = new HashMap<Integer, HashMap<Integer, HashSet<Integer>>>();
-
-            for (GoldConfiguration configuration : dataSet) {
-                Sentence sentence = configuration.getSentence();
-
-                for (int dep : configuration.getGoldDependencies().keySet()) {
-                    Pair<Integer, Integer> headDepPair = configuration.getGoldDependencies().get(dep);
-                    int relation = headDepPair.second;
-                    int dependent = sentence.posAt(dep);
-                    int head = sentence.posAt(headDepPair.first);
-
-                    if (!headDepSet.containsKey(head))
-                        headDepSet.put(head, new HashMap<Integer, HashSet<Integer>>());
-                    if (!headDepSet.get(head).containsKey(dependent))
-                        headDepSet.get(head).put(dependent, new HashSet<Integer>());
-                    headDepSet.get(head).get(dependent).add(relation);
-                }
-            }
-
             int featureLength = options.useExtendedFeatures ? 72 : 26;
+            if (options.useExtendedWithBrownClusterFeatures || maps.hasClusters())
+                featureLength = 153;
 
             System.out.println("size of training data (#sens): " + dataSet.size());
 
@@ -133,7 +111,7 @@ public class YaraParser {
             }
 
             ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, 4 + 2 * dependencyLabels.size()),
-                    options, dependencyLabels, headDepSet, featureLength, maps);
+                    options, dependencyLabels, featureLength, maps);
             trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase, options.punctuations, options.partialTrainingStartingIteration);
         }
     }

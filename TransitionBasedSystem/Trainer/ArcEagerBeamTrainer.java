@@ -49,15 +49,13 @@ public class ArcEagerBeamTrainer {
 
     private ArrayList<Integer> dependencyRelations;
     private int featureLength;
-    // for pruning irrelevant search space
-    private HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet;
 
     private Random randGen;
     private IndexMaps maps;
 
     public ArcEagerBeamTrainer(String updateMode, AveragedPerceptron classifier, Options options,
                                ArrayList<Integer> dependencyRelations,
-                               HashMap<Integer, HashMap<Integer, HashSet<Integer>>> headDepSet, int featureLength
+                               int featureLength
             , IndexMaps maps) {
         this.updateMode = updateMode;
         this.classifier = classifier;
@@ -65,7 +63,6 @@ public class ArcEagerBeamTrainer {
         this.dependencyRelations = dependencyRelations;
         this.featureLength = featureLength;
         randGen = new Random();
-        this.headDepSet = headDepSet;
         this.maps = maps;
     }
 
@@ -95,15 +92,15 @@ public class ArcEagerBeamTrainer {
             long timeSec = (end - start) / 1000;
             System.out.println("this iteration took " + timeSec + " seconds\n");
 
-            System.out.println("saving the model");
-            InfStruct infStruct = new InfStruct(classifier, maps, dependencyRelations, headDepSet, options);
+            System.out.print("saving the model...");
+            InfStruct infStruct = new InfStruct(classifier, maps, dependencyRelations, options);
             infStruct.saveModel(modelPath + "_iter" + i);
 
-            System.out.println("\nsaved iteration " + i + " with " + classifier.size() + " features\n");
+            System.out.println("done\n");
 
             if (!devPath.equals("")) {
-                AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct.avg.length, infStruct.avg, infStruct.avg[0].length);
-                KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyRelations, headDepSet, featureLength, maps, options.numOfThreads);
+                AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
+                KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyRelations, featureLength, maps, options.numOfThreads);
 
                 parser.parseConllFile(devPath, modelPath + ".__tmp__",
                         options.rootFirst, options.beamWidth, true, lowerCased, options.numOfThreads, false, "");
@@ -180,7 +177,7 @@ public class ArcEagerBeamTrainer {
             } else {
                 for (int b = 0; b < beam.size(); b++) {
                     pool.submit(new BeamScorerThread(false, classifier, beam.get(b),
-                            dependencyRelations, featureLength, headDepSet, b, options.rootFirst));
+                            dependencyRelations, featureLength, b, options.rootFirst));
                 }
                 for (int b = 0; b < beam.size(); b++) {
                     for (BeamElement element : pool.take().get()) {
@@ -281,7 +278,8 @@ public class ArcEagerBeamTrainer {
 
         for (Configuration configuration : oracles.keySet()) {
             State state = configuration.state;
-            long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+            Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+
             if (!state.stackEmpty())
                 top = state.peek();
             if (!state.bufferEmpty())
@@ -292,43 +290,46 @@ public class ArcEagerBeamTrainer {
 
                 if (first > 0 && goldDependencies.containsKey(first) && goldDependencies.get(first).first == top) {
                     int dependency = goldDependencies.get(first).second;
-                    float score = classifier.score(features, 3 + dependency, false);
+                    float[] scores= classifier.rightArcScores(features, false);
+                    float score = scores[dependency];
                     ArcEager.rightArc(newConfig.state, dependency);
                     newConfig.addAction(3 + dependency);
                     newConfig.addScore(score);
                 } else if (top > 0 && goldDependencies.containsKey(top) && goldDependencies.get(top).first == first) {
                     int dependency = goldDependencies.get(top).second;
-                    float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, false);
+                    float[] scores= classifier.leftArcScores(features, false);
+                    float score = scores[dependency];
                     ArcEager.leftArc(newConfig.state, dependency);
                     newConfig.addAction(3 + dependencyRelations.size() + dependency);
                     newConfig.addScore(score);
                 } else if (top >= 0 && state.hasHead(top)) {
+
                     if (reversedDependencies.containsKey(top)) {
                         if (reversedDependencies.get(top).size() == state.valence(top)) {
-                            float score = classifier.score(features, 1, false);
+                            float score = classifier.reduceScore(features,false);
                             ArcEager.reduce(newConfig.state);
                             newConfig.addAction(1);
                             newConfig.addScore(score);
                         } else {
-                            float score = classifier.score(features, 0, false);
+                            float score = classifier.shiftScore(features, false);
                             ArcEager.shift(newConfig.state);
                             newConfig.addAction(0);
                             newConfig.addScore(score);
                         }
                     } else {
-                        float score = classifier.score(features, 1, false);
+                        float score = classifier.reduceScore(features,false);
                         ArcEager.reduce(newConfig.state);
                         newConfig.addAction(1);
                         newConfig.addScore(score);
                     }
 
                 } else if (state.bufferEmpty() && state.stackSize() == 1 && state.peek() == state.rootIndex) {
-                    float score = classifier.score(features, 1, false);
+                    float score = classifier.reduceScore(features,false);
                     ArcEager.reduce(newConfig.state);
                     newConfig.addAction(1);
                     newConfig.addScore(score);
                 } else {
-                    float score = classifier.score(features, 0, false);
+                    float score =classifier.shiftScore(features, true);
                     ArcEager.shift(newConfig.state);
                     newConfig.addAction(0);
                     newConfig.addScore(score);
@@ -349,12 +350,12 @@ public class ArcEagerBeamTrainer {
         for (Configuration configuration : oracles.keySet()) {
             if (!configuration.state.isTerminalState()) {
                 State currentState = configuration.state;
-                long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+                Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                 int accepted = 0;
                 // I only assumed that we need zero cost ones
                 if (goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
                     Configuration newConfig = configuration.clone();
-                    float score = classifier.score(features, 0, false);
+                    float score =classifier.shiftScore(features, false);
                     ArcEager.shift(newConfig.state);
                     newConfig.addAction(0);
                     newConfig.addScore(score);
@@ -367,10 +368,11 @@ public class ArcEagerBeamTrainer {
                     accepted++;
                 }
                 if (ArcEager.canDo(Actions.RightArc, currentState)) {
+                    float[] rightArcScores=classifier.rightArcScores(features,false);
                     for (int dependency : dependencyRelations) {
                         if (goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
                             Configuration newConfig = configuration.clone();
-                            float score = classifier.score(features, 3 + dependency, false);
+                            float score = rightArcScores[ dependency];
                             ArcEager.rightArc(newConfig.state, dependency);
                             newConfig.addAction(3 + dependency);
                             newConfig.addScore(score);
@@ -385,10 +387,12 @@ public class ArcEagerBeamTrainer {
                     }
                 }
                 if (ArcEager.canDo(Actions.LeftArc, currentState)) {
+                 float[] leftArcScores=classifier.leftArcScores(features,false);
+                    
                     for (int dependency : dependencyRelations) {
                         if (goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
                             Configuration newConfig = configuration.clone();
-                            float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, false);
+                            float score =leftArcScores[ dependency];
                             ArcEager.leftArc(newConfig.state, dependency);
                             newConfig.addAction(3 + dependencyRelations.size() + dependency);
                             newConfig.addScore(score);
@@ -404,7 +408,7 @@ public class ArcEagerBeamTrainer {
                 }
                 if (goldConfiguration.actionCost(Actions.Reduce, -1, currentState) == 0) {
                     Configuration newConfig = configuration.clone();
-                    float score = classifier.score(features, 1, false);
+                    float score =classifier.reduceScore(features,false);
                     ArcEager.reduce(newConfig.state);
                     newConfig.addAction(1);
                     newConfig.addScore(score);
@@ -433,10 +437,10 @@ public class ArcEagerBeamTrainer {
             boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
             boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
             boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-            long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+            Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
 
             if (canShift) {
-                float score = classifier.score(features, 0, false);
+                float score = classifier.shiftScore(features, false);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
@@ -444,7 +448,7 @@ public class ArcEagerBeamTrainer {
                     beamPreserver.pollFirst();
             }
             if (canReduce) {
-                float score = classifier.score(features, 1, false);
+                float score =classifier.reduceScore(features,false);
                 float addedScore = score + prevScore;
                 beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
@@ -453,33 +457,25 @@ public class ArcEagerBeamTrainer {
             }
 
             if (canRightArc) {
-                int headPos = sentence.posAt(configuration.state.peek());
-                int depPos = sentence.posAt(configuration.state.bufferHead());
+                float[] rightArcScores=classifier.rightArcScores(features,false);
                 for (int dependency : dependencyRelations) {
-                    if ((!canLeftArc && !canShift && !canReduce) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
-                            && headDepSet.get(headPos).get(depPos).contains(dependency))) {
-                        float score = classifier.score(features, 3 + dependency, false);
-                        float addedScore = score + prevScore;
-                        beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
+                    float score = rightArcScores[dependency];
+                    float addedScore = score + prevScore;
+                    beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
-                        if (beamPreserver.size() > options.beamWidth)
-                            beamPreserver.pollFirst();
-                    }
+                    if (beamPreserver.size() > options.beamWidth)
+                        beamPreserver.pollFirst();
                 }
             }
             if (canLeftArc) {
-                int headPos = sentence.posAt(configuration.state.bufferHead());
-                int depPos = sentence.posAt(configuration.state.peek());
+               float[] leftArcScores=classifier.leftArcScores(features,false);
                 for (int dependency : dependencyRelations) {
-                    if ((!canShift && !canRightArc && !canReduce) || (headDepSet.containsKey(headPos) && headDepSet.get(headPos).containsKey(depPos)
-                            && headDepSet.get(headPos).get(depPos).contains(dependency))) {
-                        float score = classifier.score(features, 3 + dependencyRelations.size() + dependency, false);
-                        float addedScore = score + prevScore;
-                        beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
+                    float score = leftArcScores[dependency];
+                    float addedScore = score + prevScore;
+                    beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
-                        if (beamPreserver.size() > options.beamWidth)
-                            beamPreserver.pollFirst();
-                    }
+                    if (beamPreserver.size() > options.beamWidth)
+                        beamPreserver.pollFirst();
                 }
             }
         }
@@ -524,7 +520,7 @@ public class ArcEagerBeamTrainer {
             }
 
             if (isTrueFeature) {   // if the made dependency is truely for the word
-                long[] feats = FeatureExtractor.extractAllParseFeatures(oracleConfiguration, featureLength);
+                Long[] feats = FeatureExtractor.extractAllParseFeatures(oracleConfiguration, featureLength);
                 for (int f = 0; f < feats.length; f++) {
                     Pair<Integer, Long> featName = new Pair<Integer, Long>(action, feats[f]);
                     HashMap<Pair<Integer, Long>, Float> map = (HashMap<Pair<Integer, Long>, Float>) oracleFeatures[f];
@@ -563,7 +559,7 @@ public class ArcEagerBeamTrainer {
             }
 
             if (isTrueFeature) {   // if the made dependency is truely for the word
-                long[] feats = FeatureExtractor.extractAllParseFeatures(predictedConfiguration, featureLength);
+                Long[] feats = FeatureExtractor.extractAllParseFeatures(predictedConfiguration, featureLength);
                 if (action != 2) // do not take into account for unshift
                     for (int f = 0; f < feats.length; f++) {
                         Pair<Integer, Long> featName = new Pair<Integer, Long>(action, feats[f]);
@@ -597,16 +593,50 @@ public class ArcEagerBeamTrainer {
             HashMap<Pair<Integer, Long>, Float> map2 = (HashMap<Pair<Integer, Long>, Float>) oracleFeatures[f];
             for (Pair<Integer, Long> feat : map.keySet()) {
                 int action = feat.first;
-                long feature = feat.second;
-                if (!(map2.containsKey(feat) && map2.get(feat).equals(map.get(feat))))
-                    classifier.changeWeight(f, feature, action, -map.get(feat));
+                Actions actionType =Actions.Shift;
+                int dependency=0;
+                if (action == 0) {
+                    actionType=Actions.Shift;
+                } else if (action == 1) {
+                    actionType=Actions.Reduce;
+                } else if (action >= 3 + dependencyRelations.size()) {
+                     dependency = action - (3 + dependencyRelations.size());
+                    actionType=Actions.LeftArc;
+                } else if (action >= 3) {
+                     dependency = action - 3;
+                    actionType=Actions.RightArc;
+                } else if (action == 2) {
+                    actionType=Actions.Unshift;
+                }
+                if (feat.second != null) {
+                    long feature = feat.second;
+                    if (!(map2.containsKey(feat) && map2.get(feat).equals(map.get(feat))))
+                        classifier.changeWeight(actionType,f, feature, dependency, -map.get(feat));
+                }
             }
 
             for (Pair<Integer, Long> feat : map2.keySet()) {
                 int action = feat.first;
-                long feature = feat.second;
-                if (!(map.containsKey(feat) && map.get(feat).equals(map2.get(feat))))
-                    classifier.changeWeight(f, feature, action, map2.get(feat));
+                Actions actionType =Actions.Shift;
+                int dependency=0;
+                if (action == 0) {
+                    actionType=Actions.Shift;
+                } else if (action == 1) {
+                    actionType=Actions.Reduce;
+                } else if (action >= 3 + dependencyRelations.size()) {
+                    dependency = action - (3 + dependencyRelations.size());
+                    actionType=Actions.LeftArc;
+                } else if (action >= 3) {
+                    dependency = action - 3;
+                    actionType=Actions.RightArc;
+                } else if (action == 2) {
+                    actionType=Actions.Unshift;
+                }
+                if (feat.second != null) {
+                    long feature = feat.second;
+                    if (!(map.containsKey(feat) && map.get(feat).equals(map2.get(feat))))
+                        classifier.changeWeight(actionType,f, feature, dependency, map2.get(feat));
+                }
             }
         }
     }

@@ -31,10 +31,13 @@ public class CoNLLReader {
         fileReader = new BufferedReader(new FileReader(filePath));
     }
 
-    public static IndexMaps createIndices(String filePath, boolean labeled, boolean lowercased) throws Exception {
-
+    public static IndexMaps createIndices(String filePath, boolean labeled, boolean lowercased, String clusterFile) throws Exception {
         HashMap<String, Integer> wordMap = new HashMap<String, Integer>();
         HashMap<Integer, Integer> labels = new HashMap<Integer, Integer>();
+        HashMap<String, Integer> clusterMap = new HashMap<String, Integer>();
+        HashMap<Integer, Integer> cluster4Map = new HashMap<Integer, Integer>();
+        HashMap<Integer, Integer> cluster6Map = new HashMap<Integer, Integer>();
+
         int labelCount = 1;
         String rootString = "ROOT";
 
@@ -74,6 +77,45 @@ public class CoNLLReader {
             }
         }
 
+        if (clusterFile.length() > 0) {
+            reader = new BufferedReader(new FileReader(clusterFile));
+            while ((line = reader.readLine()) != null) {
+                String[] spl = line.trim().split("\t");
+                if (spl.length > 2) {
+                    String cluster = spl[0];
+                    String word = spl[1];
+                    String prefix4 = cluster.substring(0, Math.min(4, cluster.length()));
+                    String prefix6 = cluster.substring(0, Math.min(6, cluster.length()));
+                    int clusterNum = wi;
+
+                    if (!wordMap.containsKey(cluster)) {
+                        clusterMap.put(word, wi);
+                        wordMap.put(cluster, wi++);
+                    } else {
+                        clusterNum = wordMap.get(cluster);
+                        clusterMap.put(word, clusterNum);
+                    }
+
+                    int pref4Id = wi;
+                    if (!wordMap.containsKey(prefix4)) {
+                        wordMap.put(prefix4, wi++);
+                    } else {
+                        pref4Id = wordMap.get(prefix4);
+                    }
+
+                    int pref6Id = wi;
+                    if (!wordMap.containsKey(prefix6)) {
+                        wordMap.put(prefix6, wi++);
+                    } else {
+                        pref6Id = wordMap.get(prefix6);
+                    }
+
+                    cluster4Map.put(clusterNum, pref4Id);
+                    cluster6Map.put(clusterNum, pref6Id);
+                }
+            }
+        }
+
         reader = new BufferedReader(new FileReader(filePath));
         while ((line = reader.readLine()) != null) {
             String[] spl = line.trim().split("\t");
@@ -87,7 +129,7 @@ public class CoNLLReader {
             }
         }
 
-        return new IndexMaps(wordMap, labels, rootString);
+        return new IndexMaps(wordMap, labels, rootString, cluster4Map, cluster6Map, clusterMap);
     }
 
     /**
@@ -101,6 +143,9 @@ public class CoNLLReader {
         String line;
         ArrayList<Integer> tokens = new ArrayList<Integer>();
         ArrayList<Integer> tags = new ArrayList<Integer>();
+        ArrayList<Integer> cluster4Ids = new ArrayList<Integer>();
+        ArrayList<Integer> cluster6Ids = new ArrayList<Integer>();
+        ArrayList<Integer> clusterIds = new ArrayList<Integer>();
 
         HashMap<Integer, Pair<Integer, Integer>> goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
         int sentenceCounter = 0;
@@ -116,18 +161,27 @@ public class CoNLLReader {
                         }
                         tokens.add(0);
                         tags.add(0);
+                        cluster4Ids.add(0);
+                        cluster6Ids.add(0);
+                        clusterIds.add(0);
                     }
-                    Sentence currentSentence = new Sentence(tokens, tags);
+                    Sentence currentSentence = new Sentence(tokens, tags, cluster4Ids, cluster6Ids, clusterIds);
                     GoldConfiguration goldConfiguration = new GoldConfiguration(currentSentence, goldDependencies);
                     if (keepNonProjective || !goldConfiguration.isNonprojective())
                         configurationSet.add(goldConfiguration);
                     goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
                     tokens = new ArrayList<Integer>();
                     tags = new ArrayList<Integer>();
+                    cluster4Ids = new ArrayList<Integer>();
+                    cluster6Ids = new ArrayList<Integer>();
+                    clusterIds = new ArrayList<Integer>();
                 } else {
                     goldDependencies = new HashMap<Integer, Pair<Integer, Integer>>();
                     tokens = new ArrayList<Integer>();
                     tags = new ArrayList<Integer>();
+                    cluster4Ids = new ArrayList<Integer>();
+                    cluster6Ids = new ArrayList<Integer>();
+                    clusterIds = new ArrayList<Integer>();
                 }
                 if (sentenceCounter >= limit) {
                     System.out.println("buffer full..." + configurationSet.size());
@@ -170,6 +224,11 @@ public class CoNLLReader {
                 if (headIndex == -1)
                     ri = -1;
 
+                int[] ids = maps.clusterId(word);
+                clusterIds.add(ids[0]);
+                cluster4Ids.add(ids[1]);
+                cluster6Ids.add(ids[2]);
+
                 if (headIndex >= 0)
                     goldDependencies.put(wordIndex, new Pair<Integer, Integer>(headIndex, ri));
             }
@@ -182,9 +241,12 @@ public class CoNLLReader {
                 }
                 tokens.add(0);
                 tags.add(0);
+                cluster4Ids.add(0);
+                cluster6Ids.add(0);
+                clusterIds.add(0);
             }
             sentenceCounter++;
-            Sentence currentSentence = new Sentence(tokens, tags);
+            Sentence currentSentence = new Sentence(tokens, tags, cluster4Ids, cluster6Ids, clusterIds);
             configurationSet.add(new GoldConfiguration(currentSentence, goldDependencies));
         }
 

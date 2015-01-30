@@ -26,10 +26,12 @@ public class Options implements Serializable {
     public boolean evaluate;
     public boolean parsePartialConll;
     public String scorePath;
+    public String clusterFile;
 
     public String modelFile;
     public boolean lowercase;
     public boolean useExtendedFeatures;
+    public boolean useExtendedWithBrownClusterFeatures;
     public boolean useMaxViol;
     public boolean useDynamicOracle;
     public boolean useRandomOracleSelection;
@@ -56,6 +58,7 @@ public class Options implements Serializable {
         devPath = "";
         scorePath = "";
         separator = "_";
+        clusterFile = "";
         labeled = true;
         lowercase = false;
         useExtendedFeatures = true;
@@ -65,6 +68,7 @@ public class Options implements Serializable {
         trainingIter = 20;
         evaluate = false;
         numOfThreads = 8;
+        useExtendedWithBrownClusterFeatures = false;
         parsePartialConll = false;
 
         partialTrainingStartingIteration = 3;
@@ -106,6 +110,7 @@ public class Options implements Serializable {
         output.append("\t** The model for each iteration is with the pattern [model-file]_iter[iter#]; e.g. mode_iter2\n");
         output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line\n");
         output.append("\t** Other options\n");
+        output.append("\t \t --cluster-file [cluster-file] Brown cluster file: at most 4096 clusters are supported by the parser (default: empty)\n\t\t\t the format shoud be the same as https://github.com/percyliang/brown-cluster/blob/master/output.txt \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
         output.append("\t \t iter:[training-iterations] (default:20)\n");
         output.append("\t \t unlabeled (default: labeled parsing, unless explicitly put `unlabeled')\n");
@@ -169,7 +174,10 @@ public class Options implements Serializable {
                 options.goldFile = args[i + 1];
             else if (args[i].startsWith("--parsed-file"))
                 options.predFile = args[i + 1];
-            else if (args[i].startsWith("--out"))
+            else if (args[i].startsWith("--cluster-file")) {
+                options.clusterFile = args[i + 1];
+                options.useExtendedWithBrownClusterFeatures = true;
+            } else if (args[i].startsWith("--out"))
                 options.outputFile = args[i + 1];
             else if (args[i].startsWith("--delim"))
                 options.separator = args[i + 1];
@@ -322,11 +330,13 @@ public class Options implements Serializable {
             StringBuilder builder = new StringBuilder();
             builder.append("train file: " + inputFile + "\n");
             builder.append("dev file: " + devPath + "\n");
+            builder.append("cluster file: " + clusterFile + "\n");
             builder.append("beam width: " + beamWidth + "\n");
             builder.append("rootFirst: " + rootFirst + "\n");
             builder.append("labeled: " + labeled + "\n");
             builder.append("lower-case: " + lowercase + "\n");
             builder.append("extended features: " + useExtendedFeatures + "\n");
+            builder.append("extended with brown cluster features: " + useExtendedWithBrownClusterFeatures + "\n");
             builder.append("updateModel: " + (useMaxViol ? "max violation" : "early") + "\n");
             builder.append("oracle: " + (useDynamicOracle ? "dynamic" : "static") + "\n");
             if (useDynamicOracle)
