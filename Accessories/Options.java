@@ -110,7 +110,7 @@ public class Options implements Serializable {
         output.append("\t** The model for each iteration is with the pattern [model-file]_iter[iter#]; e.g. mode_iter2\n");
         output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line\n");
         output.append("\t** Other options\n");
-        output.append("\t \t --cluster-file [cluster-file] Brown cluster file: at most 4096 clusters are supported by the parser (default: empty)\n\t\t\t the format shoud be the same as https://github.com/percyliang/brown-cluster/blob/master/output.txt \n");
+        output.append("\t \t --cluster-file [cluster-file] Brown cluster file: at most 4096 clusters are supported by the parser (default: empty)\n\t\t\t the format should be the same as https://github.com/percyliang/brown-cluster/blob/master/output.txt \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
         output.append("\t \t iter:[training-iterations] (default:20)\n");
         output.append("\t \t unlabeled (default: labeled parsing, unless explicitly put `unlabeled')\n");

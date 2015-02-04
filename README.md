@@ -1,23 +1,25 @@
 Yara Parser
 ===================
 
-&copy; Copyright 2014, Yahoo! Inc.
+&copy; Copyright 2014-2015, Yahoo! Inc.
 
 &copy; Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
 
 
 # Yara K-Beam Arc-Eager Dependency Parser
 
-This project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs. For more details, see the technical details. The parser can be trained on any syntactic dependency treebank with Conll'06 format and can parse sentences afterwards. It can also parse partial sentences (a sentence with partial gold dependencies) and it is also possible to train on partial trees.
+This core functionality of the project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs and it was later modified in Columbia University. For more details, see the technical details. The parser can be trained on any syntactic dependency treebank with Conll'06 format and can parse sentences afterwards. It can also parse partial sentences (a sentence with partial gold dependencies) and it is also possible to train on partial trees.
+
+### Version Log
+- V0.2 (February 2015) Some problems fixed in search pruning, and brown cluster features added.
+- V0.1 (January 2015) First version of the parser with features roughly the same as Zhang and Nivre (2011).
 
 
-#WARNING
-__All the information bellow is valid for v0.1 release. There were many changes since then and the numbers are not valid anymore (the parser now is much faster and slightly more accurate than v0.1 -- will complete documentation soon)__
 
 ## Performance and Speed on WSJ/Penn Treebank
-__Performance__ really depends on the quality of POS taggers. In academic papers, researchers try n-way jackknifing for training a very optimized POS tagger. I basically used the best off-the-shelf POS tagging model from [Stanford POS tagger](http://nlp.stanford.edu/software/tagger.shtml) (which is not as optimized as doing n-way jackknifing) with [Penn2Malt](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html) conversion. The best unlabeled accuracy on the dev file was 93.09 (91.85 labeled, 49.18 unlabeled exact match) and with that model I got 92.71 (91.65 labeled, 46.98 unlabeled exact match) on the test data. All the settings that I used were defaults with 64 beams.
+__Performance__ really depends on the quality of POS taggers. I used [my own pos tagger v0.2](https://github.com/rasoolims/SemiSupervisedPosTagger/releases/tag/v0.2) and tagged the train file with 10-way jackknifing. I converted the data to dependencies with [Penn2Malt tool](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html). The best unlabeled accuracy on the dev file was 93.41 after 14 iterations and with that model I got  93.12 (92.08 labeled, 48.55 unlabeled exact match) on the test data. All the settings that I used were defaults and brown cluster features.
 
-__Speed__ really depends on your machine but this parser is very fast. In my experiments, I used a 24 core machine (Intel(R) Xeon(R) 2.00 GHz) and set number of threads to 16. The most accurate and slowest model (64 beams) can parse 85 sentences per second (average on 20 runs) with 16 threads. Each training iteration takes less than 20 minutes (20 iterations may take up to 12 hours). In the very fastest mode (1 beam, unlabeled, basic features) the parser can parse 5000 sentences per second and each training iteration takes less than 1 minute. In the fastest labeled parsing mode(1 beam, basic features), the parser can parse 2700 sentences per second and each training iteration takes less than 2 minutes.
+__Speed__ really depends on your machine and the number of unique dependency relations but generally this parser is very fast. The parser could parse around 150 sentences per second without cluster features and 70 sentences with cluster features with Penn2Malt dependency conversion on my machine. If you want to have a super-fast parser, you can use the ``beam:1`` and ``basic`` option in training and this will give you a parser that can parse about 5000 sentences per second with the default number of threads.
 
 ## Meaning of Yara
 Yara (Yahoo-Rasooli) is a word that means __strength__ , __boldness__, __bravery__ or __something robust__ in Persian. In other languages it has other meanings, e.g. in Amazonian language it means __daughter of the forests__, in Malaysian it means  __the beams of the sun__ and in ancient Egyptian it means __pure__ and __beloved__.
@@ -52,6 +54,9 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	* [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line
 	
 	*	 Other options (__there are 128 combinations of options and also beam size and thread but the default is the best setting given a big beam (e.g. 64)__)
+		* --cluster-file [cluster-file] Brown cluster file: at most 4096 clusters are supported by the parser (default: empty)
+			 
+			 * The format should be the same as https://github.com/percyliang/brown-cluster/blob/master/output.txt 
 	 	 
 	 	 * beam:[beam-width] (default:64)
 	 	 
@@ -130,19 +135,21 @@ __WARNING__ The evaluation script is Yara, takes care of ``ROOT`` output, so you
 ### Example Usage
 There is small portion from Google Universal Treebank for the German language in the __sample\_data__ directory. 
 
+### Training without Brown Cluster Features
+
      java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model iter:10 --punc_file punc_files/google_universal.puncs
 
-You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __87.27__ and labeled accuracy __80.54__ on the dev set in the 10th iteration. 
+You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __87.52__ and labeled accuracy __81.15__ on the dev set in the 7th iteration. 
 
 Performance numbers are produced after each iteration. The following is the performance on the dev after the 10th iteration:
 
-    2.35 ms for each arc!
-	31.17 ms for each sentence!
+    1.58 ms for each arc!
+	20.89 ms for each sentence!
 
-	Labeled accuracy: 80.54
-	Unlabeled accuracy:  87.27
-	Labeled exact match:  29.58
-	Unlabeled exact match:  45.07  
+	Labeled accuracy: 81.15
+	Unlabeled accuracy:  87.52
+	Labeled exact match:  23.94
+	Unlabeled exact match:  38.03 
 
 Next, you can run the developed model on the test data:
 
@@ -152,10 +159,19 @@ You can finally evaluate the output data:
 
 	java -jar jar/YaraParser.jar eval --gold-file sample_data/test.conll --parsed-file /tmp/test.output.conll 
 
-    Labeled accuracy: 71.02
-	Unlabeled accuracy:  76.56
-	Labeled exact match:  19.30
-	Unlabeled exact match:  29.82
+    Labeled accuracy: 70.32
+	Unlabeled accuracy:  76.21
+	Labeled exact match:  15.79
+	Unlabeled exact match:  22.81 
+
+### Training with Brown Cluster Features
+You can apply the same way you did without Brown cluster features but with ``--cluster-file`` option.
+
+	java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model iter:10 --punc_file punc_files/google_universal.puncs --cluster-file sample_data/german_clusters_europarl_universal_train.cluster
+
+
+
+
 
 # API Usage
 
@@ -163,15 +179,15 @@ You can look at the class __Parser/API_UsageExample__ to see an example of using
 
 # NOTES
 
-## A Useful Trick to Improve Performance
-It is shown that replacing all numbers (integers and floating points), with a dummy token (e.g. \<num\>) helps the accuracy in _some treebanks but not always_. If you want to try that idea, simply replace the numbers in your training, development and test data with that dummy token.
+## How to create word clusters?
+Given a tokenized raw text file, you can use [Percy Liang's Brown clustering code](https://github.com/percyliang/brown-cluster) to cluster the words. I put the cluster files for English and German but if you think you have a bigger text file for those you can use them as long as the formatting is ok.
 
 ## Memory size
 For very large training sets, you may need to increase the java memory heap size by -Xmx option; e.g. ``java -Xmx3g jar/YaraParser.jar``. For WSJ data, 4g is more than enough.
 
 
 ## Technical Details
-This parser is an implementation of the arc-eager dependency model [Nivre, 2004] with averaged structured Perceptron [Collins, 2002]. The feature setting is from Zhang and Nivre [2011]. The model can be trained with early update strategy [Collins and Roark, 2004] or max-violation update [Huang et al., 2012]. Oracle search for training is done with either dynamic oracles [Goldberg and Nivre, 2013] or original static oracles.  Choosing the best oracles in the dynamic oracle can be done via latent structured Perceptron [Sun et al., 2013] and also randomly. The dummy root token can be placed in the end or in the beginning of the sentence [Ballesteros and Nivre, 2013]. When the dummy root token is placed in the beginning, tree constraints are applied [Nivre and Fernández-González, 2014].
+This parser is an implementation of the arc-eager dependency model [Nivre, 2004] with averaged structured Perceptron [Collins, 2002]. The feature setting is from Zhang and Nivre [2011] with additional Brown cluster features inspired from Koo et al. [2008] and Honnibal and Johnson [2014]. The model can be trained with early update strategy [Collins and Roark, 2004] or max-violation update [Huang et al., 2012]. Oracle search for training is done with either dynamic oracles [Goldberg and Nivre, 2013] or original static oracles.  Choosing the best oracles in the dynamic oracle can be done via latent structured Perceptron [Sun et al., 2013] and also randomly. The dummy root token can be placed in the end or in the beginning of the sentence [Ballesteros and Nivre, 2013]. When the dummy root token is placed in the beginning, tree constraints are applied [Nivre and Fernández-González, 2014].
 
 __[References]__
 
@@ -184,7 +200,12 @@ __[Collins and Roark, 2004]__ Collins, Michael, and Brian Roark. "Incremental pa
 
 __[Goldberg and Nivre, 2013]__ Goldberg, Yoav, and Joakim Nivre. "Training Deterministic Parsers with Non-Deterministic Oracles." TACL 1 (2013): 403-414.
 
+__[Honnibal and Johnson]__ Honnibal, Matthew, and Mark Johnson. "Joint incremental disfluency detection and dependency parsing." Transactions of the Association for Computational Linguistics 2 (2014): 131-142.	
+
+
 __[Huang et al., 20012]__ Huang, Liang, Suphan Fayong, and Yang Guo. "Structured perceptron with inexact search." Proceedings of the 2012 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies. Association for Computational Linguistics, 2012.
+
+__[Koo et al., 2008]__ Koo, Terry, Xavier Carreras, and Michael Collins. "Simple Semi-supervised Dependency Parsing." Proceedings of ACL-08: HLT, pages 595–603, Columbus, Ohio, USA, Association for Computational Linguistics, 2008.
 
 __[Nivre, 2004]__ Nivre, Joakim. "Incrementality in deterministic dependency parsing." In Proceedings of the Workshop on Incremental Parsing: Bringing Engineering and Cognition Together, pp. 50-57. Association for Computational Linguistics, 2004.
 
