@@ -18,19 +18,19 @@ This core functionality of the project is implemented by [Mohammad Sadegh Rasool
 If you use the extended feature set or brown cluster features, currently the parser supports just 47 unique dependency relations and 260k unique words in the training data. If the number of unique relations in your training data is more than 46, your results with extended or brown cluster features may not be precise! (Stanford dependencies has 44 relations and Penn2Malt contains 12 relations).
 
 ## Performance and Speed on WSJ/Penn Treebank
-__Performance__ really depends on the quality of POS taggers. I used [my own pos tagger v0.2](https://github.com/rasoolims/SemiSupervisedPosTagger/releases/tag/v0.2) and tagged the train file with 10-way jackknifing. I converted the data to dependencies with [Penn2Malt tool](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html) and I also used [Stanford dependencies]() with `basic` and `keepPunct` options. The following tables are the results (todo!).
+__Performance__ really depends on the quality of POS taggers. I used [my own pos tagger v0.2](https://github.com/rasoolims/SemiSupervisedPosTagger/releases/tag/v0.2) and tagged the train file with 10-way jackknifing. I converted the data to dependencies with [Penn2Malt tool](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html) and I also used [Stanford dependencies](http://nlp.stanford.edu/software/lex-parser.shtml#Download) with `basic` and `keepPunct` options. The following tables are the results (``#todo:table``).
 
 
-|Parser| Dep. Rep.      | Features     |Iter#| Dev ULAS | Test UAS | Test LAS | sen/sec|
-|:----:|:---------------|:-------------|:---:|:--------:|:--------:|:--------:|:------:|
-| ZPar | Penn2Malt      | ZN (11)      | 15  |    93.14 |   92.9   |   91.8   |  29    |
-|      |                |              |     |          |          |          |        |
-| Yara | Penn2Malt      | ZN (11)      |     |          |          |          |        |
-| Yara | Penn2Malt      | ZN (11) + BC |     |          |          |          |        |
-| Yara |Stanford (3.5.1)| ZN (11)      |     |          |          |          |        |
-| Yara |Stanford (3.5.1)| ZN (11) + BC |     |          |          |          |        |
+|Parser| Dep. Rep.      | Features     |Iter#| Dev UAS | Test UAS | Test LAS | sen/sec|
+|:----:|:---------------|:-------------|:---:|:-------:|:--------:|:--------:|:------:|
+| ZPar | Penn2Malt      | ZN (11)      | 15  |   93.14 |   92.9   |   91.8   |  29    |
+|      |                |              |     |         |          |          |        |
+| Yara | Penn2Malt      | ZN (11)      |     |         |          |          |        |
+| Yara | Penn2Malt      | ZN (11) + BC |     |         |          |          |        |
+| Yara |Stanford (3.5.1)| ZN (11)      |     |         |          |          |        |
+| Yara |Stanford (3.5.1)| ZN (11) + BC |     |         |          |          |        |
 
-__Speed__ really depends on your machine and the number of unique dependency relations but generally this parser is very fast. The parser could parse around 150 sentences per second without cluster features and 70 sentences with cluster features with Penn2Malt dependency conversion on my machine. If you want to have a super-fast parser, you can use the ``beam:1`` and ``basic`` option in training and this will give you a parser that can parse about 5000 sentences per second with the default number of threads.
+__Speed__ really depends on your machine and the number of unique dependency relations but generally this parser is very fast. ``#todo: exact report``
 
 ## Meaning of Yara
 Yara (Yahoo-Rasooli) is a word that means __strength__ , __boldness__, __bravery__ or __something robust__ in Persian. In other languages it has other meanings, e.g. in Amazonian language it means __daughter of the forests__, in Malaysian it means  __the beams of the sun__ and in ancient Egyptian it means __pure__ and __beloved__.
@@ -154,8 +154,8 @@ You can kill the process whenever you find that the model performance is converg
 
 Performance numbers are produced after each iteration. The following is the performance on the dev after the 10th iteration:
 
-    1.37 ms for each arc!
-	18.11 ms for each sentence!
+    1.07 ms for each arc!
+	14.18 ms for each sentence!
 
 	Labeled accuracy: 79.93
 	Unlabeled accuracy:  87.15

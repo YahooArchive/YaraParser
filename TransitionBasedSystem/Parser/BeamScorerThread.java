@@ -49,19 +49,19 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
         Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
 
         if (canShift) {
-            float score = classifier.shiftScore(features,isDecode);
+            float score = classifier.shiftScore(features, isDecode);
             float addedScore = score + prevScore;
             elements.add(new BeamElement(addedScore, b, 0, -1));
         }
         if (canReduce) {
-            float score = classifier.reduceScore(features,isDecode);
+            float score = classifier.reduceScore(features, isDecode);
             float addedScore = score + prevScore;
             elements.add(new BeamElement(addedScore, b, 1, -1));
 
         }
 
         if (canRightArc) {
-            float[] rightArcScores=classifier.rightArcScores(features, isDecode);
+            float[] rightArcScores = classifier.rightArcScores(features, isDecode);
             for (int dependency : dependencyRelations) {
                 float score = rightArcScores[dependency];
                 float addedScore = score + prevScore;
@@ -69,9 +69,9 @@ public class BeamScorerThread implements Callable<ArrayList<BeamElement>> {
             }
         }
         if (canLeftArc) {
-            float[] leftArcScores=classifier.leftArcScores(features, isDecode);
+            float[] leftArcScores = classifier.leftArcScores(features, isDecode);
             for (int dependency : dependencyRelations) {
-                float score = leftArcScores[ dependency];
+                float score = leftArcScores[dependency];
                 float addedScore = score + prevScore;
                 elements.add(new BeamElement(addedScore, b, 3, dependency));
             }

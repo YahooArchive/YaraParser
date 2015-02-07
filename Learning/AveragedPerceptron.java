@@ -5,6 +5,7 @@
 
 package Learning;
 
+import Structures.CompactArray;
 import Structures.InfStruct;
 import TransitionBasedSystem.Parser.Actions;
 
@@ -25,109 +26,109 @@ public class AveragedPerceptron {
     /**
      * For the weights for all features
      */
-    public HashMap<Long,Float>[] shiftFeatureWeights;
-    public HashMap<Long,Float>[] reduceFeatureWeights;
-    public HashMap<Long,float[]>[] leftArcFeatureWeights;
-    public HashMap<Long,float[]>[] rightArcFeatureWeights;
+    public HashMap<Long, Float>[] shiftFeatureWeights;
+    public HashMap<Long, Float>[] reduceFeatureWeights;
+    public HashMap<Long, CompactArray>[] leftArcFeatureWeights;
+    public HashMap<Long, CompactArray>[] rightArcFeatureWeights;
 
     public int iteration;
-    public  int dependencySize;
+    public int dependencySize;
     /**
      * This is the main part of the extension to the original perceptron algorithm which the averaging over all the history
      */
-    public HashMap<Long,Float>[] shiftFeatureAveragedWeights;
-    public HashMap<Long,Float>[] reduceFeatureAveragedWeights;
-    public HashMap<Long,float[]>[] leftArcFeatureAveragedWeights;
-    public HashMap<Long,float[]>[] rightArcFeatureAveragedWeights;
+    public HashMap<Long, Float>[] shiftFeatureAveragedWeights;
+    public HashMap<Long, Float>[] reduceFeatureAveragedWeights;
+    public HashMap<Long, CompactArray>[] leftArcFeatureAveragedWeights;
+    public HashMap<Long, CompactArray>[] rightArcFeatureAveragedWeights;
 
 
     public AveragedPerceptron(int featSize, int dependencySize) {
-        shiftFeatureWeights=new HashMap[featSize];
-        reduceFeatureWeights=new HashMap[featSize];
-        leftArcFeatureWeights=new HashMap[featSize];
-        rightArcFeatureWeights=new HashMap[featSize];
+        shiftFeatureWeights = new HashMap[featSize];
+        reduceFeatureWeights = new HashMap[featSize];
+        leftArcFeatureWeights = new HashMap[featSize];
+        rightArcFeatureWeights = new HashMap[featSize];
 
-        shiftFeatureAveragedWeights=new HashMap[featSize];
-        reduceFeatureAveragedWeights=new HashMap[featSize];
-        leftArcFeatureAveragedWeights=new HashMap[featSize];
-        rightArcFeatureAveragedWeights=new HashMap[featSize];
-        for(int i=0;i<featSize;i++){
-            shiftFeatureWeights[i]=new HashMap<Long, Float>();
-            reduceFeatureWeights[i]=new HashMap<Long, Float>();
-            leftArcFeatureWeights[i]=new HashMap<Long, float[]>();
-            rightArcFeatureWeights[i]=new HashMap<Long, float[]>();
+        shiftFeatureAveragedWeights = new HashMap[featSize];
+        reduceFeatureAveragedWeights = new HashMap[featSize];
+        leftArcFeatureAveragedWeights = new HashMap[featSize];
+        rightArcFeatureAveragedWeights = new HashMap[featSize];
+        for (int i = 0; i < featSize; i++) {
+            shiftFeatureWeights[i] = new HashMap<Long, Float>();
+            reduceFeatureWeights[i] = new HashMap<Long, Float>();
+            leftArcFeatureWeights[i] = new HashMap<Long, CompactArray>();
+            rightArcFeatureWeights[i] = new HashMap<Long, CompactArray>();
 
 
-            shiftFeatureAveragedWeights[i]=new HashMap<Long, Float>();
-            reduceFeatureAveragedWeights[i]=new HashMap<Long, Float>();
-            leftArcFeatureAveragedWeights[i]=new HashMap<Long, float[]>();
-            rightArcFeatureAveragedWeights[i]=new HashMap<Long, float[]>();
+            shiftFeatureAveragedWeights[i] = new HashMap<Long, Float>();
+            reduceFeatureAveragedWeights[i] = new HashMap<Long, Float>();
+            leftArcFeatureAveragedWeights[i] = new HashMap<Long, CompactArray>();
+            rightArcFeatureAveragedWeights[i] = new HashMap<Long, CompactArray>();
         }
 
         iteration = 1;
-        this.dependencySize=dependencySize;
-    }
-
-    private AveragedPerceptron( HashMap<Long,Float>[]  shiftFeatureAveragedWeights,  HashMap<Long,Float>[]  reduceFeatureAveragedWeights,
-                              HashMap<Long,float[]>[] leftArcFeatureAveragedWeights,HashMap<Long,float[]>[] rightArcFeatureAveragedWeights,
-                              int dependencySize) {
-        this.shiftFeatureAveragedWeights=shiftFeatureAveragedWeights;
-        this.reduceFeatureAveragedWeights=reduceFeatureAveragedWeights;
-        this.leftArcFeatureAveragedWeights=leftArcFeatureAveragedWeights;
-        this.rightArcFeatureAveragedWeights=rightArcFeatureAveragedWeights;
         this.dependencySize = dependencySize;
     }
-    
-    public AveragedPerceptron(InfStruct infStruct){
-        this(infStruct.shiftFeatureAveragedWeights,infStruct.reduceFeatureAveragedWeights,infStruct.leftArcFeatureAveragedWeights,infStruct.rightArcFeatureAveragedWeights,infStruct.dependencySize);
+
+    private AveragedPerceptron(HashMap<Long, Float>[] shiftFeatureAveragedWeights, HashMap<Long, Float>[] reduceFeatureAveragedWeights,
+                               HashMap<Long, CompactArray>[] leftArcFeatureAveragedWeights, HashMap<Long, CompactArray>[] rightArcFeatureAveragedWeights,
+                               int dependencySize) {
+        this.shiftFeatureAveragedWeights = shiftFeatureAveragedWeights;
+        this.reduceFeatureAveragedWeights = reduceFeatureAveragedWeights;
+        this.leftArcFeatureAveragedWeights = leftArcFeatureAveragedWeights;
+        this.rightArcFeatureAveragedWeights = rightArcFeatureAveragedWeights;
+        this.dependencySize = dependencySize;
+    }
+
+    public AveragedPerceptron(InfStruct infStruct) {
+        this(infStruct.shiftFeatureAveragedWeights, infStruct.reduceFeatureAveragedWeights, infStruct.leftArcFeatureAveragedWeights, infStruct.rightArcFeatureAveragedWeights, infStruct.dependencySize);
     }
 
     public float changeWeight(Actions actionType, int slotNum, Long featureName, int labelIndex, float change) {
         if (featureName == null)
             return 0;
-        if(actionType==Actions.Shift){
-            if(!shiftFeatureWeights[slotNum].containsKey(featureName))
-                shiftFeatureWeights[slotNum].put(featureName,change);
+        if (actionType == Actions.Shift) {
+            if (!shiftFeatureWeights[slotNum].containsKey(featureName))
+                shiftFeatureWeights[slotNum].put(featureName, change);
             else
-                shiftFeatureWeights[slotNum].put(featureName, shiftFeatureWeights[slotNum].get(featureName)+ change);
+                shiftFeatureWeights[slotNum].put(featureName, shiftFeatureWeights[slotNum].get(featureName) + change);
 
-            if(!shiftFeatureAveragedWeights[slotNum].containsKey(featureName))
-                shiftFeatureAveragedWeights[slotNum].put(featureName,iteration*change);
+            if (!shiftFeatureAveragedWeights[slotNum].containsKey(featureName))
+                shiftFeatureAveragedWeights[slotNum].put(featureName, iteration * change);
             else
-                shiftFeatureAveragedWeights[slotNum].put(featureName, shiftFeatureAveragedWeights[slotNum].get(featureName)+ iteration*change);
-        } else if(actionType==Actions.Reduce){
-            if(!reduceFeatureWeights[slotNum].containsKey(featureName))
-                reduceFeatureWeights[slotNum].put(featureName,change);
+                shiftFeatureAveragedWeights[slotNum].put(featureName, shiftFeatureAveragedWeights[slotNum].get(featureName) + iteration * change);
+        } else if (actionType == Actions.Reduce) {
+            if (!reduceFeatureWeights[slotNum].containsKey(featureName))
+                reduceFeatureWeights[slotNum].put(featureName, change);
             else
-                reduceFeatureWeights[slotNum].put(featureName, reduceFeatureWeights[slotNum].get(featureName)+ change);
+                reduceFeatureWeights[slotNum].put(featureName, reduceFeatureWeights[slotNum].get(featureName) + change);
 
-            if(!reduceFeatureAveragedWeights[slotNum].containsKey(featureName))
-                reduceFeatureAveragedWeights[slotNum].put(featureName,iteration*change);
+            if (!reduceFeatureAveragedWeights[slotNum].containsKey(featureName))
+                reduceFeatureAveragedWeights[slotNum].put(featureName, iteration * change);
             else
-                reduceFeatureAveragedWeights[slotNum].put(featureName, reduceFeatureAveragedWeights[slotNum].get(featureName)+ iteration*change);
-        }   else if(actionType==Actions.RightArc){
+                reduceFeatureAveragedWeights[slotNum].put(featureName, reduceFeatureAveragedWeights[slotNum].get(featureName) + iteration * change);
+        } else if (actionType == Actions.RightArc) {
             changeFeatureWeight(rightArcFeatureWeights[slotNum], rightArcFeatureAveragedWeights[slotNum], featureName, labelIndex, change, dependencySize);
-        }   else if(actionType==Actions.LeftArc){
+        } else if (actionType == Actions.LeftArc) {
             changeFeatureWeight(leftArcFeatureWeights[slotNum], leftArcFeatureAveragedWeights[slotNum], featureName, labelIndex, change, dependencySize);
         }
 
         return change;
     }
-    
-    public void changeFeatureWeight( HashMap<Long, float[]> map, HashMap<Long, float[]> aMap,  Long featureName, int labelIndex, float change,int size) {
-        float[] values = map.get(featureName);
-        float[] aValues;
+
+    public void changeFeatureWeight(HashMap<Long, CompactArray> map, HashMap<Long, CompactArray> aMap, Long featureName, int labelIndex, float change, int size) {
+        CompactArray values = map.get(featureName);
+        CompactArray aValues;
         if (values != null) {
-            values[labelIndex] += change;
+            values.expandArray(labelIndex, change);
             aValues = aMap.get(featureName);
-            aValues[labelIndex] += iteration * change;
+            aValues.expandArray(labelIndex, iteration * change);
         } else {
-            values = new float[size];
-            values[labelIndex] = change;
+            float[] val = new float[]{change};
+            values = new CompactArray(labelIndex, val);
             map.put(featureName, values);
 
-            aValues = new float[size];
-            aValues[labelIndex] = iteration * change;
+            float[] aVal = new float[]{iteration * change};
+            aValues = new CompactArray(labelIndex, aVal);
             aMap.put(featureName, aValues);
         }
     }
@@ -140,71 +141,77 @@ public class AveragedPerceptron {
         iteration++;
     }
 
-    public float shiftScore(final Long[] features, boolean decode){
-        float score=0.0f;
+    public float shiftScore(final Long[] features, boolean decode) {
+        float score = 0.0f;
 
-        HashMap<Long,Float>[] map=decode?shiftFeatureAveragedWeights:shiftFeatureWeights;
-        
-        for(int i=0;i<features.length;i++){
+        HashMap<Long, Float>[] map = decode ? shiftFeatureAveragedWeights : shiftFeatureWeights;
+
+        for (int i = 0; i < features.length; i++) {
             if (features[i] == null || (i >= 26 && i < 32))
                 continue;
-           Float values=map[i].get(features[i]);
-            if(values!=null){
-                score+=values;
-            }
-        }
-        
-        return score;
-    }
-
-    public float reduceScore(final Long[] features, boolean decode){
-        float score=0.0f;
-
-        HashMap<Long,Float>[] map=decode?reduceFeatureAveragedWeights:reduceFeatureWeights;
-
-        for(int i=0;i<features.length;i++){
-            if (features[i] == null || (i >= 26 && i < 32) )
-                continue;
-            Float values=map[i].get(features[i]);
-            if(values!=null){
-                score+=values;
+            Float values = map[i].get(features[i]);
+            if (values != null) {
+                score += values;
             }
         }
 
         return score;
     }
 
-    public float[] leftArcScores(final Long[] features, boolean decode){
-        float scores[]=new float[dependencySize];
+    public float reduceScore(final Long[] features, boolean decode) {
+        float score = 0.0f;
 
-        HashMap<Long,float[]>[] map=decode?leftArcFeatureAveragedWeights:leftArcFeatureWeights;
+        HashMap<Long, Float>[] map = decode ? reduceFeatureAveragedWeights : reduceFeatureWeights;
 
-        for(int i=0;i<features.length;i++){
-            if (features[i] == null )
+        for (int i = 0; i < features.length; i++) {
+            if (features[i] == null || (i >= 26 && i < 32))
                 continue;
-            float[] values=map[i].get(features[i]);
-            if(values!=null){
-               for(int d=0;d<dependencySize;d++){
-                   scores[d]+=values[d];
-               }
+            Float values = map[i].get(features[i]);
+            if (values != null) {
+                score += values;
+            }
+        }
+
+        return score;
+    }
+
+    public float[] leftArcScores(final Long[] features, boolean decode) {
+        float scores[] = new float[dependencySize];
+
+        HashMap<Long, CompactArray>[] map = decode ? leftArcFeatureAveragedWeights : leftArcFeatureWeights;
+
+        for (int i = 0; i < features.length; i++) {
+            if (features[i] == null)
+                continue;
+            CompactArray values = map[i].get(features[i]);
+            if (values != null) {
+                int offset = values.getOffset();
+                float[] weightVector = values.getArray();
+
+                for (int d = offset; d < offset + weightVector.length; d++) {
+                    scores[d] += weightVector[d - offset];
+                }
             }
         }
 
         return scores;
     }
 
-    public float[] rightArcScores(final Long[] features, boolean decode){
-        float scores[]=new float[dependencySize];
+    public float[] rightArcScores(final Long[] features, boolean decode) {
+        float scores[] = new float[dependencySize];
 
-        HashMap<Long,float[]>[] map=decode?rightArcFeatureAveragedWeights:rightArcFeatureWeights;
+        HashMap<Long, CompactArray>[] map = decode ? rightArcFeatureAveragedWeights : rightArcFeatureWeights;
 
-        for(int i=0;i<features.length;i++){
+        for (int i = 0; i < features.length; i++) {
             if (features[i] == null)
                 continue;
-            float[] values=map[i].get(features[i]);
-            if(values!=null){
-                for(int d=0;d<dependencySize;d++){
-                    scores[d]+=values[d];
+            CompactArray values = map[i].get(features[i]);
+            if (values != null) {
+                int offset = values.getOffset();
+                float[] weightVector = values.getArray();
+
+                for (int d = offset; d < offset + weightVector.length; d++) {
+                    scores[d] += weightVector[d - offset];
                 }
             }
         }
@@ -215,12 +222,14 @@ public class AveragedPerceptron {
     public int featureSize() {
         return shiftFeatureAveragedWeights.length;
     }
-    
-    public int raSize(){
-     int size=0;
-       for(int i=0;i<leftArcFeatureAveragedWeights.length;i++){
-           size+=rightArcFeatureAveragedWeights[i].size()*dependencySize;
-       }
+
+    public int raSize() {
+        int size = 0;
+        for (int i = 0; i < leftArcFeatureAveragedWeights.length; i++) {
+            for (Long feat : rightArcFeatureAveragedWeights[i].keySet()) {
+                size += rightArcFeatureAveragedWeights[i].get(feat).length();
+            }
+        }
         return size;
     }
 
@@ -228,7 +237,7 @@ public class AveragedPerceptron {
         int size = 0;
         for (int i = 0; i < leftArcFeatureAveragedWeights.length; i++) {
             for (Long feat : rightArcFeatureAveragedWeights[i].keySet()) {
-                for (float f : rightArcFeatureAveragedWeights[i].get(feat))
+                for (float f : rightArcFeatureAveragedWeights[i].get(feat).getArray())
                     if (f != 0f)
                         size++;
             }
@@ -237,10 +246,12 @@ public class AveragedPerceptron {
     }
 
 
-    public int laSize(){
-        int size=0;
-        for(int i=0;i<leftArcFeatureAveragedWeights.length;i++){
-            size+=leftArcFeatureAveragedWeights[i].size()*dependencySize;
+    public int laSize() {
+        int size = 0;
+        for (int i = 0; i < leftArcFeatureAveragedWeights.length; i++) {
+            for (Long feat : leftArcFeatureAveragedWeights[i].keySet()) {
+                size += leftArcFeatureAveragedWeights[i].get(feat).length();
+            }
         }
         return size;
     }
@@ -249,7 +260,7 @@ public class AveragedPerceptron {
         int size = 0;
         for (int i = 0; i < leftArcFeatureAveragedWeights.length; i++) {
             for (Long feat : leftArcFeatureAveragedWeights[i].keySet()) {
-                for (float f : leftArcFeatureAveragedWeights[i].get(feat))
+                for (float f : leftArcFeatureAveragedWeights[i].get(feat).getArray())
                     if (f != 0f)
                         size++;
             }

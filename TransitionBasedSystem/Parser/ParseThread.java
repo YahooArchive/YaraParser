@@ -84,7 +84,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
 
                     if (canShift) {
-                        float score =classifier.shiftScore(features,true);
+                        float score = classifier.shiftScore(features, true);
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
@@ -93,7 +93,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
 
                     if (canReduce) {
-                        float score = classifier.reduceScore(features,true);
+                        float score = classifier.reduceScore(features, true);
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
@@ -102,9 +102,9 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
 
                     if (canRightArc) {
-                        float[] rightArcScores=classifier.rightArcScores(features,true);
+                        float[] rightArcScores = classifier.rightArcScores(features, true);
                         for (int dependency : dependencyRelations) {
-                            float score =rightArcScores[dependency];
+                            float score = rightArcScores[dependency];
                             float addedScore = score + prevScore;
                             beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
@@ -114,9 +114,9 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
 
                     if (canLeftArc) {
-                        float[] leftArcScores=classifier.leftArcScores(features,true);
+                        float[] leftArcScores = classifier.leftArcScores(features, true);
                         for (int dependency : dependencyRelations) {
-                            float score = leftArcScores[ dependency];
+                            float score = leftArcScores[dependency];
                             float addedScore = score + prevScore;
                             beamPreserver.add(new BeamElement(addedScore, b, 3, dependency));
 
@@ -184,21 +184,21 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canShift) {
-                    float score = classifier.shiftScore(features,true);
+                    float score = classifier.shiftScore(features, true);
                     if (score > bestScore) {
                         bestScore = score;
                         bestAction = 0;
                     }
                 }
                 if (canReduce) {
-                    float score =  classifier.reduceScore(features,true);
+                    float score = classifier.reduceScore(features, true);
                     if (score > bestScore) {
                         bestScore = score;
                         bestAction = 1;
                     }
                 }
                 if (canRightArc) {
-                    float[] rightArcScores=classifier.rightArcScores(features,true);
+                    float[] rightArcScores = classifier.rightArcScores(features, true);
                     for (int dependency : dependencyRelations) {
                         float score = rightArcScores[dependency];
                         if (score > bestScore) {
@@ -208,7 +208,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     }
                 }
                 if (ArcEager.canDo(Actions.LeftArc, currentState)) {
-                    float[] leftArcScores=classifier.leftArcScores(features, true);
+                    float[] leftArcScores = classifier.leftArcScores(features, true);
                     for (int dependency : dependencyRelations) {
                         float score = leftArcScores[dependency];
                         if (score > bestScore) {
@@ -334,7 +334,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
 
             if (canShift) {
                 if (isNonProjective || goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
-                    float score = classifier.shiftScore(features,true);
+                    float score = classifier.shiftScore(features, true);
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
@@ -345,7 +345,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
 
             if (canReduce) {
                 if (isNonProjective || goldConfiguration.actionCost(Actions.Reduce, -1, currentState) == 0) {
-                    float score =  classifier.reduceScore(features,true);
+                    float score = classifier.reduceScore(features, true);
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
@@ -355,10 +355,10 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             }
 
             if (canRightArc) {
-                float[] rightArcScores= classifier.rightArcScores(features,true);
+                float[] rightArcScores = classifier.rightArcScores(features, true);
                 for (int dependency : dependencyRelations) {
                     if (isNonProjective || goldConfiguration.actionCost(Actions.RightArc, dependency, currentState) == 0) {
-                        float score =rightArcScores[dependency];
+                        float score = rightArcScores[dependency];
                         float addedScore = score + prevScore;
                         beamPreserver.add(new BeamElement(addedScore, b, 2, dependency));
 
@@ -369,7 +369,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             }
 
             if (canLeftArc) {
-                float[] leftArcScores=classifier.leftArcScores(features,true);
+                float[] leftArcScores = classifier.leftArcScores(features, true);
                 for (int dependency : dependencyRelations) {
                     if (isNonProjective || goldConfiguration.actionCost(Actions.LeftArc, dependency, currentState) == 0) {
                         float score = leftArcScores[dependency];
@@ -404,7 +404,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canShift) {
-                    float score = classifier.shiftScore(features,true);
+                    float score = classifier.shiftScore(features, true);
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 0, -1));
 
@@ -413,7 +413,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canReduce) {
-                    float score = classifier.reduceScore(features,true);
+                    float score = classifier.reduceScore(features, true);
                     float addedScore = score + prevScore;
                     beamPreserver.add(new BeamElement(addedScore, b, 1, -1));
 
@@ -422,7 +422,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canRightArc) {
-                    float[] rightArcScores= classifier.rightArcScores(features,true);
+                    float[] rightArcScores = classifier.rightArcScores(features, true);
                     for (int dependency : dependencyRelations) {
                         float score = rightArcScores[dependency];
                         float addedScore = score + prevScore;
@@ -434,7 +434,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 }
 
                 if (canLeftArc) {
-                    float[] leftArcScores=classifier.leftArcScores(features,true);
+                    float[] leftArcScores = classifier.leftArcScores(features, true);
                     for (int dependency : dependencyRelations) {
                         float score = leftArcScores[dependency];
                         float addedScore = score + prevScore;
