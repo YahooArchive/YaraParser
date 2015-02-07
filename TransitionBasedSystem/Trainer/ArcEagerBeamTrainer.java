@@ -22,6 +22,7 @@ import TransitionBasedSystem.Parser.ArcEager;
 import TransitionBasedSystem.Parser.BeamScorerThread;
 import TransitionBasedSystem.Parser.KBeamArcEagerParser;
 
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
@@ -109,11 +110,9 @@ public class ArcEagerBeamTrainer {
                 int effectiveLaSize=   averagedPerceptron.effectiveLaSize();
                 float laRatio=100.0f*effectiveLaSize/laSize;
                 
-                float lowerbound=100.0f*1.0f/averagedPerceptron.dependencySize;
-                
-                System.out.println("size of RA features in memory:"+effectiveRaSize+"/"+raSize+"->"+raRatio+"%");
-                System.out.println("size of LA features in memory:"+effectiveLaSize+"/"+laSize+"->"+laRatio+"%");
-                System.out.println("lowerbound: "+lowerbound+"%");
+                DecimalFormat format = new DecimalFormat("##.00");
+                System.out.println("size of RA features in memory:"+effectiveRaSize+"/"+raSize+"->"+format.format(raRatio)+"%");
+                System.out.println("size of LA features in memory:"+effectiveLaSize+"/"+laSize+"->"+format.format(laRatio)+"%");
                 KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyRelations, featureLength, maps, options.numOfThreads);
 
                 parser.parseConllFile(devPath, modelPath + ".__tmp__",

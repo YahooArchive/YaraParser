@@ -11,14 +11,24 @@ Yara Parser
 This core functionality of the project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs and it was later modified in Columbia University. For more details, see the technical details. The parser can be trained on any syntactic dependency treebank with Conll'06 format and can parse sentences afterwards. It can also parse partial sentences (a sentence with partial gold dependencies) and it is also possible to train on partial trees.
 
 ### Version Log
-- V0.2 (February 2015) Some problems fixed in search pruning, and brown cluster features added; compressed model file saving.
+- V0.2 (__under preparation__) Some problems fixed in search pruning, and brown cluster features added; compressed model file saving.
 - V0.1 (January 2015) First version of the parser with features roughly the same as Zhang and Nivre (2011).
 
 # WARNING
 If you use the extended feature set or brown cluster features, currently the parser supports just 47 unique dependency relations and 260k unique words in the training data. If the number of unique relations in your training data is more than 46, your results with extended or brown cluster features may not be precise! (Stanford dependencies has 44 relations and Penn2Malt contains 12 relations).
 
 ## Performance and Speed on WSJ/Penn Treebank
-__Performance__ really depends on the quality of POS taggers. I used [my own pos tagger v0.2](https://github.com/rasoolims/SemiSupervisedPosTagger/releases/tag/v0.2) and tagged the train file with 10-way jackknifing. I converted the data to dependencies with [Penn2Malt tool](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html). The best unlabeled accuracy on the dev file was 93.41 after 14 iterations and with that model I got  93.12 (92.08 labeled, 48.55 unlabeled exact match) on the test data. All the settings that I used were defaults and brown cluster features.
+__Performance__ really depends on the quality of POS taggers. I used [my own pos tagger v0.2](https://github.com/rasoolims/SemiSupervisedPosTagger/releases/tag/v0.2) and tagged the train file with 10-way jackknifing. I converted the data to dependencies with [Penn2Malt tool](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html) and I also used [Stanford dependencies]() with `basic` and `keepPunct` options. The following tables are the results (todo!).
+
+
+|Parser| Dep. Rep.      | Features     |Iter#| Dev ULAS | Test UAS | Test LAS | sen/sec|
+|:----:|:---------------|:-------------|:---:|:--------:|:--------:|:--------:|:------:|
+| ZPar | Penn2Malt      | ZN (11)      | 15  |    93.14 |   92.9   |   91.8   |  29    |
+|      |                |              |     |          |          |          |        |
+| Yara | Penn2Malt      | ZN (11)      |     |          |          |          |        |
+| Yara | Penn2Malt      | ZN (11) + BC |     |          |          |          |        |
+| Yara |Stanford (3.5.1)| ZN (11)      |     |          |          |          |        |
+| Yara |Stanford (3.5.1)| ZN (11) + BC |     |          |          |          |        |
 
 __Speed__ really depends on your machine and the number of unique dependency relations but generally this parser is very fast. The parser could parse around 150 sentences per second without cluster features and 70 sentences with cluster features with Penn2Malt dependency conversion on my machine. If you want to have a super-fast parser, you can use the ``beam:1`` and ``basic`` option in training and this will give you a parser that can parse about 5000 sentences per second with the default number of threads.
 
@@ -48,14 +58,14 @@ __NOTE:__ All the examples bellow are using the jar file for running the applica
 
 __WARNING:__ The training code ignores non-projective trees in the training data. If you want to include them, try to projectivize them; e.g. by [tree projectivizer](http://www.cs.bgu.ac.il/~yoavg/software/projectivize/).
 
-* __java -jar jar/YaraParser.jar train --train-file [train-file] --dev-file [dev-file] --model-file [model-file] --punc_file [punc-file]__
+* __java -jar jar/YaraParser.jar train  -train-file [train-file]  -dev [dev-file] -model [model-file]  -punc [punc-file]__
 	
 	*	 The model for each iteration is with the pattern [model-file]_iter[iter#]; e.g. mode_iter2
 	
 	* [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line
 	
 	*	 Other options (__there are 128 combinations of options and also beam size and thread but the default is the best setting given a big beam (e.g. 64)__)
-		* --cluster-file [cluster-file] Brown cluster file: at most 4096 clusters are supported by the parser (default: empty)
+		*  -cluster [cluster-file] Brown cluster file: at most 4096 clusters are supported by the parser (default: empty)
 			 
 			 * The format should be the same as https://github.com/percyliang/brown-cluster/blob/master/output.txt 
 	 	 
@@ -83,21 +93,21 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 
 ### Parse a CoNLL_2006 File
 
-* __java -jar jar/YaraParser.jar parse_conll --test-file [test-file] --out [output-file] --model-file [model-file]__
+* __java -jar jar/YaraParser.jar parse_conll -input [test-file] -out [output-file] -model [model-file]__
 	
 	* The test file should have the conll 2006 format
 	
 	* Optional: nt:#_of_threads (default:8) 
 	
-	* Optional: --score-file [score file] averaged score of each output parse tree in a file
+	* Optional: -score [score file] averaged score of each output parse tree in a file
 
 ### Parse a POS Tagged File
 
-* __java -jar jar/YaraParser.jar parse_tagged --test-file [test-file] --out [output-file] --model-file [model-file]__
+* __java -jar jar/YaraParser.jar parse_tagged -input [test-file] -out [output-file] -model [model-file]__
 	
 	* The test file should have each sentence in line and word_tag pairs are space-delimited
 	
-	* Optional:  --delim [delim] (default is _)
+	* Optional:  -delim [delim] (default is _)
 	
 	* Optional: nt:#_of_threads (default:8) 
 	
@@ -118,18 +128,18 @@ __NOTE:__ There are some occasions where you need to parse a sentence, but alrea
 __WARNING__ Because of some technical reasons, all words connected to the dummy root word, will be labeled as ``ROOT``. If your treebank convention is different, try to refactor the ``ROOT`` dependency in the final output.
 
 
-* __java -jar YaraParser.jar parse_partial --test-file [test-file] --out [output-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)]__ 
+* __java -jar YaraParser.jar parse_partial -input [test-file] -out [output-file] -model [model-file] nt:[#_of_threads (optional -- default:8)]__ 
 		
 	* The test file should have the conll 2006 format; each word that does not have a parent, should have a -1 parent-index
 	
-	* Optional: --score-file [score file] averaged score of each output parse tree in a file
+	* Optional: -score [score file] averaged score of each output parse tree in a file
 
 
 ## Evaluate the Parser
 
 __WARNING__ The evaluation script is Yara, takes care of ``ROOT`` output, so you do not have to change anything in the output.
 
-* __java -jar YaraParser.jar eval --gold-file [gold-file] --parsed-file [parsed-file]  --punc_file [punc-file]__
+* __java -jar YaraParser.jar eval  -gold [gold-file]  -parse [parsed-file]   -punc [punc-file]__
 	* [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line
 	* Both files should have conll 2006 format
 
@@ -138,37 +148,37 @@ There is small portion from Google Universal Treebank for the German language in
 
 ### Training without Brown Cluster Features
 
-     java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model iter:10 --punc_file punc_files/google_universal.puncs
+     java -jar jar/YaraParser.jar train  -train-file sample_data/train.conll  -dev sample_data/dev.conll -model /tmp/model iter:10  -punc punc_files/google_universal.puncs
 
 You can kill the process whenever you find that the model performance is converging on the dev data. The parser achieved an unlabeled accuracy __87.52__ and labeled accuracy __81.15__ on the dev set in the 7th iteration. 
 
 Performance numbers are produced after each iteration. The following is the performance on the dev after the 10th iteration:
 
-    1.58 ms for each arc!
-	20.89 ms for each sentence!
+    1.37 ms for each arc!
+	18.11 ms for each sentence!
 
-	Labeled accuracy: 81.15
-	Unlabeled accuracy:  87.52
-	Labeled exact match:  23.94
-	Unlabeled exact match:  38.03 
+	Labeled accuracy: 79.93
+	Unlabeled accuracy:  87.15
+	Labeled exact match:  22.54
+	Unlabeled exact match:  45.07  
 
 Next, you can run the developed model on the test data:
 
-     java -jar jar/YaraParser.jar parse_conll --test-file sample_data/test.conll --model-file /tmp/model_iter10  --out /tmp/test.output.conll
+     java -jar jar/YaraParser.jar parse_conll -input sample_data/test.conll -model /tmp/model_iter10  -out /tmp/test.output.conll
 
 You can finally evaluate the output data:
 
-	java -jar jar/YaraParser.jar eval --gold-file sample_data/test.conll --parsed-file /tmp/test.output.conll 
+	java -jar jar/YaraParser.jar eval  -gold sample_data/test.conll  -parse /tmp/test.output.conll 
 
-    Labeled accuracy: 70.32
-	Unlabeled accuracy:  76.21
-	Labeled exact match:  15.79
-	Unlabeled exact match:  22.81 
+    Labeled accuracy: 70.91
+	Unlabeled accuracy:  75.97
+	Labeled exact match:  17.54
+	Unlabeled exact match:  28.07
 
 ### Training with Brown Cluster Features
-You can apply the same way you did without Brown cluster features but with ``--cluster-file`` option.
+You can apply the same way you did without Brown cluster features but with `` -cluster`` option.
 
-	java -jar jar/YaraParser.jar train --train-file sample_data/train.conll --dev-file sample_data/dev.conll --model-file /tmp/model iter:10 --punc_file punc_files/google_universal.puncs --cluster-file sample_data/german_clusters_europarl_universal_train.cluster
+	java -jar jar/YaraParser.jar train  -train-file sample_data/train.conll  -dev sample_data/dev.conll -model /tmp/model iter:10  -punc punc_files/google_universal.puncs  -cluster sample_data/german_clusters_europarl_universal_train.cluster
 
 
 
@@ -184,7 +194,7 @@ You can look at the class __Parser/API_UsageExample__ to see an example of using
 Given a tokenized raw text file, you can use [Percy Liang's Brown clustering code](https://github.com/percyliang/brown-cluster) to cluster the words. I put the cluster files for English and German but if you think you have a bigger text file for those you can use them as long as the formatting is ok.
 
 ## Memory size
-For very large training sets, you may need to increase the java memory heap size by -Xmx option; e.g. ``java -Xmx3g jar/YaraParser.jar``.
+For very large training sets, you may need to increase the java memory heap size by -Xmx option; e.g. ``java -Xmx10g jar/YaraParser.jar``.
 
 
 ## Technical Details
