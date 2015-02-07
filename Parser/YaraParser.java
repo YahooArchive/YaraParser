@@ -21,6 +21,7 @@ import java.util.HashMap;
 public class YaraParser {
     public static void main(String[] args) throws Exception {
         Options options = Options.processArgs(args);
+
         if (options.showHelp) {
             Options.showHelp();
         } else {
@@ -110,7 +111,7 @@ public class YaraParser {
                 }
             }
 
-            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, 4 + 2 * dependencyLabels.size()),
+            ArcEagerBeamTrainer trainer = new ArcEagerBeamTrainer(options.useMaxViol ? "max_violation" : "early", new AveragedPerceptron(featureLength, dependencyLabels.size()),
                     options, dependencyLabels, featureLength, maps);
             trainer.train(dataSet, options.devPath, options.trainingIter, options.modelFile, options.lowercase, options.punctuations, options.partialTrainingStartingIteration);
         }

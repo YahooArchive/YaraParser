@@ -6,6 +6,8 @@ import Learning.AveragedPerceptron;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Created by Mohammad Sadegh Rasooli.
@@ -80,9 +82,13 @@ public class InfStruct {
                 float[] vals=map2[i].get(feat);
                 float[] avgVals=avgMap2[i].get(feat);
                 float[] newVals=new float[vals.length];
+                boolean allZero=true;
                 for(int f=0;f<vals.length;f++){
                     newVals[f]=vals[f]-(avgVals[f]/perceptron.iteration);
+                    if(newVals[f]!=0f)
+                        allZero=false;
                 }
+                if(!allZero)
                 leftArcFeatureAveragedWeights[i].put(feat,newVals);
             }
         }
@@ -97,9 +103,13 @@ public class InfStruct {
                 float[] vals=map3[i].get(feat);
                 float[] avgVals=avgMap3[i].get(feat);
                 float[] newVals=new float[vals.length];
+                boolean allZero=true;
                 for(int f=0;f<vals.length;f++){
                     newVals[f]=vals[f]-(avgVals[f]/perceptron.iteration);
+                    if(newVals[f]!=0f)
+                        allZero=false;
                 }
+                if(!allZero)
                 rightArcFeatureAveragedWeights[i].put(feat,newVals);
             }
         }
@@ -110,7 +120,10 @@ public class InfStruct {
     }
 
     public InfStruct(String modelPath) throws Exception {
-        ObjectInputStream reader = new ObjectInputStream(new FileInputStream(modelPath));
+        FileInputStream fos = new FileInputStream(modelPath);
+        GZIPInputStream gz = new GZIPInputStream(fos);
+        
+        ObjectInputStream reader = new ObjectInputStream(gz);
         dependencyLabels = (ArrayList<Integer>) reader.readObject();
         maps = (IndexMaps) reader.readObject();
         options = (Options) reader.readObject();
@@ -122,7 +135,10 @@ public class InfStruct {
     }
 
     public void saveModel(String modelPath) throws Exception {
-        ObjectOutput writer = new ObjectOutputStream(new FileOutputStream(modelPath));
+        FileOutputStream fos = new FileOutputStream(modelPath);
+        GZIPOutputStream gz = new GZIPOutputStream(fos);
+
+        ObjectOutput writer = new ObjectOutputStream(gz);
         writer.writeObject(dependencyLabels);
         writer.writeObject(maps);
         writer.writeObject(options);
@@ -131,7 +147,6 @@ public class InfStruct {
         writer.writeObject(leftArcFeatureAveragedWeights);
         writer.writeObject(rightArcFeatureAveragedWeights);
         writer.writeInt(dependencySize);
-        writer.flush();
         writer.close();
     }
 }

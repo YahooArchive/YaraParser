@@ -81,7 +81,7 @@ public class ArcEagerBeamTrainer {
 
             for (GoldConfiguration goldConfiguration : trainData) {
                 dataCount++;
-                if (dataCount % 100 == 0)
+                if (dataCount % 1000 == 0)
                     System.out.print(dataCount + "...");
                 trainOnOneSample(goldConfiguration, partialTreeIter, i, dataCount, pool);
 
@@ -100,6 +100,20 @@ public class ArcEagerBeamTrainer {
 
             if (!devPath.equals("")) {
                 AveragedPerceptron averagedPerceptron = new AveragedPerceptron(infStruct);
+               
+               int raSize=  averagedPerceptron.raSize();
+                int effectiveRaSize=   averagedPerceptron.effectiveRaSize();
+                float raRatio=100.0f*effectiveRaSize/raSize;
+
+                int laSize=  averagedPerceptron.laSize();
+                int effectiveLaSize=   averagedPerceptron.effectiveLaSize();
+                float laRatio=100.0f*effectiveLaSize/laSize;
+                
+                float lowerbound=100.0f*1.0f/averagedPerceptron.dependencySize;
+                
+                System.out.println("size of RA features in memory:"+effectiveRaSize+"/"+raSize+"->"+raRatio+"%");
+                System.out.println("size of LA features in memory:"+effectiveLaSize+"/"+laSize+"->"+laRatio+"%");
+                System.out.println("lowerbound: "+lowerbound+"%");
                 KBeamArcEagerParser parser = new KBeamArcEagerParser(averagedPerceptron, dependencyRelations, featureLength, maps, options.numOfThreads);
 
                 parser.parseConllFile(devPath, modelPath + ".__tmp__",

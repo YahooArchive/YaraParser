@@ -106,11 +106,11 @@ public class Options implements Serializable {
         output.append("Usage:\n");
 
         output.append("* Train a parser:\n");
-        output.append("\tjava -jar YaraParser.jar train --train-file [train-file] --dev-file [dev-file] --model-file [model-file] --punc_file [punc-file]\n");
+        output.append("\tjava -jar YaraParser.jar train -train-file [train-file] -dev [dev-file] -model [model-file] -punc [punc-file]\n");
         output.append("\t** The model for each iteration is with the pattern [model-file]_iter[iter#]; e.g. mode_iter2\n");
         output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line\n");
         output.append("\t** Other options\n");
-        output.append("\t \t --cluster-file [cluster-file] Brown cluster file: at most 4096 clusters are supported by the parser (default: empty)\n\t\t\t the format should be the same as https://github.com/percyliang/brown-cluster/blob/master/output.txt \n");
+        output.append("\t \t -cluster [cluster-file] Brown cluster file: at most 4096 clusters are supported by the parser (default: empty)\n\t\t\t the format should be the same as https://github.com/percyliang/brown-cluster/blob/master/output.txt \n");
         output.append("\t \t beam:[beam-width] (default:64)\n");
         output.append("\t \t iter:[training-iterations] (default:20)\n");
         output.append("\t \t unlabeled (default: labeled parsing, unless explicitly put `unlabeled')\n");
@@ -124,23 +124,23 @@ public class Options implements Serializable {
         output.append("\t \t root_first (default: put ROOT in the last position, unless explicitly put 'root_first')\n\n");
 
         output.append("* Parse a CoNLL'2006 file:\n");
-        output.append("\tjava -jar YaraParser.jar parse_conll --test-file [test-file] --out [output-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
+        output.append("\tjava -jar YaraParser.jar parse_conll -input [test-file] -out [output-file] -model [model-file] nt:[#_of_threads (optional -- default:8)] \n");
         output.append("\t** The test file should have the conll 2006 format\n");
-        output.append("\t** Optional: --score-file [score file] averaged score of each output parse tree in a file\n\n");
+        output.append("\t** Optional: -score [score file] averaged score of each output parse tree in a file\n\n");
 
         output.append("* Parse a tagged file:\n");
-        output.append("\tjava -jar YaraParser.jar parse_tagged --test-file [test-file] --out [output-file]  --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
+        output.append("\tjava -jar YaraParser.jar parse_tagged -input [test-file] -out [output-file]  -model [model-file] nt:[#_of_threads (optional -- default:8)] \n");
         output.append("\t** The test file should have each sentence in line and word_tag pairs are space-delimited\n");
-        output.append("\t** Optional:  --delim [delim] (default is _)\n");
+        output.append("\t** Optional:  -delim [delim] (default is _)\n");
         output.append("\t \t Example: He_PRP is_VBZ nice_AJ ._.\n\n");
 
         output.append("* Parse a CoNLL'2006 file with partial gold trees:\n");
-        output.append("\tjava -jar YaraParser.jar parse_partial --test-file [test-file] --out [output-file] --model-file [model-file] nt:[#_of_threads (optional -- default:8)] \n");
+        output.append("\tjava -jar YaraParser.jar parse_partial -input [test-file] -out [output-file] -model [model-file] nt:[#_of_threads (optional -- default:8)] \n");
         output.append("\t** The test file should have the conll 2006 format; each word that does not have a parent, should have a -1 parent-index");
-        output.append("\t** Optional: --score-file [score file] averaged score of each output parse tree in a file\n\n");
+        output.append("\t** Optional: -score [score file] averaged score of each output parse tree in a file\n\n");
 
         output.append("* Evaluate a Conll file:\n");
-        output.append("\tjava -jar YaraParser.jar eval --gold-file [gold-file] --parsed-file [parsed-file]  --punc_file [punc-file]\n");
+        output.append("\tjava -jar YaraParser.jar eval -gold [gold-file] -parse [parsed-file]  -punc [punc-file]\n");
         output.append("\t** [punc-file]: File contains list of pos tags for punctuations in the treebank, each in one line\n");
         output.append("\t** Both files should have conll 2006 format\n");
         System.out.println(output.toString());
@@ -162,24 +162,24 @@ public class Options implements Serializable {
                 options.evaluate = true;
             else if (args[i].equals("parse_tagged"))
                 options.parseTaggedFile = true;
-            else if (args[i].equals("--train-file") || args[i].equals("--test-file"))
+            else if (args[i].equals("-train-file") || args[i].equals("-input"))
                 options.inputFile = args[i + 1];
-            else if (args[i].equals("--punc_file"))
+            else if (args[i].equals("-punc"))
                 options.changePunc(args[i + 1]);
-            else if (args[i].equals("--model-file"))
+            else if (args[i].equals("-model"))
                 options.modelFile = args[i + 1];
-            else if (args[i].startsWith("--dev-file"))
+            else if (args[i].startsWith("-dev"))
                 options.devPath = args[i + 1];
-            else if (args[i].equals("--gold-file"))
+            else if (args[i].equals("-gold"))
                 options.goldFile = args[i + 1];
-            else if (args[i].startsWith("--parsed-file"))
+            else if (args[i].startsWith("-parse"))
                 options.predFile = args[i + 1];
-            else if (args[i].startsWith("--cluster-file")) {
+            else if (args[i].startsWith("-cluster")) {
                 options.clusterFile = args[i + 1];
                 options.useExtendedWithBrownClusterFeatures = true;
-            } else if (args[i].startsWith("--out"))
+            } else if (args[i].startsWith("-out"))
                 options.outputFile = args[i + 1];
-            else if (args[i].startsWith("--delim"))
+            else if (args[i].startsWith("-delim"))
                 options.separator = args[i + 1];
             else if (args[i].startsWith("beam:"))
                 options.beamWidth = Integer.parseInt(args[i].substring(args[i].lastIndexOf(":") + 1));
@@ -191,7 +191,7 @@ public class Options implements Serializable {
                 options.labeled = Boolean.parseBoolean(args[i]);
             else if (args[i].equals("lowercase"))
                 options.lowercase = Boolean.parseBoolean(args[i]);
-            else if (args[i].startsWith("--score-file"))
+            else if (args[i].startsWith("-score"))
                 options.scorePath = args[i + 1];
             else if (args[i].equals("basic"))
                 options.useExtendedFeatures = false;

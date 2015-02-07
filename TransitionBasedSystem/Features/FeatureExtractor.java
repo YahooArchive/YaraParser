@@ -24,7 +24,6 @@ public class FeatureExtractor {
             return extractExtendedFeatures(configuration, length);
         else
             return extractExtendedFeaturesWithBrownClusters(configuration, length);
-
     }
 
 
@@ -46,9 +45,9 @@ public class FeatureExtractor {
         int b2Position = 0;
         int s0Position = 0;
 
-        int svr = 0; // stack right valency
-        int svl = 0; // stack left valency
-        int bvl = 0; // buffer left valency
+        long svr = 0; // stack right valency
+        long svl = 0; // stack left valency
+        long bvl = 0; // buffer left valency
 
         long b0w = 0;
         long b0p = 0;
@@ -235,28 +234,72 @@ public class FeatureExtractor {
         /**
          * From single words
          */
-        featureMap[index++] = s0wp;
-        featureMap[index++] = s0w;
+        if (s0w != 1) {
+            featureMap[index++] = s0wp;
+            featureMap[index++] = s0w;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p;
-        featureMap[index++] = b0wp;
-        featureMap[index++] = b0w;
+
+        if (b0w != 1) {
+            featureMap[index++] = b0wp;
+            featureMap[index++] = b0w;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b0p;
-        featureMap[index++] = b1wp;
-        featureMap[index++] = b1w;
+
+        if (b1w != 1) {
+            featureMap[index++] = b1wp;
+            featureMap[index++] = b1w;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b1p;
-        featureMap[index++] = b2wp;
-        featureMap[index++] = b2w;
+
+        if (b2w != 1) {
+            featureMap[index++] = b2wp;
+            featureMap[index++] = b2w;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b2p;
 
         /**
          * from word pairs
          */
-        featureMap[index++] = (s0wp << 28) | b0wp;
-        featureMap[index++] = (s0wp << 20) | b0w;
-        featureMap[index++] = (s0w << 28) | b0wp;
-        featureMap[index++] = (s0wp << 8) | b0p;
-        featureMap[index++] = (s0p << 28) | b0wp;
-        featureMap[index++] = (s0w << 20) | b0w;
+        if (s0w != 1 && b0w != 1) {
+            featureMap[index++] = (s0wp << 28) | b0wp;
+            featureMap[index++] = (s0wp << 20) | b0w;
+            featureMap[index++] = (s0w << 28) | b0wp;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
+
+        if (s0w != 1) {
+            featureMap[index++] = (s0wp << 8) | b0p;
+        } else {
+            featureMap[index++] = null;
+        }
+
+        if (b0w != 1) {
+            featureMap[index++] = (s0p << 28) | b0wp;
+        } else {
+            featureMap[index++] = null;
+        }
+
+        if (s0w != 1 && b0w != 1) {
+            featureMap[index++] = (s0w << 20) | b0w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = (s0p << 8) | b0p;
         featureMap[index++] = (b0p << 8) | b1p;
 
@@ -273,55 +316,111 @@ public class FeatureExtractor {
         /**
          * distance
          */
-        int distance = 0;
+        long distance = 0;
         if (s0Position > 0 && b0Position > 0)
             distance = Math.abs(b0Position - s0Position);
-        featureMap[index++] = s0w | (distance << 20);
+        if (s0w != 1) {
+            featureMap[index++] = s0w | (distance << 20);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p | (distance << 8);
-        featureMap[index++] = b0w | (distance << 20);
+        if (b0w != 1) {
+            featureMap[index++] = b0w | (distance << 20);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b0p | (distance << 8);
-        featureMap[index++] = s0w | (b0w << 20) | (distance << 40);
+        if (s0w != 1 && b0w != 1) {
+            featureMap[index++] = s0w | (b0w << 20) | (distance << 40);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p | (b0p << 8) | (distance << 28);
 
         /**
          * Valency information
          */
-        featureMap[index++] = s0w | (svr << 20);
+        if (s0w != 1) {
+            featureMap[index++] = s0w | (svr << 20);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p | (svr << 8);
-        featureMap[index++] = s0w | (svl << 20);
+        if (s0w != 1) {
+            featureMap[index++] = s0w | (svl << 20);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p | (svl << 8);
-        featureMap[index++] = b0w | (bvl << 20);
+        if (b0w != 1) {
+            featureMap[index++] = b0w | (bvl << 20);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b0p | (bvl << 8);
 
         /**
          * Unigrams
          */
-        featureMap[index++] = sh0w;
+        if (sh0w != 1) {
+            featureMap[index++] = sh0w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = sh0p;
         featureMap[index++] = s0l;
-        featureMap[index++] = sl0w;
+        if (sl0w != 1) {
+            featureMap[index++] = sl0w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = sl0p;
         featureMap[index++] = sl0l;
-        featureMap[index++] = sr0w;
+        if (sr0w != 1) {
+            featureMap[index++] = sr0w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = sr0p;
         featureMap[index++] = sr0l;
-        featureMap[index++] = bl0w;
+        if (bl0w != 1) {
+            featureMap[index++] = bl0w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = bl0p;
         featureMap[index++] = bl0l;
 
         /**
          * From third order features
          */
-        featureMap[index++] = sh1w;
+        if (sh1w != 1) {
+            featureMap[index++] = sh1w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = sh1p;
         featureMap[index++] = sh0l;
-        featureMap[index++] = sl1w;
+        if (sl1w != 1) {
+            featureMap[index++] = sl1w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = sl1p;
         featureMap[index++] = sl1l;
-        featureMap[index++] = sr1w;
+        if (sr1w != 1) {
+            featureMap[index++] = sr1w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = sr1p;
         featureMap[index++] = sr1l;
-        featureMap[index++] = bl1w;
+        if (bl1w != 1) {
+            featureMap[index++] = bl1w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = bl1p;
         featureMap[index++] = bl1l;
         featureMap[index++] = s0p | (sl0p << 8) | (sl1p << 16);
@@ -341,11 +440,23 @@ public class FeatureExtractor {
             bdl = state.leftDependentLabels(b0Position);
         }
 
-        featureMap[index++] = s0w | (sdr << 20);
+        if (s0w != 1) {
+            featureMap[index++] = s0w | (sdr << 18);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p | (sdr << 8);
-        featureMap[index++] = s0w | (sdl << 20);
+        if (s0w != 1) {
+            featureMap[index++] = s0w | (sdl << 18);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p | (sdl << 8);
-        featureMap[index++] = b0w | (bdl << 20);
+        if (b0w != 1) {
+            featureMap[index++] = b0w | (bdl << 18);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b0p | (bdl << 8);
         return featureMap;
     }
@@ -460,29 +571,72 @@ public class FeatureExtractor {
         /**
          * From single words
          */
-        featureMap[index++] = s0wp;
-        featureMap[index++] = s0w;
+        if (s0w != 1) {
+            featureMap[index++] = s0wp;
+            featureMap[index++] = s0w;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p;
-        featureMap[index++] = b0wp;
-        featureMap[index++] = b0w;
+
+        if (b0w != 1) {
+            featureMap[index++] = b0wp;
+            featureMap[index++] = b0w;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b0p;
 
-        featureMap[index++] = b1wp;
-        featureMap[index++] = b1w;
+        if (b1w != 1) {
+            featureMap[index++] = b1wp;
+            featureMap[index++] = b1w;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b1p;
-        featureMap[index++] = b2wp;
-        featureMap[index++] = b2w;
+
+        if (b2w != 1) {
+            featureMap[index++] = b2wp;
+            featureMap[index++] = b2w;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b2p;
 
         /**
          * from word pairs
          */
-        featureMap[index++] = (s0wp << 28) | b0wp;
-        featureMap[index++] = (s0wp << 20) | b0w;
-        featureMap[index++] = (s0w << 28) | b0wp;
-        featureMap[index++] = (s0wp << 8) | b0p;
-        featureMap[index++] = (s0p << 28) | b0wp;
-        featureMap[index++] = (s0w << 20) | b0w;
+        if (s0w != 1 && b0w != 1) {
+            featureMap[index++] = (s0wp << 28) | b0wp;
+            featureMap[index++] = (s0wp << 20) | b0w;
+            featureMap[index++] = (s0w << 28) | b0wp;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
+
+        if (s0w != 1) {
+            featureMap[index++] = (s0wp << 8) | b0p;
+        } else {
+            featureMap[index++] = null;
+        }
+
+        if (b0w != 1) {
+            featureMap[index++] = (s0p << 28) | b0wp;
+        } else {
+            featureMap[index++] = null;
+        }
+
+        if (s0w != 1 && b0w != 1) {
+            featureMap[index++] = (s0w << 20) | b0w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = (s0p << 8) | b0p;
         featureMap[index++] = (b0p << 8) | b1p;
 
@@ -724,28 +878,72 @@ public class FeatureExtractor {
         /**
          * From single words
          */
-        featureMap[index++] = s0wp;
-        featureMap[index++] = s0w;
+        if (s0w != 1) {
+            featureMap[index++] = s0wp;
+            featureMap[index++] = s0w;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p;
-        featureMap[index++] = b0wp;
-        featureMap[index++] = b0w;
+
+        if (b0w != 1) {
+            featureMap[index++] = b0wp;
+            featureMap[index++] = b0w;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b0p;
-        featureMap[index++] = b1wp;
-        featureMap[index++] = b1w;
+
+        if (b1w != 1) {
+            featureMap[index++] = b1wp;
+            featureMap[index++] = b1w;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b1p;
-        featureMap[index++] = b2wp;
-        featureMap[index++] = b2w;
+
+        if (b2w != 1) {
+            featureMap[index++] = b2wp;
+            featureMap[index++] = b2w;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b2p;
 
         /**
          * from word pairs
          */
-        featureMap[index++] = (s0wp << 28) | b0wp;
-        featureMap[index++] = (s0wp << 20) | b0w;
-        featureMap[index++] = (s0w << 28) | b0wp;
-        featureMap[index++] = (s0wp << 8) | b0p;
-        featureMap[index++] = (s0p << 28) | b0wp;
-        featureMap[index++] = (s0w << 20) | b0w;
+        if (s0w != 1 && b0w != 1) {
+            featureMap[index++] = (s0wp << 28) | b0wp;
+            featureMap[index++] = (s0wp << 20) | b0w;
+            featureMap[index++] = (s0w << 28) | b0wp;
+        } else {
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+            featureMap[index++] = null;
+        }
+
+        if (s0w != 1) {
+            featureMap[index++] = (s0wp << 8) | b0p;
+        } else {
+            featureMap[index++] = null;
+        }
+
+        if (b0w != 1) {
+            featureMap[index++] = (s0p << 28) | b0wp;
+        } else {
+            featureMap[index++] = null;
+        }
+
+        if (s0w != 1 && b0w != 1) {
+            featureMap[index++] = (s0w << 20) | b0w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = (s0p << 8) | b0p;
         featureMap[index++] = (b0p << 8) | b1p;
 
@@ -762,55 +960,111 @@ public class FeatureExtractor {
         /**
          * distance
          */
-        int distance = 0;
+        long distance = 0;
         if (s0Position > 0 && b0Position > 0)
             distance = Math.abs(b0Position - s0Position);
-        featureMap[index++] = s0w | (distance << 20);
+        if (s0w != 1) {
+            featureMap[index++] = s0w | (distance << 20);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p | (distance << 8);
-        featureMap[index++] = b0w | (distance << 20);
+        if (b0w != 1) {
+            featureMap[index++] = b0w | (distance << 20);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b0p | (distance << 8);
-        featureMap[index++] = s0w | (b0w << 20) | (distance << 40);
+        if (s0w != 1 && b0w != 1) {
+            featureMap[index++] = s0w | (b0w << 20) | (distance << 40);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p | (b0p << 8) | (distance << 28);
 
         /**
          * Valency information
          */
-        featureMap[index++] = s0w | (svr << 20);
+        if (s0w != 1) {
+            featureMap[index++] = s0w | (svr << 20);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p | (svr << 8);
-        featureMap[index++] = s0w | (svl << 20);
+        if (s0w != 1) {
+            featureMap[index++] = s0w | (svl << 20);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p | (svl << 8);
-        featureMap[index++] = b0w | (bvl << 20);
+        if (b0w != 1) {
+            featureMap[index++] = b0w | (bvl << 20);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b0p | (bvl << 8);
 
         /**
          * Unigrams
          */
-        featureMap[index++] = sh0w;
+        if (sh0w != 1) {
+            featureMap[index++] = sh0w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = sh0p;
         featureMap[index++] = s0l;
-        featureMap[index++] = sl0w;
+        if (sl0w != 1) {
+            featureMap[index++] = sl0w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = sl0p;
         featureMap[index++] = sl0l;
-        featureMap[index++] = sr0w;
+        if (sr0w != 1) {
+            featureMap[index++] = sr0w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = sr0p;
         featureMap[index++] = sr0l;
-        featureMap[index++] = bl0w;
+        if (bl0w != 1) {
+            featureMap[index++] = bl0w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = bl0p;
         featureMap[index++] = bl0l;
 
         /**
          * From third order features
          */
-        featureMap[index++] = sh1w;
+        if (sh1w != 1) {
+            featureMap[index++] = sh1w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = sh1p;
         featureMap[index++] = sh0l;
-        featureMap[index++] = sl1w;
+        if (sl1w != 1) {
+            featureMap[index++] = sl1w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = sl1p;
         featureMap[index++] = sl1l;
-        featureMap[index++] = sr1w;
+        if (sr1w != 1) {
+            featureMap[index++] = sr1w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = sr1p;
         featureMap[index++] = sr1l;
-        featureMap[index++] = bl1w;
+        if (bl1w != 1) {
+            featureMap[index++] = bl1w;
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = bl1p;
         featureMap[index++] = bl1l;
         featureMap[index++] = s0p | (sl0p << 8) | (sl1p << 16);
@@ -830,13 +1084,24 @@ public class FeatureExtractor {
             bdl = state.leftDependentLabels(b0Position);
         }
 
-        featureMap[index++] = s0w | (sdr << 20);
+        if (s0w != 1) {
+            featureMap[index++] = s0w | (sdr << 18);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p | (sdr << 8);
-        featureMap[index++] = s0w | (sdl << 20);
+        if (s0w != 1) {
+            featureMap[index++] = s0w | (sdl << 18);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = s0p | (sdl << 8);
-        featureMap[index++] = b0w | (bdl << 20);
+        if (b0w != 1) {
+            featureMap[index++] = b0w | (bdl << 18);
+        } else {
+            featureMap[index++] = null;
+        }
         featureMap[index++] = b0p | (bdl << 8);
-
 
         /**
          * Brown cluster features

@@ -11,10 +11,11 @@ Yara Parser
 This core functionality of the project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs and it was later modified in Columbia University. For more details, see the technical details. The parser can be trained on any syntactic dependency treebank with Conll'06 format and can parse sentences afterwards. It can also parse partial sentences (a sentence with partial gold dependencies) and it is also possible to train on partial trees.
 
 ### Version Log
-- V0.2 (February 2015) Some problems fixed in search pruning, and brown cluster features added.
+- V0.2 (February 2015) Some problems fixed in search pruning, and brown cluster features added; compressed model file saving.
 - V0.1 (January 2015) First version of the parser with features roughly the same as Zhang and Nivre (2011).
 
-
+# WARNING
+If you use the extended feature set or brown cluster features, currently the parser supports just 47 unique dependency relations and 260k unique words in the training data. If the number of unique relations in your training data is more than 46, your results with extended or brown cluster features may not be precise! (Stanford dependencies has 44 relations and Penn2Malt contains 12 relations).
 
 ## Performance and Speed on WSJ/Penn Treebank
 __Performance__ really depends on the quality of POS taggers. I used [my own pos tagger v0.2](https://github.com/rasoolims/SemiSupervisedPosTagger/releases/tag/v0.2) and tagged the train file with 10-way jackknifing. I converted the data to dependencies with [Penn2Malt tool](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html). The best unlabeled accuracy on the dev file was 93.41 after 14 iterations and with that model I got  93.12 (92.08 labeled, 48.55 unlabeled exact match) on the test data. All the settings that I used were defaults and brown cluster features.
@@ -183,7 +184,7 @@ You can look at the class __Parser/API_UsageExample__ to see an example of using
 Given a tokenized raw text file, you can use [Percy Liang's Brown clustering code](https://github.com/percyliang/brown-cluster) to cluster the words. I put the cluster files for English and German but if you think you have a bigger text file for those you can use them as long as the formatting is ok.
 
 ## Memory size
-For very large training sets, you may need to increase the java memory heap size by -Xmx option; e.g. ``java -Xmx3g jar/YaraParser.jar``. For WSJ data, 4g is more than enough.
+For very large training sets, you may need to increase the java memory heap size by -Xmx option; e.g. ``java -Xmx3g jar/YaraParser.jar``.
 
 
 ## Technical Details
@@ -214,4 +215,4 @@ __[Nivre and Fernández-González, 2014]__ Nivre, Joakim, and Daniel Fernández-
 
 __[Sun et al., 2013]__ Sun, Xu, Takuya Matsuzaki, and Wenjie Li. "Latent structured perceptrons for large-scale learning with hidden information." IEEE Transactions on Knowledge and Data Engineering, 25.9 (2013): 2063-2075.
 
-__[Zhang and Nivre, 2011]__ Zhang, Yue, and Joakim Nivre. "Transition-based dependency parsing with rich non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.
+__[Zhang and Nivre, 2011]__ Zhang, Yue, and Joakim Nivre. "Transition-based dependency parsing with rich non-local features." Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies: short papers-Volume 2. Association for Computational Linguistics, 2011.s, 2011.

@@ -137,7 +137,7 @@ public class CoNLLReader {
      * @return
      */
     public ArrayList<GoldConfiguration> readData(int limit, boolean keepNonProjective, boolean labeled, boolean rootFirst, boolean lowerCased, IndexMaps maps) throws Exception {
-        HashMap<String, Integer> wordmap = maps.getWordMap();
+        HashMap<String, Integer> wordMap = maps.getWordMap();
         ArrayList<GoldConfiguration> configurationSet = new ArrayList<GoldConfiguration>();
 
         String line;
@@ -198,12 +198,12 @@ public class CoNLLReader {
                 String pos = splitLine[3].trim();
 
                 int wi = -1;
-                if (wordmap.containsKey(word))
-                    wi = wordmap.get(word);
+                if (wordMap.containsKey(word))
+                    wi = wordMap.get(word);
 
                 int pi = -1;
-                if (wordmap.containsKey(pos))
-                    pi = wordmap.get(pos);
+                if (wordMap.containsKey(pos))
+                    pi = wordMap.get(pos);
 
                 tags.add(pi);
                 tokens.add(wi);
@@ -219,8 +219,8 @@ public class CoNLLReader {
                     relation = "ROOT";
 
                 int ri = -1;
-                if (wordmap.containsKey(relation))
-                    ri = wordmap.get(relation);
+                if (wordMap.containsKey(relation))
+                    ri = wordMap.get(relation);
                 if (headIndex == -1)
                     ri = -1;
 
