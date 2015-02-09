@@ -32,7 +32,7 @@ import java.util.concurrent.Executors;
 public class ArcEagerBeamTrainer {
     Options options;
     /**
-     * Can be either "early", "max_violation" or "late"
+     * Can be either "early" or "max_violation"
      * For more information read:
      * Liang Huang, Suphan Fayong and Yang Guo. "Structured perceptron with inexact search."
      * In Proceedings of the 2012 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies,
@@ -40,14 +40,7 @@ public class ArcEagerBeamTrainer {
      */
     private String updateMode;
     private AveragedPerceptron classifier;
-    /**
-     * Can configure such that we can place the ROOT token either in the first or last place
-     * For more information see:
-     * Miguel Ballesteros and Joakim Nivre. "Going to the roots of dependency parsing."
-     * Computational Linguistics 39, no. 1 (2013): 5-13.
-     */
-
-
+   
     private ArrayList<Integer> dependencyRelations;
     private int featureLength;
 
@@ -91,7 +84,7 @@ public class ArcEagerBeamTrainer {
             System.out.print("\n");
             long end = System.currentTimeMillis();
             long timeSec = (end - start) / 1000;
-            System.out.println("this iteration took " + timeSec + " seconds\n");
+            System.out.println("iteration "+i+" took " + timeSec + " seconds\n");
 
             System.out.print("saving the model...");
             InfStruct infStruct = new InfStruct(classifier, maps, dependencyRelations, options);
@@ -291,7 +284,7 @@ public class ArcEagerBeamTrainer {
 
         for (Configuration configuration : oracles.keySet()) {
             State state = configuration.state;
-            Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+            Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
 
             if (!state.stackEmpty())
                 top = state.peek();
@@ -363,7 +356,7 @@ public class ArcEagerBeamTrainer {
         for (Configuration configuration : oracles.keySet()) {
             if (!configuration.state.isTerminalState()) {
                 State currentState = configuration.state;
-                Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+                Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                 int accepted = 0;
                 // I only assumed that we need zero cost ones
                 if (goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {
@@ -450,7 +443,7 @@ public class ArcEagerBeamTrainer {
             boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
             boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
             boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-            Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+            Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
 
             if (canShift) {
                 float score = classifier.shiftScore(features, false);
@@ -533,10 +526,10 @@ public class ArcEagerBeamTrainer {
             }
 
             if (isTrueFeature) {   // if the made dependency is truely for the word
-                Long[] feats = FeatureExtractor.extractAllParseFeatures(oracleConfiguration, featureLength);
+                Object[] feats = FeatureExtractor.extractAllParseFeatures(oracleConfiguration, featureLength);
                 for (int f = 0; f < feats.length; f++) {
-                    Pair<Integer, Long> featName = new Pair<Integer, Long>(action, feats[f]);
-                    HashMap<Pair<Integer, Long>, Float> map = (HashMap<Pair<Integer, Long>, Float>) oracleFeatures[f];
+                    Pair<Integer, Object> featName = new Pair<Integer, Object>(action, feats[f]);
+                    HashMap<Pair<Integer, Object>, Float> map = (HashMap<Pair<Integer, Object>, Float>) oracleFeatures[f];
                     Float value = map.get(featName);
                     if (value == null)
                         map.put(featName, 1.0f);
@@ -572,11 +565,11 @@ public class ArcEagerBeamTrainer {
             }
 
             if (isTrueFeature) {   // if the made dependency is truely for the word
-                Long[] feats = FeatureExtractor.extractAllParseFeatures(predictedConfiguration, featureLength);
+                Object[] feats = FeatureExtractor.extractAllParseFeatures(predictedConfiguration, featureLength);
                 if (action != 2) // do not take into account for unshift
                     for (int f = 0; f < feats.length; f++) {
-                        Pair<Integer, Long> featName = new Pair<Integer, Long>(action, feats[f]);
-                        HashMap<Pair<Integer, Long>, Float> map = (HashMap<Pair<Integer, Long>, Float>) predictedFeatures[f];
+                        Pair<Integer, Object> featName = new Pair<Integer, Object>(action, feats[f]);
+                        HashMap<Pair<Integer, Object>, Float> map = (HashMap<Pair<Integer, Object>, Float>) predictedFeatures[f];
                         Float value = map.get(featName);
                         if (value == null)
                             map.put(featName, 1.f);
@@ -602,9 +595,9 @@ public class ArcEagerBeamTrainer {
         }
 
         for (int f = 0; f < predictedFeatures.length; f++) {
-            HashMap<Pair<Integer, Long>, Float> map = (HashMap<Pair<Integer, Long>, Float>) predictedFeatures[f];
-            HashMap<Pair<Integer, Long>, Float> map2 = (HashMap<Pair<Integer, Long>, Float>) oracleFeatures[f];
-            for (Pair<Integer, Long> feat : map.keySet()) {
+            HashMap<Pair<Integer, Object>, Float> map = (HashMap<Pair<Integer, Object>, Float>) predictedFeatures[f];
+            HashMap<Pair<Integer, Object>, Float> map2 = (HashMap<Pair<Integer, Object>, Float>) oracleFeatures[f];
+            for (Pair<Integer, Object> feat : map.keySet()) {
                 int action = feat.first;
                 Actions actionType = Actions.Shift;
                 int dependency = 0;
@@ -622,13 +615,13 @@ public class ArcEagerBeamTrainer {
                     actionType = Actions.Unshift;
                 }
                 if (feat.second != null) {
-                    long feature = feat.second;
+                    Object feature = feat.second;
                     if (!(map2.containsKey(feat) && map2.get(feat).equals(map.get(feat))))
                         classifier.changeWeight(actionType, f, feature, dependency, -map.get(feat));
                 }
             }
 
-            for (Pair<Integer, Long> feat : map2.keySet()) {
+            for (Pair<Integer, Object> feat : map2.keySet()) {
                 int action = feat.first;
                 Actions actionType = Actions.Shift;
                 int dependency = 0;
@@ -646,7 +639,7 @@ public class ArcEagerBeamTrainer {
                     actionType = Actions.Unshift;
                 }
                 if (feat.second != null) {
-                    long feature = feat.second;
+                    Object feature = feat.second;
                     if (!(map.containsKey(feat) && map.get(feat).equals(map2.get(feat))))
                         classifier.changeWeight(actionType, f, feature, dependency, map2.get(feat));
                 }

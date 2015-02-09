@@ -63,7 +63,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
             boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
             boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-            Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+            Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
             if (!canShift
                     && !canReduce
                     && !canRightArc
@@ -198,7 +198,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
             boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
             boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
             boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-            Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+            Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
             if (!canShift
                     && !canReduce
                     && !canRightArc
@@ -270,7 +270,7 @@ public class KBeamArcEagerParser extends TransitionBasedParser {
                 boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
                 boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
                 boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-                Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+                Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                 if (!canShift
                         && !canReduce
                         && !canRightArc

@@ -72,7 +72,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                     boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
                     boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
                     boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-                    Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+                    Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                     if (!canShift
                             && !canReduce
                             && !canRightArc
@@ -160,7 +160,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             } else {
                 Configuration configuration = beam.get(0);
                 State currentState = configuration.state;
-                Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+                Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                 float bestScore = Float.NEGATIVE_INFINITY;
                 int bestAction = -1;
 
@@ -321,7 +321,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
             boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
             boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-            Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+            Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
             if (!canShift
                     && !canReduce
                     && !canRightArc
@@ -392,7 +392,7 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
                 boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
                 boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
                 boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-                Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+                Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
                 if (!canShift
                         && !canReduce
                         && !canRightArc

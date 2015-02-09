@@ -52,7 +52,7 @@ public class PartialTreeBeamScorerThread implements Callable<ArrayList<BeamEleme
         boolean canReduce = ArcEager.canDo(Actions.Reduce, currentState);
         boolean canRightArc = ArcEager.canDo(Actions.RightArc, currentState);
         boolean canLeftArc = ArcEager.canDo(Actions.LeftArc, currentState);
-        Long[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
+        Object[] features = FeatureExtractor.extractAllParseFeatures(configuration, featureLength);
 
         if (canShift) {
             if (isNonProjective || goldConfiguration.actionCost(Actions.Shift, -1, currentState) == 0) {

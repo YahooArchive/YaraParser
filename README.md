@@ -11,26 +11,24 @@ Yara Parser
 This core functionality of the project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs and it was later modified in Columbia University. For more details, see the technical details. The parser can be trained on any syntactic dependency treebank with Conll'06 format and can parse sentences afterwards. It can also parse partial sentences (a sentence with partial gold dependencies) and it is also possible to train on partial trees.
 
 ### Version Log
-- V0.2 (__under preparation__) Some problems fixed in search pruning, and brown cluster features added; compressed model file saving.
+- V0.2 (__under preparation__) Some problems fixed in search pruning and dependency features, and brown cluster features added; compressed model file saving.
 - V0.1 (January 2015) First version of the parser with features roughly the same as Zhang and Nivre (2011).
 
 # WARNING
-If you use the extended feature set or brown cluster features, currently the parser supports just 47 unique dependency relations and 260k unique words in the training data. If the number of unique relations in your training data is more than 46, your results with extended or brown cluster features may not be precise! (Stanford dependencies has 44 relations and Penn2Malt contains 12 relations).
+If you use the extended feature set or brown cluster features, currently the parser supports just 50 unique dependency relations and 1M unique words in the training data. If the number of unique relations in your training data is more than 64, your results with extended or brown cluster features may not be precise! 
 
 ## Performance and Speed on WSJ/Penn Treebank
-__Performance__ really depends on the quality of POS taggers. I used [my own pos tagger v0.2](https://github.com/rasoolims/SemiSupervisedPosTagger/releases/tag/v0.2) and tagged the train file with 10-way jackknifing. I converted the data to dependencies with [Penn2Malt tool](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html) and I also used [Stanford dependencies](http://nlp.stanford.edu/software/lex-parser.shtml#Download) with `basic` and `keepPunct` options. The following tables are the results (``#todo:table``).
+Performance and speed really depends on the quality of POS taggers and machine power and memory. I used [my own pos tagger v0.2](https://github.com/rasoolims/SemiSupervisedPosTagger/releases/tag/v0.2) and tagged the train file with 10-way jackknifing. I got POS accuracy of 98.68, 97.08 and 97.34 in the train, dev and test files respectively. I converted the data to dependencies with [Penn2Malt tool](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html). The following tables are the results.
 
 
-|Parser| Dep. Rep.      | Features     |Iter#| Dev UAS | Test UAS | Test LAS | sen/sec|
-|:----:|:---------------|:-------------|:---:|:-------:|:--------:|:--------:|:------:|
-| ZPar | Penn2Malt      | ZN (11)      | 15  |   93.14 |   92.9   |   91.8   |  29    |
-|      |                |              |     |         |          |          |        |
-| Yara | Penn2Malt      | ZN (11)      |     |         |          |          |        |
-| Yara | Penn2Malt      | ZN (11) + BC |     |         |          |          |        |
-| Yara |Stanford (3.5.1)| ZN (11)      |     |         |          |          |        |
-| Yara |Stanford (3.5.1)| ZN (11) + BC |     |         |          |          |        |
+|Parser| Dep. Rep.      |beam| Features     |Iter#| Dev UAS | Test UAS | Test LAS | sen/sec|
+|:----:|:---------------|----|:-------------|:---:|:-------:|:--------:|:--------:|:------:|
+| ZPar | Penn2Malt      | 64 | ZN (11)      | 15  |  93.14  |   92.9   |   91.8   |  29    |
+| Yara | Penn2Malt      | 1  | ZN (11) basic| 6   |  89.54  |   89.34  |   88.02  | 6000   |
+| Yara | Penn2Malt      | 1  | ZN (11) + BC | 13  |  89.98  |   89.74  |   88.52  | 1300   |
+| Yara | Penn2Malt      | 64 | ZN (11)      | 13  |  93.31  |   92.97  |   91.93  |  133   |
+| Yara | Penn2Malt      | 64 | ZN (11) + BC | 13  |  93.42  |   93.32  |   92.32  |   45   |
 
-__Speed__ really depends on your machine and the number of unique dependency relations but generally this parser is very fast. ``#todo: exact report``
 
 ## Meaning of Yara
 Yara (Yahoo-Rasooli) is a word that means __strength__ , __boldness__, __bravery__ or __something robust__ in Persian. In other languages it has other meanings, e.g. in Amazonian language it means __daughter of the forests__, in Malaysian it means  __the beams of the sun__ and in ancient Egyptian it means __pure__ and __beloved__.
