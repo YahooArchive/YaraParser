@@ -23,11 +23,11 @@ Performance and speed really depends on the quality of POS taggers and machine p
 
 |Parser| Dep. Rep.      |beam| Features     |Iter#| Dev UAS | Test UAS | Test LAS | sen/sec|
 |:----:|:---------------|----|:-------------|:---:|:-------:|:--------:|:--------:|:------:|
-| ZPar | Penn2Malt      | 64 | ZN (11)      | 15  |  93.14  |   92.9   |   91.8   |  29    |
-| Yara | Penn2Malt      | 1  | ZN (11) basic| 6   |  89.54  |   89.34  |   88.02  | 6000   |
-| Yara | Penn2Malt      | 1  | ZN (11) + BC | 13  |  89.98  |   89.74  |   88.52  | 1300   |
-| Yara | Penn2Malt      | 64 | ZN (11)      | 13  |  93.31  |   92.97  |   91.93  |  133   |
-| Yara | Penn2Malt      | 64 | ZN (11) + BC | 13  |  93.42  |   93.32  |   92.32  |   45   |
+| ZPar | Penn2Malt      | 64 | [ZN (11)](http://www.sutd.edu.sg/cmsresource/faculty/yuezhang/acl11j.pdf)      | 15  |  93.14  |   92.9   |   91.8   |  29    |
+| Yara | Penn2Malt      | 1  | [ZN (11)](http://www.sutd.edu.sg/cmsresource/faculty/yuezhang/acl11j.pdf) (11) basic| 6   |  89.54  |   89.34  |   88.02  | 6000   |
+| Yara | Penn2Malt      | 1  | [ZN (11)](http://www.sutd.edu.sg/cmsresource/faculty/yuezhang/acl11j.pdf) (11) + BC | 13  |  89.98  |   89.74  |   88.52  | 1300   |
+| Yara | Penn2Malt      | 64 | [ZN (11)](http://www.sutd.edu.sg/cmsresource/faculty/yuezhang/acl11j.pdf) (11)      | 13  |  93.31  |   92.97  |   91.93  |  133   |
+| Yara | Penn2Malt      | 64 | [ZN (11)](http://www.sutd.edu.sg/cmsresource/faculty/yuezhang/acl11j.pdf) (11) + BC | 13  |  93.42  |   93.32  |   92.32  |   45   |
 
 
 ## Meaning of Yara
