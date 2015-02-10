@@ -15,7 +15,7 @@ This core functionality of the project is implemented by [Mohammad Sadegh Rasool
 - V0.1 (January 2015) First version of the parser with features roughly the same as Zhang and Nivre (2011).
 
 # WARNING
-If you use the extended feature set or brown cluster features, currently the parser supports just 50 unique dependency relations and 1M unique words in the training data. If the number of unique relations in your training data is more than 64, your results with extended or brown cluster features may not be precise! 
+If you use the extended feature set or brown cluster features, currently the parser supports just 64 unique dependency relations and 1M unique words in the training data. If the number of unique relations in your training data is more than 64, your results with extended or brown cluster features may not be precise! 
 
 ## Performance and Speed on WSJ/Penn Treebank
 Performance and speed really depends on the quality of POS taggers and machine power and memory. I used [my own pos tagger v0.2](https://github.com/rasoolims/SemiSupervisedPosTagger/releases/tag/v0.2) and tagged the train file with 10-way jackknifing. I got POS accuracy of 98.68, 97.08 and 97.34 in the train, dev and test files respectively. I converted the data to dependencies with [Penn2Malt tool](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html). The following tables are the results.
