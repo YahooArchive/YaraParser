@@ -11,7 +11,7 @@ Yara Parser
 This core functionality of the project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs and it was later modified in Columbia University. For more details, see the technical details. The parser can be trained on any syntactic dependency treebank with Conll'06 format and can parse sentences afterwards. It can also parse partial sentences (a sentence with partial gold dependencies) and it is also possible to train on partial trees.
 
 ### Version Log
-- V0.2 (__under preparation__) Some problems fixed in search pruning and dependency features, and brown cluster features added; compressed model file saving.
+- V0.2 (10 Feb. 2015) Some problems fixed in search pruning and dependency features, and brown cluster features added; compressed model file saving.
 - V0.1 (January 2015) First version of the parser with features roughly the same as Zhang and Nivre (2011).
 
 # WARNING
@@ -198,7 +198,7 @@ For very large training sets, you may need to increase the java memory heap size
 ## Technical Details
 This parser is an implementation of the arc-eager dependency model [Nivre, 2004] with averaged structured Perceptron [Collins, 2002]. The feature setting is from Zhang and Nivre [2011] with additional Brown cluster features inspired from Koo et al. [2008] and Honnibal and Johnson [2014]. The model can be trained with early update strategy [Collins and Roark, 2004] or max-violation update [Huang et al., 2012]. Oracle search for training is done with either dynamic oracles [Goldberg and Nivre, 2013] or original static oracles.  Choosing the best oracles in the dynamic oracle can be done via latent structured Perceptron [Sun et al., 2013] and also randomly. The dummy root token can be placed in the end or in the beginning of the sentence [Ballesteros and Nivre, 2013]. When the dummy root token is placed in the beginning, tree constraints are applied [Nivre and Fernández-González, 2014].
 
-__[References]__
+##References
 
 __[Ballesteros and Nivre, 2013]__ Ballesteros, Miguel, and Joakim Nivre. "Going to the roots of dependency parsing." Computational Linguistics 39.1 (2013): 5-13.
 	

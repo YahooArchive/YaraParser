@@ -447,5 +447,4 @@ public class ParseThread implements Callable<Pair<Configuration, Integer>> {
             }
         }
     }
-
 }

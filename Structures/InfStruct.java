@@ -81,7 +81,7 @@ public class InfStruct {
             for (Object feat : map2[i].keySet()) {
                 CompactArray vals = map2[i].get(feat);
                 CompactArray avgVals = avgMap2[i].get(feat);
-                leftArcFeatureAveragedWeights[i].put(feat, getAvaregedCompactArray(vals, avgVals, perceptron.iteration));
+                leftArcFeatureAveragedWeights[i].put(feat, getAveragedCompactArray(vals, avgVals, perceptron.iteration));
             }
         }
 
@@ -94,7 +94,7 @@ public class InfStruct {
             for (Object feat : map3[i].keySet()) {
                 CompactArray vals = map3[i].get(feat);
                 CompactArray avgVals = avgMap3[i].get(feat);
-                rightArcFeatureAveragedWeights[i].put(feat, getAvaregedCompactArray(vals, avgVals, perceptron.iteration));
+                rightArcFeatureAveragedWeights[i].put(feat, getAveragedCompactArray(vals, avgVals, perceptron.iteration));
             }
         }
 
@@ -134,7 +134,7 @@ public class InfStruct {
         writer.close();
     }
 
-    private CompactArray getAvaregedCompactArray(CompactArray ca, CompactArray aca, int iteration) {
+    private CompactArray getAveragedCompactArray(CompactArray ca, CompactArray aca, int iteration) {
         int offset = ca.getOffset();
         float[] a = ca.getArray();
         float[] aa = aca.getArray();
