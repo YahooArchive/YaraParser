@@ -49,7 +49,9 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
 
         ArrayList<Integer> tokens = new ArrayList<Integer>();
         ArrayList<Integer> tags = new ArrayList<Integer>();
-
+        ArrayList<Integer> brownCluster4thPrefix=new ArrayList<Integer>();
+        ArrayList<Integer> brownCluster6thPrefix=new ArrayList<Integer>();
+        ArrayList<Integer> brownClusterFullString =new ArrayList<Integer>();
 
         int i = 0;
         for (String w : wrds) {
@@ -70,6 +72,10 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
             int pi = -1;
             if (wordMap.containsKey(pos))
                 pi = wordMap.get(pos);
+            int[] clusters=maps.clusterId(word);
+            brownClusterFullString.add(clusters[0]);
+            brownCluster4thPrefix.add(clusters[1]);
+            brownCluster6thPrefix.add(clusters[2]);
 
             tokens.add(wi);
             tags.add(pi);
@@ -79,10 +85,13 @@ public class ParseTaggedThread implements Callable<Pair<String, Integer>> {
             if (!rootFirst) {
                 tokens.add(0);
                 tags.add(0);
+                brownClusterFullString.add(0);
+                brownCluster4thPrefix.add(0);
+                brownCluster6thPrefix.add(0);
             }
-            Sentence sentence = new Sentence(tokens, tags);
-            Configuration bestParse = parser.parse(sentence, rootFirst, beamWidth, 1);
 
+            Sentence sentence = new Sentence(tokens, tags,brownCluster4thPrefix,brownCluster6thPrefix,brownClusterFullString);
+            Configuration bestParse = parser.parse(sentence, rootFirst, beamWidth, 1);
 
             StringBuilder finalOutput = new StringBuilder();
             for (i = 0; i < words.length; i++) {

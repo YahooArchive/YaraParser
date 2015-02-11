@@ -5,6 +5,7 @@
 
 package Structures;
 
+
 import java.util.ArrayList;
 
 public class Sentence implements Comparable {
@@ -18,14 +19,6 @@ public class Sentence implements Comparable {
     private int[] brownCluster6thPrefix;
     private int[] brownClusterFullString;
 
-    public Sentence(ArrayList<Integer> tokens, ArrayList<Integer> pos) {
-        words = new int[tokens.size()];
-        tags = new int[tokens.size()];
-        for (int i = 0; i < tokens.size(); i++) {
-            words[i] = tokens.get(i);
-            tags[i] = pos.get(i);
-        }
-    }
 
     public Sentence(ArrayList<Integer> tokens, ArrayList<Integer> pos, ArrayList<Integer> brownCluster4thPrefix, ArrayList<Integer> brownCluster6thPrefix, ArrayList<Integer> brownClusterFullString) {
         words = new int[tokens.size()];
@@ -40,11 +33,6 @@ public class Sentence implements Comparable {
             this.brownCluster6thPrefix[i] = brownCluster6thPrefix.get(i);
             this.brownClusterFullString[i] = brownClusterFullString.get(i);
         }
-    }
-
-    public Sentence(int[] words, int[] tags) {
-        this.words = words;
-        this.tags = tags;
     }
 
     public int size() {
