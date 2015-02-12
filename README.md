@@ -6,7 +6,7 @@ Yara Parser
 &copy; Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
 
 
-# Yara K-Beam Arc-Eager Dependency YaraParser.Parser
+# Yara K-Beam Arc-Eager Dependency Parser
 
 This core functionality of the project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs and it was later modified in Columbia University. For more details, see the technical details. The parser can be trained on any syntactic dependency treebank with Conll'06 format and can parse sentences afterwards. It can also parse partial sentences (a sentence with partial gold dependencies) and it is also possible to train on partial trees.
 
