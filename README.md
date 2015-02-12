@@ -1,4 +1,4 @@
-Yara Parser
+Yara YaraParser.Parser
 ===================
 
 &copy; Copyright 2014-2015, Yahoo! Inc.
@@ -6,7 +6,7 @@ Yara Parser
 &copy; Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
 
 
-# Yara K-Beam Arc-Eager Dependency Parser
+# Yara K-Beam Arc-Eager Dependency YaraParser.Parser
 
 This core functionality of the project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs and it was later modified in Columbia University. For more details, see the technical details. The parser can be trained on any syntactic dependency treebank with Conll'06 format and can parse sentences afterwards. It can also parse partial sentences (a sentence with partial gold dependencies) and it is also possible to train on partial trees.
 
@@ -21,7 +21,7 @@ If you use the extended feature set or brown cluster features, currently the par
 Performance and speed really depends on the quality of POS taggers and machine power and memory. I used [my own pos tagger v0.2](https://github.com/rasoolims/SemiSupervisedPosTagger/releases/tag/v0.2) and tagged the train file with 10-way jackknifing. I got POS accuracy of 97.14, 97.18 and 97.37 in the train, dev and test files respectively. I converted the data to dependencies with [Penn2Malt tool](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html). The following tables are the results.
 
 
-|Parser| Dep. Rep.      |beam| Features     |Iter#| Dev UAS | Test UAS | Test LAS | sen/sec|
+|YaraParser.Parser| Dep. Rep.      |beam| Features     |Iter#| Dev UAS | Test UAS | Test LAS | sen/sec|
 |:----:|:---------------|----|:-------------|:---:|:-------:|:--------:|:--------:|:------:|
 | ZPar | Penn2Malt      | 64 | [ZN (11)](http://www.sutd.edu.sg/cmsresource/faculty/yuezhang/acl11j.pdf)      | 15  |  93.14  |   92.9   |   91.8   |  29    |
 | Yara | Penn2Malt      | 1  | [ZN (11)](http://www.sutd.edu.sg/cmsresource/faculty/yuezhang/acl11j.pdf) (11) basic| 6   |  89.54  |   89.34  |   88.02  | 6000   |
@@ -37,22 +37,22 @@ Yara (Yahoo-Rasooli) is a word that means __strength__ , __boldness__, __bravery
 
 Go to the root directory of the project and run the following command:
 	
-	javac Parser/YaraParser.java
+	javac YaraParser.Parser/YaraParser.java
 
 Then you can test the code via the following command:
 
-    java Parser.YaraParser
+    java YaraParser.Parser.YaraParser
     
 or
     
-    java Parser/YaraParser
+    java YaraParser.Parser/YaraParser
 
 
 ## Command Line Options
 
 __NOTE:__ All the examples bellow are using the jar file for running the application but you can also use the java class files after manually compiling the code.
 
-### Train a Parser
+### Train a YaraParser.Parser
 
 __WARNING:__ The training code ignores non-projective trees in the training data. If you want to include them, try to projectivize them; e.g. by [tree projectivizer](http://www.cs.bgu.ac.il/~yoavg/software/projectivize/).
 
@@ -111,7 +111,7 @@ __WARNING:__ The training code ignores non-projective trees in the training data
 	
 	* Example line: He_PRP is_VBZ nice_AJ ._.
 	
-### Train a Parser with Partial Training data
+### Train a YaraParser.Parser with Partial Training data
 There are some occasions that the training data does not always have full trees. In such cases, you can still train a parsing model with CoNLL format but the words that do not have a head, should have ``-1`` as their heads. For the partial trees in the training data, dynamic oracles will be applied, regardless of your choice of using static or dynamic oracles. 
 
 The parser starts parsing only on full trees for 2 iterations and then works on partial trees as well. If you want to change its default (3), use __``pt:#pt``__ (e.g. pt:5) as an argument.
@@ -133,7 +133,7 @@ __WARNING__ Because of some technical reasons, all words connected to the dummy 
 	* Optional: -score [score file] averaged score of each output parse tree in a file
 
 
-## Evaluate the Parser
+## Evaluate the YaraParser.Parser
 
 __WARNING__ The evaluation script is Yara, takes care of ``ROOT`` output, so you do not have to change anything in the output.
 
