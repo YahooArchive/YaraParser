@@ -1,4 +1,4 @@
-Yara YaraParser.Parser
+Yara Parser
 ===================
 
 &copy; Copyright 2014-2015, Yahoo! Inc.
