@@ -93,6 +93,18 @@ public class Options implements Serializable {
         punctuations.add("-RSB-");
         punctuations.add("-LCB-");
         punctuations.add("-RCB-");
+        punctuations.add("!");
+        punctuations.add(".");
+        punctuations.add("#");
+        punctuations.add("$");
+        punctuations.add("''");
+        punctuations.add("(");
+        punctuations.add(")");
+        punctuations.add(",");
+        punctuations.add("-LRB-");
+        punctuations.add("-RRB-");
+        punctuations.add(":");
+        punctuations.add("?");
     }
 
     public static void showHelp() {
