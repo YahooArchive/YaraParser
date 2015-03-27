@@ -10,6 +10,10 @@ Yara Parser
 
 This core functionality of the project is implemented by [Mohammad Sadegh Rasooli](www.cs.columbia.edu:/~rasooli) during his internship in Yahoo! labs and it was later modified in Columbia University. For more details, see the technical details. The parser can be trained on any syntactic dependency treebank with Conll'06 format and can parse sentences afterwards. It can also parse partial sentences (a sentence with partial gold dependencies) and it is also possible to train on partial trees.
 
+Please cite the following technical report if you use Yara in your research:
+
+* Mohammad Sadegh Rasooli and Joel Tetreault. [Yara Parser: A Fast and Accurate Dependency Parser](http://arxiv.org/abs/1503.06733). arXiv:1503.06733v2 [cs.CL] Mar 2015.
+
 ### Version Log
 - V0.2 (10 Feb. 2015) Some problems fixed in search pruning and dependency features, and brown cluster features added; compressed model file saving.
 - V0.1 (January 2015) First version of the parser with features roughly the same as Zhang and Nivre (2011).
