@@ -15,6 +15,7 @@ __Please cite the following technical report if you use Yara in your research:__
 * Mohammad Sadegh Rasooli and Joel Tetreault. [Yara Parser: A Fast and Accurate Dependency Parser](http://arxiv.org/abs/1503.06733). arXiv:1503.06733v2 [cs.CL] Mar 2015.
 
 ### Version Log
+- v0.2.1 (18 Mar. 2015) Some minor changes to packaging and punctuation defaults. 
 - V0.2 (10 Feb. 2015) Some problems fixed in search pruning and dependency features, and brown cluster features added; compressed model file saving.
 - V0.1 (January 2015) First version of the parser with features roughly the same as Zhang and Nivre (2011).
 
