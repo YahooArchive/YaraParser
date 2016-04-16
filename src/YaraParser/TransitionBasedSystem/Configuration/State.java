@@ -27,6 +27,8 @@ public class State implements Cloneable {
     protected Pair<Integer, Integer>[] arcs;
     protected int[] leftMostArcs;
     protected int[] rightMostArcs;
+    protected int[] secondLeftMostArcs;
+    protected int[] secondRightMostArcs;
     protected int[] leftValency;
     protected int[] rightValency;
     protected long[] rightDepLabels;
@@ -40,7 +42,9 @@ public class State implements Cloneable {
         arcs = new Pair[size + 1];
 
         leftMostArcs = new int[size + 1];
+        secondLeftMostArcs = new int[size + 1];
         rightMostArcs = new int[size + 1];
+        secondRightMostArcs = new int[size + 1];
         leftValency = new int[size + 1];
         rightValency = new int[size + 1];
         rightDepLabels = new long[size + 1];
@@ -86,14 +90,23 @@ public class State implements Cloneable {
         assert dependency<64;
 
         if (dependent > head) { //right dep
-            if (rightMostArcs[head] == 0 || dependent > rightMostArcs[head])
+            if (rightMostArcs[head] == 0 )
                 rightMostArcs[head] = dependent;
+            else if(dependent > rightMostArcs[head]){
+                secondRightMostArcs[head] = rightMostArcs[head];
+                rightMostArcs[head] = dependent;
+            } else if(dependent > secondRightMostArcs[head])
+                secondRightMostArcs[head] = dependent;
             rightValency[head] += 1;
             rightDepLabels[head] = rightDepLabels[head] | value;
-
         } else { //left dependency
-            if (leftMostArcs[head] == 0 || dependent < leftMostArcs[head])
+            if (leftMostArcs[head] == 0 )
                 leftMostArcs[head] = dependent;
+            else if(dependent < leftMostArcs[head]){
+                secondLeftMostArcs[head] = leftMostArcs[head];
+                leftMostArcs[head] = dependent;
+            } else if(dependent<secondLeftMostArcs[head])
+                secondLeftMostArcs[head] = dependent;
             leftDepLabels[head] = leftDepLabels[head] | value;
             leftValency[head] += 1;
         }
@@ -159,8 +172,16 @@ public class State implements Cloneable {
         return (rightMostArcs[index] == 0 ? -1 : rightMostArcs[index]);
     }
 
+    public int secondRightMostModifier(int index) {
+        return (secondRightMostArcs[index] == 0 ? -1 : secondRightMostArcs[index]);
+    }
+    
     public int leftMostModifier(int index) {
         return (leftMostArcs[index] == 0 ? -1 : leftMostArcs[index]);
+    }
+
+    public int secondLeftMostModifier(int index) {
+        return (secondLeftMostArcs[index] == 0 ? -1 : secondLeftMostArcs[index]);
     }
 
     /**
@@ -230,11 +251,18 @@ public class State implements Cloneable {
                     state.rightValency[h] = rightValency[h];
                     state.rightDepLabels[h] = rightDepLabels[h];
                 }
+                if (secondRightMostArcs[h] != 0) {
+                    state.secondRightMostArcs[h] = secondRightMostArcs[h];
+                }
 
                 if (leftMostArcs[h] != 0) {
                     state.leftMostArcs[h] = leftMostArcs[h];
                     state.leftValency[h] = leftValency[h];
                     state.leftDepLabels[h] = leftDepLabels[h];
+                }
+
+                if (secondLeftMostArcs[h] != 0) {
+                    state.secondLeftMostArcs[h] = secondLeftMostArcs[h];
                 }
             }
         }
