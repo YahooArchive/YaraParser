@@ -1,7 +1,7 @@
 Yara Parser
 ===================
 
-&copy; Copyright 2014-2015, Yahoo! Inc.
+&copy; Copyright 2014-2016, Yahoo! Inc.
 
 &copy; Licensed under the terms of the Apache License 2.0. See LICENSE file at the project root for terms.
 
@@ -15,14 +15,16 @@ __Please cite the following technical report if you use Yara in your research:__
 * Mohammad Sadegh Rasooli and Joel Tetreault. [Yara Parser: A Fast and Accurate Dependency Parser](http://arxiv.org/abs/1503.06733). arXiv:1503.06733v2 [cs.CL] Mar 2015.
 
 ### Version Log
+- v0.3 (21 Apr. 2016) Fix a bug in third-order feature computation.
+- v0.2.1 (18 Mar. 2015) Some minor changes to packaging and punctuation defaults. 
 - V0.2 (10 Feb. 2015) Some problems fixed in search pruning and dependency features, and brown cluster features added; compressed model file saving.
 - V0.1 (January 2015) First version of the parser with features roughly the same as Zhang and Nivre (2011).
 
 # WARNING
 If you use the extended feature set or brown cluster features, currently the parser supports just 64 unique dependency relations and 1M unique words in the training data. If the number of unique relations in your training data is more than 64, your results with extended or brown cluster features may not be precise! 
 
-## Performance and Speed on WSJ/Penn Treebank
-Performance and speed really depends on the quality of POS taggers and machine power and memory. I used [my own pos tagger v0.2](https://github.com/rasoolims/SemiSupervisedPosTagger/releases/tag/v0.2) and tagged the train file with 10-way jackknifing. I got POS accuracy of 97.14, 97.18 and 97.37 in the train, dev and test files respectively. I converted the data to dependencies with [Penn2Malt tool](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html). The following tables are the results.
+## Performance and Speed on WSJ/Penn Treebank (v0.2)
+Performance and speed really depends on the quality of POS taggers and machine power and memory. I used [my own pos tagger v0.2](https://github.com/rasoolims/SemiSupervisedPosTagger/releases/tag/v0.2) and tagged the train file with 10-way jackknifing. I got POS accuracy of 97.14, 97.18 and 97.37 in the train, dev and test files respectively. I converted the data to dependencies with [Penn2Malt tool](http://stp.lingfil.uu.se/~nivre/research/Penn2Malt.html). The following table shows the results.
 
 
 |YaraParser.Parser| Dep. Rep.      |beam| Features     |Iter#| Dev UAS | Test UAS | Test LAS | sen/sec|
